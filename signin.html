@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Warehouse Intelligence – Sign In</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0b1120;
+            color: #e5e7eb;
+            display: flex;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+        }
+        .auth-card {
+            background: #020617;
+            border: 1px solid #1f2937;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+        .auth-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .auth-subtitle {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            background: #020617;
+            color: #e5e7eb;
+            margin-bottom: 12px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        button {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: #ffffff;
+        }
+        .btn-secondary {
+            background: #111827;
+            color: #e5e7eb;
+            border: 1px solid #374151;
+        }
+        .message {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            min-height: 1.2em;
+        }
+        .message.error {
+            color: #fca5a5;
+        }
+        .message.success {
+            color: #6ee7b7;
+        }
+        .link {
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+        .link a {
+            color: #93c5fd;
+            text-decoration: none;
+        }
+        .link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <h1 class="auth-title">Sign in to Warehouse Intelligence</h1>
+        <p class="auth-subtitle">
+            Use your email and password to access the dashboard.
+        </p>
+
+        <form id="auth-form">
+            <label for="email">Email</label>
+            <input id="email" type="email" placeholder="you@example.com" required />
+
+            <label for="password">Password</label>
+            <input id="password" type="password" placeholder="At least 6 characters" required />
+
+            <div class="btn-row">
+                <button type="submit" id="btn-signin" class="btn-primary">Sign in</button>
+                <button type="button" id="btn-signup" class="btn-secondary">Create account</button>
+            </div>
+        </form>
+
+        <div id="message" class="message"></div>
+
+        <div class="link">
+            <a href="index.html">← Back to landing page</a>
+        </div>
+    </div>
+
+    <!-- Supabase global script -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // 1) Insert YOUR values here
+        const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
+
+        // 2) Change this to your actual table name (e.g. "profiles", "users", etc.)
+        const PROFILE_TABLE = "users";
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const form = document.getElementById("auth-form");
+        const btnSignin = document.getElementById("btn-signin");
+        const btnSignup = document.getElementById("btn-signup");
+        const messageEl = document.getElementById("message");
+
+        function setMessage(text, type = "") {
+            messageEl.textContent = text;
+            messageEl.className = "message " + (type || "");
+        }
+
+        function setLoading(isLoading) {
+            btnSignin.disabled = isLoading;
+            btnSignup.disabled = isLoading;
+            if (isLoading) {
+                btnSignin.textContent = "Working…";
+            } else {
+                btnSignin.textContent = "Sign in";
+            }
+        }
+
+        // Helper: ensure a profile row exists for this user (used on both sign-up and sign-in)
+       async function ensureProfileRow(user) {
+    if (!user) {
+        console.warn("No user object supplied to ensureProfileRow");
+        return;
+    }
+
+    // Try upsert so it's safe to call on both sign-up and sign-in
+    const { error: upsertError } = await supabase
+        .from(PROFILE_TABLE)
+        .upsert(
+            {
+                id: user.id,
+                email: user.email,
+                full_name: "New User"
+            },
+            { onConflict: "id" }   // ignore if row already exists
+        );
+
+    if (upsertError) {
+        console.error("Profile upsert error:", upsertError);
+        // Optional: show it on the page while you're developing
+        setMessage("Profile error: " + upsertError.message, "error");
+    } else {
+        console.log("Profile row ensured for", user.email);
+    }
+}
+
+        // SIGN IN
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            setMessage("");
+            setLoading(true);
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            setLoading(false);
+
+            if (error) {
+                console.error("Sign-in error:", error);
+                setMessage(error.message, "error");
+                return;
+            }
+
+            const user = data.user;
+            // Make sure profile row exists even for older accounts
+            await ensureProfileRow(user);
+
+            setMessage("Signed in successfully – redirecting…", "success");
+            window.location.href = "dashboard.html";
+        });
+
+        // SIGN UP
+        btnSignup.addEventListener("click", async () => {
+            setMessage("");
+            setLoading(true);
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password
+            });
+
+            if (error) {
+                console.error("Sign-up error:", error);
+                setLoading(false);
+                setMessage(error.message, "error");
+                return;
+            }
+
+            const user = data.user;
+            await ensureProfileRow(user);
+
+            setLoading(false);
+            setMessage(
+                "Account created. Check your email if confirmation is required, then sign in.",
+                "success"
+            );
+        });
+    </script>
+</body>
+</html>
