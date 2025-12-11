@@ -1,77 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Warehouse Intelligence – Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>Warehouse Intelligence – Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <style>
-        body {
-            font-family: system-ui, sans-serif;
-            margin: 0;
-            padding: 24px;
-            background: #0b1120;
-            color: #e5e7eb;
-        }
-        .card {
-            background: #020617;
-            padding: 24px;
-            border-radius: 12px;
-            max-width: 600px;
-            margin: auto;
-            border: 1px solid #1f2937;
-        }
-        button {
-            margin-top: 16px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            background: #3b82f6;
-            color: white;
-            font-weight: 600;
-        }
-    </style>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: #020617;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dash-shell {
+      max-width: 960px;
+      width: 100%;
+      padding: 32px 20px;
+    }
+
+    .dash-card {
+      background: #020617;
+      border-radius: 18px;
+      border: 1px solid #1f2937;
+      padding: 24px 24px 28px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+    }
+
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .dash-title {
+      font-size: 1.6rem;
+      font-weight: 650;
+    }
+
+    .dash-subtitle {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      margin-bottom: 20px;
+    }
+
+    .pill-user {
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      background: transparent;
+      color: #e5e7eb;
+      transition: all 0.16s ease-out;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ff7a3c, #ffb14d);
+      color: #020617;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      border-color: #374151;
+    }
+
+    .btn-outline:hover {
+      border-color: #ff7a3c;
+      color: #f9fafb;
+    }
+
+    .dash-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .dash-body {
+      margin-top: 20px;
+      font-size: 0.92rem;
+      color: #d1d5db;
+    }
+
+    .dash-message {
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      min-height: 1.1em;
+    }
+
+    .dash-message.error {
+      color: #fca5a5;
+    }
+
+    .dash-message.ok {
+      color: #6ee7b7;
+    }
+
+    .tool-section {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #1f2937;
+    }
+
+    .tool-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .tool-text {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 640px) {
+      .dash-card {
+        padding: 20px 16px 22px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Dashboard</h1>
-        <p id="user-email">Checking login…</p>
-        <button id="btn-signout">Sign out</button>
+  <div class="dash-shell">
+    <div class="dash-card">
+      <div class="dash-header">
+        <div>
+          <div class="dash-title">Dashboard</div>
+          <div class="dash-subtitle">
+            Authenticated area for Warehouse Intelligence tools.
+          </div>
+        </div>
+        <div class="dash-actions">
+          <span id="user-pill" class="pill-user" style="display:none;"></span>
+          <button id="btn-signout" class="btn btn-outline">Sign out</button>
+        </div>
+      </div>
+
+      <div id="dash-message" class="dash-message">Checking login…</div>
+
+      <div class="dash-body">
+        <div class="tool-section">
+          <div class="tool-title">Workforce planner – web version</div>
+          <p class="tool-text">
+            Open the live HTML version of the workforce / warehouse scheduling
+            tool in a new tab. This version is intended to be used online
+            after sign-in.
+          </p>
+          <!-- NEW BUTTON TO OPEN THE TOOL -->
+          <a
+            href="warehouse_scheduling.html"
+            target="_blank"
+            rel="noopener"
+            class="btn btn-primary"
+          >
+            Open workforce planner
+          </a>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Supabase global script -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // TODO: insert your real values
+    const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
 
-    <script>
-        // INSERT YOUR OWN VALUES:
-        const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE";
-        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const dashMessage = document.getElementById("dash-message");
+    const btnSignout = document.getElementById("btn-signout");
+    const userPill = document.getElementById("user-pill");
 
-        const userEmailEl = document.getElementById("user-email");
-        const btnSignout = document.getElementById("btn-signout");
+    function setMessage(text, type = "") {
+      dashMessage.textContent = text;
+      dashMessage.className = "dash-message " + (type || "");
+    }
 
-        // Check the session on page load
-        (async () => {
-            const { data, error } = await supabase.auth.getSession();
+    async function checkSession() {
+      setMessage("Checking login…");
 
-            if (error || !data.session) {
-                // Not logged in → redirect to sign-in
-                window.location.href = "signin.html";
-                return;
-            }
+      const { data, error } = await supabase.auth.getUser();
 
-            const user = data.session.user;
-            userEmailEl.textContent = `Signed in as: ${user.email}`;
-        })();
+      if (error || !data || !data.user) {
+        setMessage("Not signed in. Redirecting to sign-in…", "error");
+        setTimeout(() => {
+          window.location.href = "signin.html";
+        }, 800);
+        return;
+      }
 
-        // Sign out button
-        btnSignout.addEventListener("click", async () => {
-            await supabase.auth.signOut();
-            window.location.href = "signin.html";
-        });
-    </script>
+      const user = data.user;
+      const label = user.email || "Signed in";
+      userPill.textContent = label;
+      userPill.style.display = "inline-flex";
+
+      setMessage("Signed in as " + label, "ok");
+    }
+
+    btnSignout.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "signin.html";
+    });
+
+    checkSession();
+  </script>
 </body>
 </html>
