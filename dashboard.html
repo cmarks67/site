@@ -66,7 +66,7 @@
 
     /* Sidebar */
     .sidebar {
-      width: 220px;
+      width: 240px;
       border-radius: 12px;
       border: 1px solid #1f2937;
       background: #020617;
@@ -74,12 +74,12 @@
       height: fit-content;
     }
 
-    .sidebar-title {
+    .sidebar-section-title {
       font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: #6b7280;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .nav-item {
@@ -99,6 +99,44 @@
     }
 
     .nav-item:hover {
+      background: #111827;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: #111827;
+      margin: 10px 0;
+    }
+
+    .tools-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 6px 2px;
+      border-radius: 6px;
+    }
+
+    .tools-header:hover {
+      background: #111827;
+    }
+
+    .tools-arrow {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .tool-item {
+      display: block;
+      padding: 6px 9px;
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 4px;
+    }
+
+    .tool-item:hover {
       background: #111827;
     }
 
@@ -176,11 +214,13 @@
       font-size: 0.85rem;
       margin-top: 10px;
     }
+
     th, td {
       border-bottom: 1px solid #1f2937;
       padding: 6px 4px;
       text-align: left;
     }
+
     th {
       color: #9ca3af;
       font-weight: 500;
@@ -203,6 +243,11 @@
       font-size: 0.9rem;
       margin-bottom: 10px;
       box-sizing: border-box;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #60a5fa;
     }
 
     .btn-small {
@@ -231,7 +276,6 @@
 </head>
 
 <body>
-
   <header>
     <div class="brand">Warehouse <span>Intelligence</span></div>
     <div class="user-info">
@@ -243,11 +287,22 @@
   <main>
     <div class="layout">
 
-      <!-- LEFT SIDEBAR -->
+      <!-- SIDEBAR -->
       <aside class="sidebar">
-        <div class="sidebar-title">Navigation</div>
+        <div class="sidebar-section-title">Navigation</div>
         <div id="nav-overview" class="nav-item active">Overview</div>
         <div id="nav-users" class="nav-item">Users</div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="tools-header" id="tools-toggle">
+          <div class="sidebar-section-title" style="margin-bottom:0;">Tools</div>
+          <span class="tools-arrow" id="tools-arrow">▾</span>
+        </div>
+        <div id="sidebar-tools-list">
+          <a href="warehouse_scheduling.html" class="tool-item">Scheduling tool</a>
+          <!-- in future add more tools here -->
+        </div>
       </aside>
 
       <!-- MAIN CONTENT -->
@@ -260,6 +315,9 @@
           <div style="margin-top:6px;">
             <span id="badge-role" class="badge"></span>
             <span id="badge-account-type" class="badge"></span>
+          </div>
+          <div class="muted" style="margin-top:6px;">
+            Account ID: <span id="account-id" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;"></span>
           </div>
         </div>
 
@@ -276,7 +334,6 @@
 
         <!-- Users Section -->
         <section id="section-users" class="hidden">
-
           <div class="card">
             <h2>Users</h2>
             <p class="muted" id="users-intro"></p>
@@ -297,13 +354,15 @@
 
             <div id="single-user-note" class="hidden">
               <p class="muted">
-                This is a <strong>Single-user</strong> account.  
-                Additional users cannot be added.
+                This is a <strong>Single-user</strong> account. Additional users cannot be added.
               </p>
             </div>
 
             <div id="add-user-card" class="hidden" style="margin-top:14px; border-top:1px solid #1f2937; padding-top:12px;">
               <h3 style="font-size:0.95rem; margin:0 0 8px;">Add a standard user</h3>
+              <p class="muted">
+                The new user will be created as <strong>Standard</strong> and linked to this business.
+              </p>
               <form id="add-user-form">
                 <label for="new-user-name">Full name</label>
                 <input id="new-user-name" required />
@@ -321,16 +380,16 @@
               </form>
               <div id="add-user-message"></div>
             </div>
-
           </div>
         </section>
-      </section>
 
+      </section>
     </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    // TODO: set these to your real project values
     const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
 
@@ -343,11 +402,16 @@
     const accountName = document.getElementById("account-name");
     const badgeRole = document.getElementById("badge-role");
     const badgeAccountType = document.getElementById("badge-account-type");
+    const accountIdSpan = document.getElementById("account-id");
 
     const navOverview = document.getElementById("nav-overview");
     const navUsers = document.getElementById("nav-users");
     const sectionOverview = document.getElementById("section-overview");
     const sectionUsers = document.getElementById("section-users");
+
+    const toolsToggle = document.getElementById("tools-toggle");
+    const toolsArrow = document.getElementById("tools-arrow");
+    const toolsList = document.getElementById("sidebar-tools-list");
 
     const usersIntro = document.getElementById("users-intro");
     const usersTableBody = document.getElementById("users-table-body");
@@ -356,6 +420,7 @@
     const addUserCard = document.getElementById("add-user-card");
     const addUserForm = document.getElementById("add-user-form");
     const addUserMsg = document.getElementById("add-user-message");
+    const btnSignout = document.getElementById("btn-signout");
 
     function showSection(section) {
       if (section === "overview") {
@@ -374,7 +439,20 @@
     navOverview.addEventListener("click", () => showSection("overview"));
     navUsers.addEventListener("click", () => showSection("users"));
 
-    document.getElementById("btn-signout").addEventListener("click", async () => {
+    // Tools expand / collapse
+    let toolsExpanded = true;
+    toolsToggle.addEventListener("click", () => {
+      toolsExpanded = !toolsExpanded;
+      if (toolsExpanded) {
+        toolsList.classList.remove("hidden");
+        toolsArrow.textContent = "▾";
+      } else {
+        toolsList.classList.add("hidden");
+        toolsArrow.textContent = "▸";
+      }
+    });
+
+    btnSignout.addEventListener("click", async () => {
       await client.auth.signOut();
       window.location.href = "signin.html";
     });
@@ -395,9 +473,9 @@
       }
 
       const user = sessionData.session.user;
-      headerEmail.textContent = user.email;
+      headerEmail.textContent = user.email || "";
 
-      // TRY LOAD PROFILE
+      // Load profile; create default if missing
       let { data: profile, error: profileError } = await client
         .from("users")
         .select("*")
@@ -405,7 +483,6 @@
         .single();
 
       if (!profile || profileError) {
-        // CREATE DEFAULT PROFILE
         profile = {
           id: user.id,
           email: user.email,
@@ -414,55 +491,59 @@
           account_type: "single_user",
           business_owner_id: user.id
         };
-
         await client.from("users").upsert(profile, { onConflict: "id" });
       }
 
       currentProfile = profile;
 
-      // FILL ACCOUNT CARD
-      accountName.textContent = profile.full_name;
+      // Fill account card
+      accountName.textContent = profile.full_name || profile.email || "";
       badgeRole.textContent = profile.role;
       badgeRole.classList.add(profile.role);
 
       badgeAccountType.textContent =
-        profile.account_type === "business"
-          ? "Business account"
-          : "Single user";
+        profile.account_type === "business" ? "Business account" : "Single user";
       badgeAccountType.classList.add(profile.account_type);
 
-      // CONFIGURE USERS SECTION
+      const rawAccountId = profile.business_owner_id || profile.id || "";
+      const accountNumber = rawAccountId
+        ? "WI-" + rawAccountId.slice(0, 8).toUpperCase()
+        : "Unknown";
+      accountIdSpan.textContent = accountNumber;
+      accountIdSpan.title = rawAccountId || "";
+
+      // Configure Users section vis
       if (profile.account_type === "single_user") {
         usersIntro.textContent = "This is a single-user account.";
         singleUserNote.classList.remove("hidden");
         addUserCard.classList.add("hidden");
       } else if (profile.role !== "admin") {
-        usersIntro.textContent = "Only administrators can add users.";
+        usersIntro.textContent = "Only administrators can add or change users.";
+        singleUserNote.classList.add("hidden");
         addUserCard.classList.add("hidden");
       } else {
-        usersIntro.textContent = "Manage users for this business.";
+        usersIntro.textContent = "Manage users under this business account.";
+        singleUserNote.classList.add("hidden");
         addUserCard.classList.remove("hidden");
       }
 
-      // LOAD BUSINESS USERS
+      // Load users for this business
       const businessOwnerId = profile.business_owner_id || profile.id;
-
       const { data: users } = await client
         .from("users")
         .select("*")
         .eq("business_owner_id", businessOwnerId)
         .order("created_at", { ascending: true });
 
-      if (users?.length) {
+      if (users && users.length) {
         usersListContainer.classList.remove("hidden");
         usersTableBody.innerHTML = "";
-
         users.forEach(u => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${u.email}</td>
+            <td>${u.email || ""}</td>
             <td>${u.full_name || ""}</td>
-            <td>${u.role}</td>
+            <td>${u.role || ""}</td>
             <td>${u.created_at ? new Date(u.created_at).toLocaleString() : ""}</td>
           `;
           usersTableBody.appendChild(tr);
@@ -470,12 +551,12 @@
       }
     })();
 
-    // ADD USER HANDLER
+    // Add user handler (admin + business only)
     addUserForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       setAddUserMessage("");
 
-      if (currentProfile.account_type !== "business" || currentProfile.role !== "admin") {
+      if (!currentProfile || currentProfile.account_type !== "business" || currentProfile.role !== "admin") {
         setAddUserMessage("You are not allowed to add users.", "error");
         return;
       }
@@ -490,12 +571,11 @@
         return;
       }
 
-      // Use separate client to avoid overwriting current session
       const transient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: { persistSession: false }
       });
 
-      // CREATE AUTH USER
+      // Create auth user
       const { data: newUserData, error: newUserError } = await transient.auth.signUp({
         email,
         password,
@@ -509,7 +589,7 @@
 
       const newUser = newUserData.user;
 
-      // UPDATE PROFILE ROW
+      // Upsert profile row
       const { error: upsertError } = await client
         .from("users")
         .upsert({
@@ -518,7 +598,7 @@
           full_name: fullName,
           role: "standard",
           account_type: "business",
-          business_owner_id: currentProfile.business_owner_id
+          business_owner_id: currentProfile.business_owner_id || currentProfile.id
         });
 
       if (upsertError) {
@@ -530,6 +610,5 @@
       setTimeout(() => window.location.reload(), 800);
     });
   </script>
-
 </body>
 </html>
