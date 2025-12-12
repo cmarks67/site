@@ -1,305 +1,563 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Warehouse Intelligence – Sign in</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #0b1120;
-      color: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .card {
-      background: #020617;
-      border-radius: 12px;
-      border: 1px solid #1f2937;
-      padding: 24px 28px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.45);
-    }
-    h1 {
-      margin-top: 0;
-      font-size: 1.4rem;
-      margin-bottom: 0.25rem;
-    }
-    .subtitle {
-      font-size: 0.9rem;
-      color: #9ca3af;
-      margin-bottom: 1rem;
-    }
-    .tabs {
-      display: flex;
-      margin-bottom: 1rem;
-      border-radius: 999px;
-      background: #020617;
-      border: 1px solid #1f2937;
-      padding: 2px;
-    }
-    .tab {
-      flex: 1;
-      text-align: center;
-      padding: 6px 0;
-      font-size: 0.9rem;
-      border-radius: 999px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .tab.active {
-      background: #1f2937;
-    }
-    label {
-      display: block;
-      font-size: 0.8rem;
-      margin-bottom: 4px;
-      color: #d1d5db;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 0.9rem;
-      box-sizing: border-box;
-      margin-bottom: 10px;
-    }
-    input:focus, select:focus {
-      outline: none;
-      border-color: #60a5fa;
-    }
-    button {
-      width: 100%;
-      padding: 9px 12px;
-      border-radius: 999px;
-      border: none;
-      background: #dc2626;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 6px;
-    }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .small {
-      font-size: 0.8rem;
-      color: #9ca3af;
-      margin-top: 8px;
-    }
-    .error {
-      margin-top: 8px;
-      color: #fecaca;
-      font-size: 0.8rem;
-    }
-    .success {
-      margin-top: 8px;
-      color: #bbf7d0;
-      font-size: 0.8rem;
-    }
-    .hidden {
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h1>Warehouse Intelligence</h1>
-    <div class="subtitle">Sign in or create a new account.</div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Warehouse Intelligence – Sign in</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <div class="tabs">
-      <div id="tab-signin" class="tab active">Sign in</div>
-      <div id="tab-signup" class="tab">Create account</div>
+    <style>
+      :root {
+        --bg: #f3f4f6;
+        --card-bg: #ffffff;
+        --card-border: #e5e7eb;
+        --text-main: #111827;
+        --text-muted: #6b7280;
+        --input-bg: #f9fafb;
+        --input-border: #d1d5db;
+        --input-border-focus: #2563eb;
+        --pill-bg: #e5e7eb;
+        --pill-border: #d1d5db;
+        --pill-active-bg: #ffffff;
+        --pill-active-text: #111827;
+        --pill-inactive-text: #6b7280;
+        --primary-btn: #ef4444;
+        --primary-btn-hover: #f97373;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background: var(--bg);
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
+      }
+
+      .auth-shell {
+        max-width: 640px;
+        width: 100%;
+      }
+
+      .auth-card {
+        background: var(--card-bg);
+        border-radius: 18px;
+        border: 1px solid var(--card-border);
+        padding: 28px 32px 32px;
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+      }
+
+      .auth-header {
+        margin-bottom: 24px;
+      }
+
+      .auth-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 0 0 4px;
+      }
+
+      .auth-subtitle {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
+
+      /* Tabs (Sign in / Create account) */
+      .tab-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--pill-bg);
+        border-radius: 999px;
+        padding: 3px;
+        border: 1px solid var(--pill-border);
+        margin-bottom: 20px;
+      }
+
+      .tab-button {
+        flex: 1;
+        padding: 8px 0;
+        border-radius: 999px;
+        border: none;
+        background: transparent;
+        color: var(--pill-inactive-text);
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+      }
+
+      .tab-button.active {
+        background: var(--pill-active-bg);
+        color: var(--pill-active-text);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(148, 163, 184, 0.45);
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.active {
+        display: block;
+      }
+
+      /* Form layout */
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      label {
+        font-size: 0.85rem;
+        color: var(--text-main);
+      }
+
+      .input,
+      select {
+        padding: 9px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--input-border);
+        background: var(--input-bg);
+        color: var(--text-main);
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease,
+          background 0.15s ease;
+      }
+
+      .input::placeholder {
+        color: #9ca3af;
+      }
+
+      .input:focus,
+      select:focus {
+        border-color: var(--input-border-focus);
+        box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+        background: #ffffff;
+      }
+
+      select {
+        cursor: pointer;
+      }
+
+      /* Password strength meter (Create account) */
+      .strength-wrapper {
+        margin-top: 4px;
+      }
+
+      .strength-meter {
+        width: 100%;
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: width 0.25s ease, background-color 0.25s ease;
+      }
+
+      .strength-text {
+        margin-top: 4px;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+      }
+
+      .helper-text {
+        margin-top: 4px;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+      }
+
+      .inline-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+      }
+
+      .forgot-password {
+        font-size: 0.8rem;
+      }
+
+      .forgot-password a {
+        color: #2563eb;
+        text-decoration: none;
+      }
+
+      .forgot-password a:hover {
+        text-decoration: underline;
+      }
+
+      /* Buttons */
+      .primary-btn {
+        margin-top: 16px;
+        width: 100%;
+        padding: 11px 14px;
+        border-radius: 999px;
+        border: none;
+        background: var(--primary-btn);
+        color: #f9fafb;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.1s ease,
+          box-shadow 0.1s ease;
+      }
+
+      .primary-btn:hover {
+        background: var(--primary-btn-hover);
+        box-shadow: 0 14px 28px rgba(239, 68, 68, 0.4);
+        transform: translateY(-1px);
+      }
+
+      .primary-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 8px 18px rgba(239, 68, 68, 0.35);
+      }
+
+      .footnote {
+        margin-top: 10px;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+      }
+
+      @media (max-width: 640px) {
+        .auth-card {
+          padding: 22px 18px 24px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="auth-shell">
+      <div class="auth-card">
+        <header class="auth-header">
+          <h1 class="auth-title">Warehouse Intelligence</h1>
+          <div class="auth-subtitle">Sign in or create a new account.</div>
+        </header>
+
+        <!-- Tabs -->
+        <div class="tab-toggle">
+          <button
+            type="button"
+            class="tab-button active"
+            data-tab="signin-tab"
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            class="tab-button"
+            data-tab="create-tab"
+          >
+            Create account
+          </button>
+        </div>
+
+        <!-- SIGN IN TAB -->
+        <section id="signin-tab" class="tab-panel active">
+          <form id="signin-form" method="post" action="">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="signin-email">Email</label>
+                <input
+                  id="signin-email"
+                  name="email"
+                  type="email"
+                  class="input"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="signin-password">Password</label>
+                <input
+                  id="signin-password"
+                  name="password"
+                  type="password"
+                  class="input"
+                  autocomplete="current-password"
+                  required
+                />
+
+                <div class="inline-row">
+                  <div class="helper-text">
+                    Use your registered password to access your account.
+                  </div>
+                  <div class="forgot-password">
+                    <!-- PUT YOUR RESET PASSWORD URL HERE -->
+                    <a href="/reset-password">Forgot password?</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="primary-btn">Sign in</button>
+          </form>
+        </section>
+
+        <!-- CREATE ACCOUNT TAB -->
+        <section id="create-tab" class="tab-panel">
+          <form id="create-account-form" method="post" action="">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="full-name">Full name</label>
+                <input
+                  id="full-name"
+                  name="fullName"
+                  type="text"
+                  class="input"
+                  autocomplete="name"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="create-email">Email</label>
+                <input
+                  id="create-email"
+                  name="email"
+                  type="email"
+                  class="input"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="create-password">Password</label>
+                <input
+                  id="create-password"
+                  name="password"
+                  type="password"
+                  class="input"
+                  autocomplete="new-password"
+                  required
+                />
+
+                <!-- PASSWORD STRENGTH (CREATE ACCOUNT) -->
+                <div class="strength-wrapper">
+                  <div class="strength-meter">
+                    <div id="create-strength-bar" class="strength-bar"></div>
+                  </div>
+                  <div id="create-strength-text" class="strength-text">
+                    Password strength:
+                  </div>
+                </div>
+
+                <div class="helper-text">
+                  Use at least 8 characters, including upper &amp; lower case,
+                  numbers and a symbol.
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="confirm-password">Confirm password</label>
+                <input
+                  id="confirm-password"
+                  name="confirmPassword"
+                  type="password"
+                  class="input"
+                  autocomplete="new-password"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="account-type">Account type</label>
+                <select id="account-type" name="accountType">
+                  <option value="business">Business (multiple users)</option>
+                  <option value="single">Single user</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="primary-btn">Create account</button>
+          </form>
+
+          <div class="footnote">
+            The first user for an account is always created as an Administrator.
+          </div>
+        </section>
+      </div>
     </div>
 
-    <!-- Sign in form -->
-    <form id="signin-form">
-      <label for="signin-email">Email</label>
-      <input id="signin-email" type="email" required autocomplete="email" />
+    <script>
+      // TAB TOGGLING
+      const tabButtons = document.querySelectorAll(".tab-button");
+      const tabPanels = document.querySelectorAll(".tab-panel");
 
-      <label for="signin-password">Password</label>
-      <input id="signin-password" type="password" required autocomplete="current-password" />
+      tabButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const targetId = btn.getAttribute("data-tab");
 
-      <button type="submit" id="signin-button">Sign in</button>
-    </form>
+          tabButtons.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
 
-    <!-- Sign up form -->
-    <form id="signup-form" class="hidden">
-      <label for="signup-name">Full name</label>
-      <input id="signup-name" type="text" required autocomplete="name" />
-
-      <label for="signup-email">Email</label>
-      <input id="signup-email" type="email" required autocomplete="email" />
-
-      <label for="signup-password">Password</label>
-      <input id="signup-password" type="password" required autocomplete="new-password" />
-
-      <label for="signup-password-confirm">Confirm password</label>
-      <input id="signup-password-confirm" type="password" required autocomplete="new-password" />
-
-      <label for="signup-account-type">Account type</label>
-      <select id="signup-account-type" required>
-        <option value="business">Business (multiple users)</option>
-        <option value="single_user">Single user</option>
-      </select>
-
-      <button type="submit" id="signup-button">Create account</button>
-      <div class="small">
-        The first user for an account is always created as an Administrator.
-      </div>
-    </form>
-
-    <div id="message" class="small"></div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // TODO: replace with your actual values
-    const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
-
-    const { createClient } = supabase;
-    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const tabSignin = document.getElementById("tab-signin");
-    const tabSignup = document.getElementById("tab-signup");
-    const signinForm = document.getElementById("signin-form");
-    const signupForm = document.getElementById("signup-form");
-    const messageEl = document.getElementById("message");
-    const signinButton = document.getElementById("signin-button");
-    const signupButton = document.getElementById("signup-button");
-
-    function setMessage(text, type) {
-      messageEl.textContent = text || "";
-      messageEl.className = "small";
-      if (!text) return;
-      if (type === "error") messageEl.classList.add("error");
-      if (type === "success") messageEl.classList.add("success");
-    }
-
-    // Switch tabs
-    tabSignin.addEventListener("click", () => {
-      tabSignin.classList.add("active");
-      tabSignup.classList.remove("active");
-      signinForm.classList.remove("hidden");
-      signupForm.classList.add("hidden");
-      setMessage("");
-    });
-
-    tabSignup.addEventListener("click", () => {
-      tabSignup.classList.add("active");
-      tabSignin.classList.remove("active");
-      signupForm.classList.remove("hidden");
-      signinForm.classList.add("hidden");
-      setMessage("");
-    });
-
-    // On load: if already signed in, go to dashboard
-    (async () => {
-      const { data } = await client.auth.getSession();
-      if (data.session) {
-        window.location.href = "dashboard.html";
-      }
-    })();
-
-    // Sign in handler
-    signinForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      setMessage("");
-      signinButton.disabled = true;
-
-      const email = document.getElementById("signin-email").value.trim();
-      const password = document.getElementById("signin-password").value;
-
-      const { data, error } = await client.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        setMessage(error.message, "error");
-        signinButton.disabled = false;
-        return;
-      }
-
-      setMessage("Signed in. Redirecting...", "success");
-      window.location.href = "dashboard.html";
-    });
-
-    // Sign up handler
-    signupForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      setMessage("");
-      signupButton.disabled = true;
-
-      const fullName = document.getElementById("signup-name").value.trim();
-      const email = document.getElementById("signup-email").value.trim();
-      const password = document.getElementById("signup-password").value;
-      const passwordConfirm = document.getElementById("signup-password-confirm").value;
-      const accountType = document.getElementById("signup-account-type").value;
-
-      if (password !== passwordConfirm) {
-        setMessage("Passwords do not match.", "error");
-        signupButton.disabled = false;
-        return;
-      }
-
-      // 1) Create Auth user
-      const { data: signUpData, error: signUpError } = await client.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName }
-        }
+          tabPanels.forEach((panel) => {
+            panel.classList.toggle("active", panel.id === targetId);
+          });
+        });
       });
 
-      if (signUpError) {
-        setMessage(signUpError.message, "error");
-        signupButton.disabled = false;
-        return;
+      // PASSWORD STRENGTH (CREATE ACCOUNT TAB)
+      const createPassword = document.getElementById("create-password");
+      const strengthBar = document.getElementById("create-strength-bar");
+      const strengthText = document.getElementById("create-strength-text");
+
+      function evaluateStrength(value) {
+        let score = 0;
+        if (value.length >= 8) score++;
+        if (/[A-Z]/.test(value)) score++;
+        if (/[0-9]/.test(value)) score++;
+        if (/[^A-Za-z0-9]/.test(value)) score++;
+        return score;
       }
 
-      const user = signUpData.user;
-      if (!user) {
-        setMessage("Sign up succeeded but no user returned.", "error");
-        signupButton.disabled = false;
-        return;
+      function updateStrengthMeter() {
+        const val = createPassword.value;
+        const score = evaluateStrength(val);
+
+        if (!val) {
+          strengthBar.style.width = "0%";
+          strengthBar.style.backgroundColor = "transparent";
+          strengthText.textContent = "Password strength:";
+          return;
+        }
+
+        switch (score) {
+          case 1:
+            strengthBar.style.width = "25%";
+            strengthBar.style.backgroundColor = "#dc2626"; // red
+            strengthText.textContent = "Password strength: Weak";
+            break;
+          case 2:
+            strengthBar.style.width = "55%";
+            strengthBar.style.backgroundColor = "#eab308"; // amber
+            strengthText.textContent = "Password strength: Fair";
+            break;
+          case 3:
+            strengthBar.style.width = "80%";
+            strengthBar.style.backgroundColor = "#22c55e"; // good
+            strengthText.textContent = "Password strength: Good";
+            break;
+          case 4:
+            strengthBar.style.width = "100%";
+            strengthBar.style.backgroundColor = "#16a34a"; // strong
+            strengthText.textContent = "Password strength: Strong";
+            break;
+        }
       }
 
-// 2) Create or update the profile row with role/admin + account_type + business_owner_id
-const { error: upsertError } = await client
-  .from("users")
-  .upsert(
-    {
-      id: user.id,               // ensure id matches auth user id
-      email,
-      full_name: fullName,
-      role: "admin",
-      account_type: accountType,
-      business_owner_id: user.id
-    },
-    { onConflict: "id" }         // if row exists, update it
-  );
+      if (createPassword) {
+        createPassword.addEventListener("input", updateStrengthMeter);
+      }
+    </script>
 
-if (upsertError) {
-  setMessage(
-    "Account created but failed to update user profile: " + upsertError.message,
-    "error"
-  );
-  signupButton.disabled = false;
-  return;
-}
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <script>
+      // ------------------------------------------------------
+      // 1. INITIALISE SUPABASE
+      // ------------------------------------------------------
+      const supabaseUrl = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
+      const supabaseAnonKey = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
 
-      setMessage("Account created. Redirecting to dashboard...", "success");
-      window.location.href = "dashboard.html";
-    });
-  </script>
-</body>
+      // Use the global 'supabase' from CDN to get createClient
+      const { createClient } = supabase;
+      const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+      // ------------------------------------------------------
+      // 2. SIGN IN HANDLER
+      // ------------------------------------------------------
+      const signinForm = document.getElementById("signin-form");
+
+      if (signinForm) {
+        signinForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const email = document.getElementById("signin-email").value;
+          const password = document.getElementById("signin-password").value;
+
+          const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (error) {
+            alert("Sign in failed: " + error.message);
+            return;
+          }
+
+          // Redirect after login
+          window.location.href = "C:/Users/chris/Downloads/site/dashboard.html"; // change to your real dashboard URL
+        });
+      }
+
+      // ------------------------------------------------------
+      // 3. CREATE ACCOUNT HANDLER
+      // ------------------------------------------------------
+      const createForm = document.getElementById("create-account-form");
+
+      if (createForm) {
+        createForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const fullName = document.getElementById("full-name").value;
+          const email = document.getElementById("create-email").value;
+          const password = document.getElementById("create-password").value;
+          const password2 =
+            document.getElementById("confirm-password").value;
+          const accountType =
+            document.getElementById("account-type").value;
+
+          if (password !== password2) {
+            alert("Passwords do not match. Please check and try again.");
+            return;
+          }
+
+          const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: fullName,
+                account_type: accountType,
+              },
+            },
+          });
+
+          if (error) {
+            alert("Account creation failed: " + error.message);
+            return;
+          }
+
+          alert("Account created. Check your email to confirm.");
+          // Optional redirect:
+          // window.location.href = "/signin.html";
+        });
+      }
+    </script>
+  </body>
 </html>

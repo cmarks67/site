@@ -6,12 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root {
-      --bg: #f4f5f7;
+      /* Brand-level colours – align these to your main site */
+      --brand-primary: #1b6ac9;   /* primary accent */
+      --brand-primary-soft: #e3efff;
+      --brand-dark: #0b1b3a;
+      --brand-border: #d0d4dc;
+      --brand-bg: #f5f7fb;
+
+      /* UI tokens derived from brand */
+      --bg: var(--brand-bg);
       --card-bg: #ffffff;
-      --border: #d0d4dc;
-      --accent: #1b6ac9;
-      --accent-soft: #e3efff;
-      --text-main: #222b3a;
+      --border: var(--brand-border);
+      --accent: var(--brand-primary);
+      --accent-soft: var(--brand-primary-soft);
+      --text-main: #1f2933;
       --text-muted: #6b7280;
       --danger: #c0392b;
       --success: #1e8449;
@@ -40,7 +48,7 @@
       position: sticky;
       top: 0;
       z-index: 40;
-      background: var(--bg);
+      background: linear-gradient(to bottom, #f9fafb, var(--bg));
       padding-bottom: 8px;
     }
 
@@ -51,15 +59,55 @@
       align-items: center;
       gap: 16px;
       margin-bottom: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-lg);
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid #e2e8f0;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .logo-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-img {
+      max-width: 32px;
+      max-height: 32px;
+      display: block;
+    }
+
+    .title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
     }
 
     .top-bar h1 {
       margin: 0;
-      font-size: 1.4rem;
+      font-size: 1.3rem;
+      color: var(--brand-dark);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
     .top-bar .subtitle {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
 
@@ -68,6 +116,7 @@
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
+      justify-content: flex-end;
     }
 
     label {
@@ -87,15 +136,73 @@
       border: 1px solid var(--border);
       font-size: 0.85rem;
       min-width: 80px;
+      background: #f9fafb;
     }
 
     input[type="number"] { text-align: right; }
     input[type="file"]   { font-size: 0.8rem; }
 
+    /* Generic buttons */
+    .btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #f1f5f9;
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn:hover {
+      background: #e2e8f0;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background: #1555a0;
+      border-color: #1555a0;
+    }
+
+    .btn-ghost {
+      background: #ffffff;
+      border-color: #d1d5db;
+      color: var(--text-main);
+    }
+    .btn-ghost:hover {
+      background: #f3f4f6;
+    }
+
+    /* Back button */
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: var(--text-main);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .back-button span {
+      font-size: 0.9rem;
+    }
+    .back-button:hover {
+      background: #f3f4f6;
+      border-color: #cbd5f5;
+    }
+
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 12px;
+      margin-top: 10px;
       margin-bottom: 8px;
     }
 
@@ -188,6 +295,7 @@
     .panel h2 {
       margin: 0;
       font-size: 1rem;
+      color: var(--brand-dark);
     }
 
     .panel-header small {
@@ -255,16 +363,8 @@
     }
 
     .inline-controls button {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #f1f5f9;
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
-
-    .inline-controls button:hover {
-      background: #e2e8f0;
+      /* use generic button styling */
+      font-size: 0.78rem;
     }
 
     .message {
@@ -287,10 +387,11 @@
       padding: 6px 10px;
       border-radius: 6px;
       border: 1px solid var(--border);
-      background: #e0ecff;
+      background: var(--accent-soft);
       font-size: 0.8rem;
       cursor: pointer;
-      margin-left: 8px;
+      margin-left: 4px;
+      color: var(--accent);
     }
 
     .sidebar-toggle:hover {
@@ -318,6 +419,14 @@
       .sidebar {
         width: 100%;
         right: -100%;
+      }
+
+      .top-bar {
+        align-items: flex-start;
+      }
+
+      .controls {
+        justify-content: flex-start;
       }
     }
 
@@ -439,41 +548,68 @@
 <body>
 <div class="page">
 
-  <!-- Sticky header: controls + KPI summary -->
-  <div class="sticky-header">
-    <header class="top-bar">
-      <div>
-        <h1>Warehouse Scheduling – Plan vs Actual</h1>
-        <div class="subtitle">
-          Multi-day · Multi-shift · Configurable tasks & MHE · HTML/JS prototype
+<!-- Sticky header: branding + controls + KPI summary -->
+<div class="sticky-header">
+  <header class="top-bar">
+
+    <div class="brand-wrap" style="display:flex; flex-direction:column; gap:2px;">
+
+      <!-- Text logo -->
+      <div class="logo-wrap" style="background: transparent; box-shadow: none; padding: 0;">
+        <div style="margin:0; font-size:1.1rem; font-weight:600;">
+          Warehouse <span style="color:#e63946;">Intelligence</span>
         </div>
       </div>
-      <div class="controls">
-        <label>
-          Date
-          <input type="date" id="shift-date">
-        </label>
-        <label>
-          Shift
-          <select id="shift-name">
-            <option value="AM">AM</option>
-            <option value="PM">PM</option>
-            <option value="Nights">Nights</option>
-          </select>
-        </label>
-        <label>
-          View
-          <select id="view-mode">
-            <option value="Shift">Shift</option>
-            <option value="Day">Day (all shifts)</option>
-            <option value="Week">Week (all days)</option>
-          </select>
-        </label>
-        <button type="button" id="btn-toggle-sidebar" class="sidebar-toggle">
-          Task &amp; MHE setup
-        </button>
+
+      <!-- Page title + subtitle -->
+      <div class="title-wrap" style="margin-top:-4px;">
+        <h1 style="margin:0; font-size:1.25rem;">Warehouse Scheduling – Plan vs Actual</h1>
+        <div class="subtitle" style="font-size:0.85rem; margin-top:2px;">
+          Multi-day · Multi-shift · Configurable tasks &amp; MHE · HTML/JS prototype
+        </div>
       </div>
-    </header>
+
+    </div>
+
+    <div class="controls">
+      <!-- Back to dashboard button -->
+      <button type="button"
+              class="back-button"
+              onclick="window.location.href='dashboard.html';">
+        <span>←</span>
+        <span>Back to dashboard</span>
+      </button>
+
+      <label>
+        Date
+        <input type="date" id="shift-date">
+      </label>
+      <label>
+        Shift
+        <select id="shift-name">
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+          <option value="Nights">Nights</option>
+        </select>
+      </label>
+      <label>
+        View
+        <select id="view-mode">
+          <option value="Shift">Shift</option>
+          <option value="Day">Day (all shifts)</option>
+          <option value="Week">Week (all days)</option>
+        </select>
+      </label>
+
+      <button type="button" id="btn-toggle-sidebar" class="sidebar-toggle">
+        Task &amp; MHE setup
+      </button>
+    </div>
+
+  </header>
+</div>
+
+
 
     <!-- KPI layout -->
     <section class="kpi-row">
@@ -525,7 +661,7 @@
   <!-- Upload / export section -->
   <section class="panel">
     <div class="panel-header">
-      <h2>Upload & export – Plan & Actual</h2>
+      <h2>Upload &amp; export – Plan &amp; Actual</h2>
       <small>
         Preferred CSV columns: Date, Shift, Task, PlanVolume, ActualVolume.
         Older format (Task, PlanVolume, ActualVolume) also accepted for the current day/shift.
@@ -536,9 +672,15 @@
         Import CSV
         <input type="file" id="csv-upload" accept=".csv,text/csv">
       </label>
-      <button type="button" id="btn-download-template">Download CSV template (current day/shift)</button>
-      <button type="button" id="btn-download-full-data">Download full dataset CSV</button>
-      <button type="button" id="btn-clear-volumes">Clear all volumes (all days/shifts)</button>
+      <button type="button" id="btn-download-template" class="btn btn-ghost">
+        Download CSV template (current day/shift)
+      </button>
+      <button type="button" id="btn-download-full-data" class="btn btn-ghost">
+        Download full dataset CSV
+      </button>
+      <button type="button" id="btn-clear-volumes" class="btn btn-ghost">
+        Clear all volumes (all days/shifts)
+      </button>
     </div>
     <div id="upload-message" class="message"></div>
     <div class="footer-note">
@@ -623,9 +765,15 @@
         To
         <input type="date" id="range-to">
       </label>
-      <button type="button" id="btn-refresh-range">Refresh range summary</button>
-      <button type="button" id="btn-download-range-csv">Download range summary CSV</button>
-      <button type="button" id="btn-print-range">Print / PDF</button>
+      <button type="button" id="btn-refresh-range" class="btn btn-ghost">
+        Refresh range summary
+      </button>
+      <button type="button" id="btn-download-range-csv" class="btn btn-ghost">
+        Download range summary CSV
+      </button>
+      <button type="button" id="btn-print-range" class="btn btn-primary">
+        Print / PDF
+      </button>
     </div>
     <table id="range-summary-table">
       <thead>

@@ -5,610 +5,733 @@
   <title>Warehouse Intelligence – Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    :root {
+      --wi-red: #dc2626;
+      --wi-red-dark: #b91c1c;
+      --bg: #f3f4f6;
+      --bg-card: #ffffff;
+      --border: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #020617;
-      color: #e5e7eb;
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: system-ui, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
+    /* HEADER */
     header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
       padding: 12px 20px;
-      border-bottom: 1px solid #1f2937;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #020617;
     }
-
-    header .brand {
-      font-weight: 600;
-      font-size: 1rem;
+    .brand {
+      font-size: 1.2rem;
+      font-weight: 700;
     }
-
-    header .brand span {
-      color: #dc2626;
-    }
-
-    header .user-info {
-      font-size: 0.85rem;
-      color: #9ca3af;
+    .brand span { color: var(--wi-red); }
+    .user-info {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 10px;
     }
-
-    header button {
+    #header-user-email {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    #btn-signout {
       padding: 6px 12px;
       border-radius: 999px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
+      border: 1px solid var(--border);
+      background: #fff;
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
     }
+    #btn-signout:hover { background: #f9fafb; }
 
-    main {
-      flex: 1;
-      padding: 16px 20px 28px;
-      max-width: 1400px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
+    /* LAYOUT */
+    main { flex: 1; }
     .layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
       display: flex;
-      gap: 24px;
+      gap: 20px;
     }
 
-    /* Sidebar */
+    /* SIDEBAR */
     .sidebar {
       width: 240px;
+      background: var(--bg-card);
       border-radius: 12px;
-      border: 1px solid #1f2937;
-      background: #020617;
+      border: 1px solid var(--border);
       padding: 12px 10px;
       height: fit-content;
     }
-
     .sidebar-section-title {
       font-size: 0.8rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #6b7280;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
       margin-bottom: 6px;
     }
-
     .nav-item {
-      display: flex;
-      align-items: center;
-      padding: 7px 9px;
+      padding: 8px 10px;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 0.85rem;
-      color: #e5e7eb;
       margin-bottom: 4px;
-      user-select: none;
+      font-size: 0.9rem;
     }
-
     .nav-item.active {
-      background: #1f2937;
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 600;
     }
-
-    .nav-item:hover {
-      background: #111827;
-    }
-
+    .nav-item:hover { background: #f3f4f6; }
     .sidebar-divider {
       height: 1px;
-      background: #111827;
-      margin: 10px 0;
+      background: var(--border);
+      margin: 12px 0;
     }
-
     .tools-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
       cursor: pointer;
       padding: 6px 2px;
       border-radius: 6px;
     }
-
-    .tools-header:hover {
-      background: #111827;
-    }
-
-    .tools-arrow {
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
+    .tools-header:hover { background: #f3f4f6; }
+    .tools-arrow { font-size: 0.8rem; color: var(--text-muted); }
     .tool-item {
       display: block;
-      padding: 6px 9px;
-      font-size: 0.85rem;
-      color: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--text-main);
       text-decoration: none;
-      border-radius: 8px;
-      margin-bottom: 4px;
+      font-size: 0.9rem;
     }
+    .tool-item:hover { background: #f3f4f6; }
 
-    .tool-item:hover {
-      background: #111827;
-    }
-
-    /* Content area */
-    .content {
-      flex: 1;
-    }
+    /* MAIN CONTENT */
+    .content { flex: 1; }
 
     .card {
-      background: #020617;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 12px;
-      border: 1px solid #1f2937;
-      padding: 16px 18px;
-      margin-bottom: 20px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.04);
     }
-
-    h2 {
-      font-size: 1.15rem;
-      margin-bottom: 12px;
-    }
+    h2 { margin: 0 0 10px; }
+    h3 { margin: 0 0 8px; }
+    .muted { color: var(--text-muted); font-size: 0.9rem; }
 
     .badge {
       display: inline-block;
       padding: 2px 8px;
       border-radius: 999px;
-      border: 1px solid #4b5563;
+      border: 1px solid var(--border);
       font-size: 0.75rem;
       margin-right: 6px;
     }
+    .badge.admin { background: #fee2e2; border-color: #fecaca; color: #991b1b; }
+    .badge.standard { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+    .badge.business { background: #dcfce7; border-color: #bbf7d0; color: #166534; }
+    .badge.single_user { background: #f3e8ff; border-color: #e9d5ff; color: #6b21a8; }
 
-    .badge.admin {
-      border-color: #f87171;
-      color: #fecaca;
-    }
-
-    .badge.standard {
-      border-color: #60a5fa;
-      color: #bfdbfe;
-    }
-
-    .badge.business {
-      border-color: #22c55e;
-      color: #bbf7d0;
-    }
-
-    .badge.single_user {
-      border-color: #a855f7;
-      color: #e9d5ff;
-    }
-
-    .muted {
-      font-size: 0.85rem;
-      color: #9ca3af;
-    }
-
-    .hidden { display: none; }
-
-    .btn-primary {
-      display: inline-block;
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: none;
-      background: #dc2626;
-      color: white;
+    .account-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      margin-top: 6px;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-      margin-top: 10px;
-    }
-
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; }
     th, td {
-      border-bottom: 1px solid #1f2937;
+      border-bottom: 1px solid var(--border);
       padding: 6px 4px;
       text-align: left;
+      font-size: 0.9rem;
     }
+    th { font-weight: 500; color: var(--text-muted); }
 
-    th {
-      color: #9ca3af;
-      font-weight: 500;
-    }
-
+    /* FORMS & BUTTONS */
     label {
       display: block;
       font-size: 0.8rem;
       margin-bottom: 4px;
-      color: #d1d5db;
+      color: var(--text-main);
     }
-
     input {
       width: 100%;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
       font-size: 0.9rem;
-      margin-bottom: 10px;
-      box-sizing: border-box;
     }
-
     input:focus {
       outline: none;
-      border-color: #60a5fa;
+      border-color: var(--wi-red);
+      box-shadow: 0 0 0 1px rgba(220,38,38,0.1);
     }
 
     .btn-small {
-      padding: 8px 12px;
+      padding: 7px 12px;
       border-radius: 999px;
+      background: #16a34a;
       border: none;
-      background: #22c55e;
-      color: #022c22;
-      font-size: 0.85rem;
-      font-weight: 600;
+      color: #fff;
       cursor: pointer;
-    }
-
-    .error {
-      color: #fecaca;
       font-size: 0.8rem;
-      margin-top: 6px;
     }
+    .btn-small:hover { background: #15803d; }
 
-    .success {
-      color: #bbf7d0;
-      font-size: 0.8rem;
-      margin-top: 6px;
+    .btn-reset {
+      background: #6366f1;
+      padding: 5px 9px;
+      border-radius: 8px;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      margin-right: 4px;
+    }
+    .btn-reset:hover { background: #4f46e5; }
+
+    .btn-promote {
+      background: #f97316;
+      padding: 5px 9px;
+      border-radius: 8px;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      margin-right: 4px;
+    }
+    .btn-promote:hover { background: #ea580c; }
+
+    .btn-delete {
+      background: #b91c1c;
+      padding: 5px 9px;
+      border-radius: 8px;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+    .btn-delete:hover { background: #991b1b; }
+
+    .btn-primary {
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: var(--wi-red);
+      color: #fff;
+      border: none;
+      display: inline-block;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .btn-primary:hover { background: var(--wi-red-dark); }
+
+    .error { color: #b91c1c; font-size: 0.8rem; margin-top: 6px; }
+    .success { color: #166534; font-size: 0.8rem; margin-top: 6px; }
+    .hidden { display: none; }
+
+    @media (max-width: 900px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; }
     }
   </style>
 </head>
 
 <body>
-  <header>
+
+<header>
+  <div class="header-inner">
     <div class="brand">Warehouse <span>Intelligence</span></div>
     <div class="user-info">
       <span id="header-user-email"></span>
       <button id="btn-signout">Sign out</button>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main>
-    <div class="layout">
+<main>
+  <div class="layout">
 
-      <!-- SIDEBAR -->
-      <aside class="sidebar">
-        <div class="sidebar-section-title">Navigation</div>
-        <div id="nav-overview" class="nav-item active">Overview</div>
-        <div id="nav-users" class="nav-item">Users</div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section-title">Navigation</div>
+      <div id="nav-overview" class="nav-item active">Overview</div>
+      <div id="nav-users" class="nav-item">Users</div>
+      <div id="nav-settings" class="nav-item">Settings</div>
 
-        <div class="sidebar-divider"></div>
+      <div class="sidebar-divider"></div>
 
-        <div class="tools-header" id="tools-toggle">
-          <div class="sidebar-section-title" style="margin-bottom:0;">Tools</div>
-          <span class="tools-arrow" id="tools-arrow">▾</span>
+      <div class="tools-header" id="tools-toggle">
+        <span class="sidebar-section-title" style="margin-bottom:0;">Tools</span>
+        <span class="tools-arrow" id="tools-arrow">▾</span>
+      </div>
+      <div id="sidebar-tools-list">
+        <a href="warehouse_scheduling.html" class="tool-item">Scheduling tool</a>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <section class="content">
+
+      <!-- ACCOUNT -->
+      <div class="card">
+        <h2>Account</h2>
+        <div class="muted" id="account-name"></div>
+        <div style="margin-top:6px;">
+          <span id="badge-role" class="badge"></span>
+          <span id="badge-account-type" class="badge"></span>
         </div>
-        <div id="sidebar-tools-list">
-          <a href="warehouse_scheduling.html" class="tool-item">Scheduling tool</a>
-          <!-- in future add more tools here -->
+        <div class="muted" style="margin-top:6px;">
+          Account ID: <span id="account-id" class="account-id"></span>
         </div>
-      </aside>
-
-      <!-- MAIN CONTENT -->
-      <section class="content">
-
-        <!-- Account Card -->
-        <div class="card" id="account-card">
-          <h2>Account</h2>
-          <div class="muted" id="account-name"></div>
-          <div style="margin-top:6px;">
-            <span id="badge-role" class="badge"></span>
-            <span id="badge-account-type" class="badge"></span>
-          </div>
-          <div class="muted" style="margin-top:6px;">
-            Account ID: <span id="account-id" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;"></span>
-          </div>
+        <div class="muted" style="margin-top:6px;">
+          All users and tools are scoped to this account.
         </div>
+      </div>
 
-        <!-- Overview Section -->
-        <section id="section-overview">
-          <div class="card">
-            <h2>Scheduling tool</h2>
-            <p class="muted">
-              Open your live scheduling tool. All entries are stored against your business account.
-            </p>
-            <a href="warehouse_scheduling.html" class="btn-primary">Open scheduling tool</a>
-          </div>
-        </section>
-
-        <!-- Users Section -->
-        <section id="section-users" class="hidden">
-          <div class="card">
-            <h2>Users</h2>
-            <p class="muted" id="users-intro"></p>
-
-            <div id="users-list-container" class="hidden">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Email</th>
-                    <th>Name</th>
-                    <th>Role</th>
-                    <th>Created</th>
-                  </tr>
-                </thead>
-                <tbody id="users-table-body"></tbody>
-              </table>
-            </div>
-
-            <div id="single-user-note" class="hidden">
-              <p class="muted">
-                This is a <strong>Single-user</strong> account. Additional users cannot be added.
-              </p>
-            </div>
-
-            <div id="add-user-card" class="hidden" style="margin-top:14px; border-top:1px solid #1f2937; padding-top:12px;">
-              <h3 style="font-size:0.95rem; margin:0 0 8px;">Add a standard user</h3>
-              <p class="muted">
-                The new user will be created as <strong>Standard</strong> and linked to this business.
-              </p>
-              <form id="add-user-form">
-                <label for="new-user-name">Full name</label>
-                <input id="new-user-name" required />
-
-                <label for="new-user-email">Email</label>
-                <input id="new-user-email" type="email" required />
-
-                <label for="new-user-password">Password</label>
-                <input id="new-user-password" type="password" required />
-
-                <label for="new-user-password-confirm">Confirm password</label>
-                <input id="new-user-password-confirm" type="password" required />
-
-                <button class="btn-small" id="btn-add-user" type="submit">Create user</button>
-              </form>
-              <div id="add-user-message"></div>
-            </div>
-          </div>
-        </section>
-
+      <!-- OVERVIEW -->
+      <section id="section-overview">
+        <div class="card">
+          <h2>Scheduling tool</h2>
+          <p class="muted">
+            Plan MHE and labour, track indirect time, and compare plan vs actual by shift.
+          </p>
+          <a href="warehouse_scheduling.html" class="btn-primary">Open scheduling tool</a>
+        </div>
       </section>
-    </div>
-  </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // TODO: set these to your real project values
-    const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
+      <!-- USERS -->
+      <section id="section-users" class="hidden">
+        <div class="card">
+          <h2>Users</h2>
+          <p class="muted" id="users-intro"></p>
 
-    const { createClient } = supabase;
-    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          <div id="users-list-container" class="hidden">
+            <table>
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body"></tbody>
+            </table>
+          </div>
 
-    let currentProfile = null;
+          <div id="single-user-note" class="hidden">
+            <p class="muted">
+              This account is configured as <strong>Single user</strong>. Additional users cannot be added.
+            </p>
+          </div>
 
-    const headerEmail = document.getElementById("header-user-email");
-    const accountName = document.getElementById("account-name");
-    const badgeRole = document.getElementById("badge-role");
-    const badgeAccountType = document.getElementById("badge-account-type");
-    const accountIdSpan = document.getElementById("account-id");
+          <div id="add-user-card" class="hidden" style="margin-top:14px;">
+            <h3>Add a standard user</h3>
+            <form id="add-user-form" style="margin-top:8px;">
+              <label>Full name</label>
+              <input id="new-user-name" required />
 
-    const navOverview = document.getElementById("nav-overview");
-    const navUsers = document.getElementById("nav-users");
-    const sectionOverview = document.getElementById("section-overview");
-    const sectionUsers = document.getElementById("section-users");
+              <label>Email</label>
+              <input id="new-user-email" type="email" required />
 
-    const toolsToggle = document.getElementById("tools-toggle");
-    const toolsArrow = document.getElementById("tools-arrow");
-    const toolsList = document.getElementById("sidebar-tools-list");
+              <label>Password</label>
+              <input id="new-user-password" type="password" required />
 
-    const usersIntro = document.getElementById("users-intro");
-    const usersTableBody = document.getElementById("users-table-body");
-    const usersListContainer = document.getElementById("users-list-container");
-    const singleUserNote = document.getElementById("single-user-note");
-    const addUserCard = document.getElementById("add-user-card");
-    const addUserForm = document.getElementById("add-user-form");
-    const addUserMsg = document.getElementById("add-user-message");
-    const btnSignout = document.getElementById("btn-signout");
+              <label>Confirm password</label>
+              <input id="new-user-password-confirm" type="password" required />
 
-    function showSection(section) {
-      if (section === "overview") {
-        navOverview.classList.add("active");
-        navUsers.classList.remove("active");
-        sectionOverview.classList.remove("hidden");
-        sectionUsers.classList.add("hidden");
-      } else {
-        navUsers.classList.add("active");
-        navOverview.classList.remove("active");
-        sectionUsers.classList.remove("hidden");
-        sectionOverview.classList.add("hidden");
+              <button class="btn-small" type="submit">Create user</button>
+            </form>
+            <div id="add-user-message"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="section-settings" class="hidden">
+        <div class="card">
+          <h2>Settings</h2>
+          <h3 style="margin-top:6px;">Change your password</h3>
+          <p class="muted">
+            This will update the password for your own account only.
+          </p>
+          <form id="password-form" style="margin-top:10px;">
+            <label>New password</label>
+            <input id="password-new" type="password" required />
+
+            <label>Confirm new password</label>
+            <input id="password-new-confirm" type="password" required />
+
+            <button class="btn-small" type="submit">Update password</button>
+          </form>
+          <div id="password-message"></div>
+        </div>
+      </section>
+
+    </section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
+
+const { createClient } = supabase;
+const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentProfile = null;
+
+/* ELEMENTS */
+const headerEmail = document.getElementById("header-user-email");
+const btnSignout = document.getElementById("btn-signout");
+
+const navOverview = document.getElementById("nav-overview");
+const navUsers = document.getElementById("nav-users");
+const navSettings = document.getElementById("nav-settings");
+const sectionOverview = document.getElementById("section-overview");
+const sectionUsers = document.getElementById("section-users");
+const sectionSettings = document.getElementById("section-settings");
+
+const toolsToggle = document.getElementById("tools-toggle");
+const toolsArrow = document.getElementById("tools-arrow");
+const toolsList = document.getElementById("sidebar-tools-list");
+
+const accountName = document.getElementById("account-name");
+const badgeRole = document.getElementById("badge-role");
+const badgeAccountType = document.getElementById("badge-account-type");
+const accountIdSpan = document.getElementById("account-id");
+
+const usersIntro = document.getElementById("users-intro");
+const usersTableBody = document.getElementById("users-table-body");
+const usersListContainer = document.getElementById("users-list-container");
+const singleUserNote = document.getElementById("single-user-note");
+const addUserCard = document.getElementById("add-user-card");
+const addUserForm = document.getElementById("add-user-form");
+const addUserMsg = document.getElementById("add-user-message");
+
+const passwordForm = document.getElementById("password-form");
+const passwordMsg = document.getElementById("password-message");
+
+/* NAVIGATION */
+function showSection(section) {
+  navOverview.classList.remove("active");
+  navUsers.classList.remove("active");
+  navSettings.classList.remove("active");
+  sectionOverview.classList.add("hidden");
+  sectionUsers.classList.add("hidden");
+  sectionSettings.classList.add("hidden");
+
+  if (section === "overview") {
+    navOverview.classList.add("active");
+    sectionOverview.classList.remove("hidden");
+  } else if (section === "users") {
+    navUsers.classList.add("active");
+    sectionUsers.classList.remove("hidden");
+  } else if (section === "settings") {
+    navSettings.classList.add("active");
+    sectionSettings.classList.remove("hidden");
+  }
+}
+
+navOverview.addEventListener("click", () => showSection("overview"));
+navUsers.addEventListener("click", () => showSection("users"));
+navSettings.addEventListener("click", () => showSection("settings"));
+
+/* TOOLS TOGGLE */
+let toolsExpanded = true;
+toolsToggle.addEventListener("click", () => {
+  toolsExpanded = !toolsExpanded;
+  toolsList.classList.toggle("hidden", !toolsExpanded);
+  toolsArrow.textContent = toolsExpanded ? "▾" : "▸";
+});
+
+/* SIGN OUT */
+btnSignout.addEventListener("click", async () => {
+  await client.auth.signOut();
+  window.location.href = "signin.html";
+});
+
+/* HELPERS */
+function setAddUserMessage(text, type) {
+  addUserMsg.textContent = text || "";
+  addUserMsg.className = type || "";
+}
+function setPasswordMessage(text, type) {
+  passwordMsg.textContent = text || "";
+  passwordMsg.className = type || "";
+}
+
+/* INITIAL LOAD */
+(async () => {
+  const { data: sessionData } = await client.auth.getSession();
+  if (!sessionData?.session) {
+    window.location.href = "signin.html";
+    return;
+  }
+
+  const authUser = sessionData.session.user;
+  headerEmail.textContent = authUser.email;
+
+  // Load profile
+  let { data: profile } = await client
+    .from("users")
+    .select("*")
+    .eq("id", authUser.id)
+    .single();
+
+  if (!profile) {
+    // New user fallback
+    profile = {
+      id: authUser.id,
+      email: authUser.email,
+      full_name: authUser.user_metadata?.full_name || authUser.email,
+      role: "admin",
+      account_type: "single_user",
+      business_owner_id: authUser.id,
+      is_active: true
+    };
+    await client.from("users").upsert(profile);
+  }
+
+  // Block deleted users
+  if (profile.is_active === false) {
+    alert("This user has been deactivated. Please contact your administrator.");
+    await client.auth.signOut();
+    window.location.href = "signin.html";
+    return;
+  }
+
+  currentProfile = profile;
+
+  // Account card
+  accountName.textContent = profile.full_name || profile.email || "";
+  badgeRole.textContent = profile.role === "admin" ? "Admin" : "Standard";
+  badgeRole.classList.add(profile.role === "admin" ? "admin" : "standard");
+
+  badgeAccountType.textContent =
+    profile.account_type === "business" ? "Business account" : "Single user";
+  badgeAccountType.classList.add(profile.account_type);
+
+  const rawId = profile.business_owner_id || profile.id;
+  const shortId = "WI-" + rawId.slice(0, 8).toUpperCase();
+  accountIdSpan.textContent = shortId;
+  accountIdSpan.title = rawId;
+
+  // Users section config
+  if (profile.account_type === "single_user") {
+    usersIntro.textContent = "This is a single-user account.";
+    singleUserNote.classList.remove("hidden");
+    addUserCard.classList.add("hidden");
+  } else if (profile.role !== "admin") {
+    usersIntro.textContent = "You can view users in your business. Only admins can manage them.";
+    singleUserNote.classList.add("hidden");
+    addUserCard.classList.add("hidden");
+  } else {
+    usersIntro.textContent = "Manage users under this business account.";
+    singleUserNote.classList.add("hidden");
+    addUserCard.classList.remove("hidden");
+  }
+
+  // Load active users in business
+  const businessOwnerId = profile.business_owner_id || profile.id;
+  const { data: users } = await client
+    .from("users")
+    .select("*")
+    .eq("business_owner_id", businessOwnerId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: true });
+
+  if (users?.length) {
+    usersListContainer.classList.remove("hidden");
+    usersTableBody.innerHTML = "";
+
+    users.forEach(u => {
+      const tr = document.createElement("tr");
+      const canManage = currentProfile.role === "admin";
+      const isSelf = u.id === currentProfile.id;
+
+      let actionsHtml = "";
+      if (canManage && !isSelf) {
+        actionsHtml = `
+          <button class="btn-reset" data-email="${u.email}">Reset</button>
+          ${
+            u.role !== "admin"
+              ? `<button class="btn-promote" data-id="${u.id}">Promote</button>`
+              : ""
+          }
+          <button class="btn-delete" data-id="${u.id}">Delete</button>
+        `;
       }
-    }
 
-    navOverview.addEventListener("click", () => showSection("overview"));
-    navUsers.addEventListener("click", () => showSection("users"));
+      tr.innerHTML = `
+        <td>${u.email}</td>
+        <td>${u.full_name || ""}</td>
+        <td>${u.role}</td>
+        <td>${u.created_at ? new Date(u.created_at).toLocaleString() : ""}</td>
+        <td>${actionsHtml}</td>
+      `;
 
-    // Tools expand / collapse
-    let toolsExpanded = true;
-    toolsToggle.addEventListener("click", () => {
-      toolsExpanded = !toolsExpanded;
-      if (toolsExpanded) {
-        toolsList.classList.remove("hidden");
-        toolsArrow.textContent = "▾";
-      } else {
-        toolsList.classList.add("hidden");
-        toolsArrow.textContent = "▸";
-      }
+      usersTableBody.appendChild(tr);
     });
 
-    btnSignout.addEventListener("click", async () => {
-      await client.auth.signOut();
-      window.location.href = "signin.html";
-    });
-
-    function setAddUserMessage(text, type) {
-      addUserMsg.textContent = text || "";
-      addUserMsg.className = "";
-      if (type === "error") addUserMsg.classList.add("error");
-      if (type === "success") addUserMsg.classList.add("success");
-    }
-
-    // INITIAL LOAD
-    (async () => {
-      const { data: sessionData } = await client.auth.getSession();
-      if (!sessionData?.session) {
-        window.location.href = "signin.html";
-        return;
-      }
-
-      const user = sessionData.session.user;
-      headerEmail.textContent = user.email || "";
-
-      // Load profile; create default if missing
-      let { data: profile, error: profileError } = await client
-        .from("users")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile || profileError) {
-        profile = {
-          id: user.id,
-          email: user.email,
-          full_name: user.user_metadata?.full_name || user.email,
-          role: "admin",
-          account_type: "single_user",
-          business_owner_id: user.id
-        };
-        await client.from("users").upsert(profile, { onConflict: "id" });
-      }
-
-      currentProfile = profile;
-
-      // Fill account card
-      accountName.textContent = profile.full_name || profile.email || "";
-      badgeRole.textContent = profile.role;
-      badgeRole.classList.add(profile.role);
-
-      badgeAccountType.textContent =
-        profile.account_type === "business" ? "Business account" : "Single user";
-      badgeAccountType.classList.add(profile.account_type);
-
-      const rawAccountId = profile.business_owner_id || profile.id || "";
-      const accountNumber = rawAccountId
-        ? "WI-" + rawAccountId.slice(0, 8).toUpperCase()
-        : "Unknown";
-      accountIdSpan.textContent = accountNumber;
-      accountIdSpan.title = rawAccountId || "";
-
-      // Configure Users section vis
-      if (profile.account_type === "single_user") {
-        usersIntro.textContent = "This is a single-user account.";
-        singleUserNote.classList.remove("hidden");
-        addUserCard.classList.add("hidden");
-      } else if (profile.role !== "admin") {
-        usersIntro.textContent = "Only administrators can add or change users.";
-        singleUserNote.classList.add("hidden");
-        addUserCard.classList.add("hidden");
-      } else {
-        usersIntro.textContent = "Manage users under this business account.";
-        singleUserNote.classList.add("hidden");
-        addUserCard.classList.remove("hidden");
-      }
-
-      // Load users for this business
-      const businessOwnerId = profile.business_owner_id || profile.id;
-      const { data: users } = await client
-        .from("users")
-        .select("*")
-        .eq("business_owner_id", businessOwnerId)
-        .order("created_at", { ascending: true });
-
-      if (users && users.length) {
-        usersListContainer.classList.remove("hidden");
-        usersTableBody.innerHTML = "";
-        users.forEach(u => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${u.email || ""}</td>
-            <td>${u.full_name || ""}</td>
-            <td>${u.role || ""}</td>
-            <td>${u.created_at ? new Date(u.created_at).toLocaleString() : ""}</td>
-          `;
-          usersTableBody.appendChild(tr);
+    // Attach admin-only actions
+    if (currentProfile.role === "admin") {
+      // Reset password (email link)
+      document.querySelectorAll(".btn-reset").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const email = btn.dataset.email;
+          await client.auth.resetPasswordForEmail(email);
+          alert("Password reset email sent to " + email);
         });
-      }
-    })();
-
-    // Add user handler (admin + business only)
-    addUserForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      setAddUserMessage("");
-
-      if (!currentProfile || currentProfile.account_type !== "business" || currentProfile.role !== "admin") {
-        setAddUserMessage("You are not allowed to add users.", "error");
-        return;
-      }
-
-      const fullName = document.getElementById("new-user-name").value.trim();
-      const email = document.getElementById("new-user-email").value.trim();
-      const password = document.getElementById("new-user-password").value;
-      const passwordConfirm = document.getElementById("new-user-password-confirm").value;
-
-      if (password !== passwordConfirm) {
-        setAddUserMessage("Passwords do not match.", "error");
-        return;
-      }
-
-      const transient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: { persistSession: false }
       });
 
-      // Create auth user
-      const { data: newUserData, error: newUserError } = await transient.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName } }
+      // Promote to admin
+      document.querySelectorAll(".btn-promote").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const userId = btn.dataset.id;
+          if (!confirm("Promote this user to admin?")) return;
+          const { error } = await client
+            .from("users")
+            .update({ role: "admin" })
+            .eq("id", userId);
+          if (error) {
+            alert("Error promoting user: " + error.message);
+          } else {
+            window.location.reload();
+          }
+        });
       });
 
-      if (newUserError) {
-        setAddUserMessage(newUserError.message, "error");
-        return;
-      }
-
-      const newUser = newUserData.user;
-
-      // Upsert profile row
-      const { error: upsertError } = await client
-        .from("users")
-        .upsert({
-          id: newUser.id,
-          email,
-          full_name: fullName,
-          role: "standard",
-          account_type: "business",
-          business_owner_id: currentProfile.business_owner_id || currentProfile.id
+      // Delete user (soft delete: is_active = false)
+      document.querySelectorAll(".btn-delete").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const userId = btn.dataset.id;
+          if (!confirm("Delete this user? They will be deactivated and unable to access the account.")) return;
+          const { error } = await client
+            .from("users")
+            .update({ is_active: false })
+            .eq("id", userId);
+          if (error) {
+            alert("Error deleting user: " + error.message);
+          } else {
+            window.location.reload();
+          }
         });
+      });
+    }
+  }
+})();
 
-      if (upsertError) {
-        setAddUserMessage(upsertError.message, "error");
-        return;
-      }
+/* ADD USER – ADMIN + BUSINESS ONLY */
+addUserForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  setAddUserMessage("", "");
 
-      setAddUserMessage("User created successfully.", "success");
-      setTimeout(() => window.location.reload(), 800);
+  if (!currentProfile || currentProfile.account_type !== "business" || currentProfile.role !== "admin") {
+    setAddUserMessage("You are not allowed to add users.", "error");
+    return;
+  }
+
+  const fullName = document.getElementById("new-user-name").value.trim();
+  const email = document.getElementById("new-user-email").value.trim();
+  const password = document.getElementById("new-user-password").value;
+  const confirm = document.getElementById("new-user-password-confirm").value;
+
+  if (password !== confirm) {
+    setAddUserMessage("Passwords do not match.", "error");
+    return;
+  }
+
+  const transient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false }
+  });
+
+  const { data, error } = await transient.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName } }
+  });
+
+  if (error) {
+    setAddUserMessage(error.message, "error");
+    return;
+  }
+
+  const newUser = data.user;
+
+  const { error: upsertErr } = await client
+    .from("users")
+    .upsert({
+      id: newUser.id,
+      email,
+      full_name: fullName,
+      role: "standard",
+      account_type: "business",
+      business_owner_id: currentProfile.business_owner_id || currentProfile.id,
+      is_active: true
     });
-  </script>
+
+  if (upsertErr) {
+    setAddUserMessage(upsertErr.message, "error");
+    return;
+  }
+
+  setAddUserMessage("User created successfully.", "success");
+  setTimeout(() => window.location.reload(), 800);
+});
+
+/* SETTINGS – CHANGE OWN PASSWORD */
+passwordForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  setPasswordMessage("", "");
+
+  const pw1 = document.getElementById("password-new").value;
+  const pw2 = document.getElementById("password-new-confirm").value;
+
+  if (pw1 !== pw2) {
+    setPasswordMessage("Passwords do not match.", "error");
+    return;
+  }
+
+  const { error } = await client.auth.updateUser({ password: pw1 });
+
+  if (error) {
+    setPasswordMessage(error.message, "error");
+    return;
+  }
+
+  setPasswordMessage("Password updated. You may be asked to sign in again on other devices.", "success");
+  passwordForm.reset();
+});
+</script>
+
 </body>
 </html>

@@ -1,1066 +1,447 @@
 <!doctype html>
-<html
-  lang="en"
->
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta property="og:url" content="https://url/" />
-    <title>Warehouse Intelligence</title>
-    <meta property="og:title" content="Warehouse Intelligence" />
-    <meta property="og:type" content="website" />
-    <meta
-      name="keywords"
-      content="warehouse, inventory, labour, logistics, operations"
-    />
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Warehouse Intelligence</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --wi-red: #dc2626;
+      --wi-red-dark: #b91c1c;
+      --bg: #f3f4f6;
+      --bg-card: #ffffff;
+      --border-subtle: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+    }
 
-    <!-- DESIGN SYSTEM / THEME -->
-    <style>
-      :root {
-        --wi-bg: #050b1a;
-        --wi-bg-soft: #0b1224;
-        --wi-card-bg: #11172b;
-        --wi-border: #242b42;
-        --wi-accent: #ff7a3c;
-        --wi-accent-soft: rgba(255, 122, 60, 0.12);
-        --wi-text-main: #f7f7ff;
-        --wi-text-soft: #c4c7d9;
-        --wi-text-muted: #8b90a6;
-        --wi-ok: #3ccf91;
-        --wi-danger: #ff4f5e;
-        --wi-radius-lg: 18px;
-        --wi-radius-pill: 999px;
-        --wi-shadow-soft: 0 22px 48px rgba(0, 0, 0, 0.25);
-        --wi-container-width: 1120px;
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .logo .highlight {
+      color: var(--wi-red);
+    }
+
+    .logo-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .header-cta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-outline {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: #ffffff;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn-outline:hover {
+      background: #f9fafb;
+    }
+
+    /* MAIN LAYOUT */
+    main {
+      flex: 1;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+    }
+
+    /* HERO */
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: 28px;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .hero-text-eyebrow {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--wi-red);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .hero-title {
+      font-size: clamp(2.1rem, 3vw, 2.6rem);
+      line-height: 1.15;
+      margin: 0 0 10px;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin: 0 0 18px;
+      max-width: 520px;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 999px;
+      border: none;
+      background: var(--wi-red);
+      color: #ffffff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: var(--wi-red-dark);
+    }
+
+    .btn-ghost {
+      display: inline-block;
+      padding: 9px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: transparent;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn-ghost:hover {
+      background: #e5e7eb;
+    }
+
+    .hero-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .hero-panel {
+      background: var(--bg-card);
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      padding: 16px 16px 14px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    .hero-panel-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .hero-panel-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .hero-panel-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px dashed #e5e7eb;
+    }
+
+    .hero-panel-list li:last-child {
+      border-bottom: none;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #fee2e2;
+      color: #991b1b;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* TOOLS OVERVIEW */
+    .section-title {
+      font-size: 1.3rem;
+      margin-bottom: 4px;
+    }
+
+    .section-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    .tool-card {
+      background: var(--bg-card);
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .tool-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .tool-description {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .tool-label {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      border: 1px solid #e5e7eb;
+      color: var(--text-muted);
+    }
+
+    .tool-label-live {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #166534;
+    }
+
+    .tool-label-soon {
+      background: #eef2ff;
+      border-color: #c7d2fe;
+      color: #3730a3;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .tools-grid {
+        grid-template-columns: minmax(0, 1fr);
       }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
-        font-family:
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          sans-serif;
-        background: radial-gradient(
-          circle at top,
-          #11172b 0,
-          #050814 45%,
-          #02030a 100%
-        );
-        color: var(--wi-text-main);
-        line-height: 1.5;
-        -webkit-font-smoothing: antialiased;
-      }
-
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
-
-      img {
-        max-width: 100%;
-        display: block;
-      }
-
-      .wi-container {
-        max-width: var(--wi-container-width);
-        margin: 0 auto;
-        padding: 0 1.5rem;
-      }
-
-      /* NAVBAR */
-      .wi-nav {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        backdrop-filter: blur(14px);
-        background: linear-gradient(
-          to bottom,
-          rgba(5, 8, 20, 0.94),
-          rgba(5, 8, 20, 0.7),
-          transparent
-        );
-        border-bottom: 1px solid rgba(36, 43, 66, 0.6);
-      }
-
-      .wi-nav-inner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.85rem 0;
-        gap: 1rem;
-      }
-
-      .wi-logo {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-      }
-
-      .wi-logo-mark {
-        width: 32px;
-        height: 32px;
-        border-radius: 10px;
-        background: conic-gradient(
-          from 220deg,
-          #ff7a3c,
-          #ffb14d,
-          #3ccf91,
-          #4d9bff,
-          #ff7a3c
-        );
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
-        position: relative;
-      }
-
-      .wi-logo-mark::after {
-        content: "";
-        width: 19px;
-        height: 19px;
-        border-radius: 7px;
-        background: #050814;
-      }
-
-      .wi-logo-text {
-        display: flex;
+      .header-inner {
         flex-direction: column;
-        gap: 2px;
+        align-items: flex-start;
       }
 
-      .wi-logo-text-main {
-        font-weight: 650;
-        letter-spacing: 0.03em;
-        font-size: 0.98rem;
-        text-transform: uppercase;
-      }
-
-      .wi-logo-text-sub {
-        font-size: 0.72rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--wi-text-muted);
-      }
-
-      .wi-nav-links {
-        display: flex;
-        gap: 1.4rem;
-        font-size: 0.88rem;
-        color: var(--wi-text-soft);
-      }
-
-      .wi-nav-links a {
-        padding: 0.3rem 0;
-        border-bottom: 2px solid transparent;
-      }
-
-      .wi-nav-links a:hover {
-        color: var(--wi-text-main);
-        border-bottom-color: var(--wi-accent);
-      }
-
-      .wi-nav-cta {
-        display: flex;
-        align-items: center;
-        gap: 0.7rem;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-      }
-
-      .wi-tag-chip {
-        font-size: 0.72rem;
-        padding: 0.25rem 0.7rem;
-        border-radius: var(--wi-radius-pill);
-        border: 1px solid rgba(60, 207, 145, 0.28);
-        color: var(--wi-ok);
-        background: rgba(6, 44, 33, 0.5);
-      }
-
-      .wi-btn {
-        border-radius: var(--wi-radius-pill);
-        padding: 0.5rem 1.25rem;
-        font-size: 0.86rem;
-        border: 1px solid transparent;
-        cursor: pointer;
-        background: transparent;
-        color: var(--wi-text-soft);
-        transition: all 0.16s ease-out;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-      }
-
-      .wi-btn-primary {
-        background: linear-gradient(135deg, var(--wi-accent), #ffb14d);
-        color: #050814;
-        font-weight: 600;
-        box-shadow: var(--wi-shadow-soft);
-      }
-
-      .wi-btn-primary:hover {
-        filter: brightness(1.04);
-        transform: translateY(-1px);
-      }
-
-      .wi-btn-outline {
-        border-color: var(--wi-border);
-      }
-
-      .wi-btn-outline:hover {
-        border-color: var(--wi-accent);
-        color: var(--wi-text-main);
-        background: rgba(255, 122, 60, 0.05);
-      }
-
-      /* HERO */
-      .wi-hero {
-        padding: 4.5rem 0 4rem;
-      }
-
-      .wi-hero-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.4fr);
-        gap: 3rem;
-        align-items: center;
-      }
-
-      .wi-hero-eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        font-size: 0.78rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: var(--wi-radius-pill);
-        background: rgba(9, 15, 32, 0.82);
-        border: 1px solid rgba(36, 43, 66, 0.9);
-        margin-bottom: 1.25rem;
-      }
-
-      .wi-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: var(--wi-ok);
-        box-shadow: 0 0 0 4px rgba(60, 207, 145, 0.23);
-      }
-
-      .wi-hero-title {
-        font-size: clamp(2.4rem, 3.1vw, 3rem);
-        font-weight: 720;
-        letter-spacing: 0.01em;
-        margin-bottom: 0.75rem;
-      }
-
-      .wi-hero-highlight {
-        background: linear-gradient(135deg, #ffb14d, #ff7a3c, #ff4f5e);
-        -webkit-background-clip: text;
-        color: transparent;
-      }
-
-      .wi-hero-subtitle {
-        font-size: 0.98rem;
-        max-width: 32rem;
-        color: var(--wi-text-soft);
-        margin-bottom: 1.7rem;
-      }
-
-      .wi-hero-actions {
-        display: flex;
-        gap: 0.9rem;
-        margin-bottom: 1.7rem;
+      .header-cta {
+        width: 100%;
+        justify-content: flex-start;
         flex-wrap: wrap;
       }
 
-      .wi-hero-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.8rem;
-        font-size: 0.8rem;
-        color: var(--wi-text-muted);
+      .hero {
+        margin-top: 10px;
       }
+    }
 
-      .wi-hero-meta span strong {
-        display: block;
-        font-size: 1rem;
-        color: var(--wi-text-soft);
-      }
+    footer {
+      text-align: center;
+      padding: 18px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-subtle);
+      background: #f9fafb;
+    }
+  </style>
+</head>
 
-      /* HERO RIGHT PANEL */
-      .wi-hero-panel {
-        background: radial-gradient(
-          circle at top left,
-          #20315f 0,
-          #050814 54%
-        );
-        border-radius: 22px;
-        border: 1px solid rgba(61, 72, 119, 0.85);
-        padding: 1.45rem 1.5rem 1.6rem;
-        box-shadow: var(--wi-shadow-soft);
-        position: relative;
-        overflow: hidden;
-      }
+<body>
 
-      .wi-hero-panel-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        font-size: 0.82rem;
-        color: var(--wi-text-soft);
-      }
-
-      .wi-pill {
-        border-radius: var(--wi-radius-pill);
-        padding: 0.22rem 0.65rem;
-        background: rgba(5, 8, 20, 0.65);
-        border: 1px solid rgba(132, 142, 199, 0.55);
-        font-size: 0.72rem;
-      }
-
-      .wi-hero-metrics {
-        background: rgba(5, 8, 20, 0.85);
-        border-radius: 15px;
-        border: 1px solid rgba(49, 61, 104, 0.85);
-        padding: 0.9rem 1rem;
-        margin-bottom: 1.1rem;
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.9rem;
-        font-size: 0.78rem;
-      }
-
-      .wi-hero-metric-label {
-        color: var(--wi-text-muted);
-        margin-bottom: 0.25rem;
-      }
-
-      .wi-hero-metric-value {
-        font-size: 1rem;
-        font-weight: 600;
-      }
-
-      .wi-hero-metric-badge {
-        font-size: 0.72rem;
-        margin-top: 0.18rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.08rem 0.55rem;
-        border-radius: var(--wi-radius-pill);
-        background: rgba(6, 44, 33, 0.9);
-        color: var(--wi-ok);
-      }
-
-      .wi-hero-status-list {
-        margin-top: 0.1rem;
-        font-size: 0.8rem;
-        border-radius: 15px;
-        border: 1px dashed rgba(76, 88, 136, 0.9);
-        padding: 0.75rem 0.9rem;
-        background: rgba(5, 8, 20, 0.8);
-        display: flex;
-        flex-direction: column;
-        gap: 0.4rem;
-      }
-
-      .wi-hero-status-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.8rem;
-      }
-
-      .wi-hero-status-label {
-        color: var(--wi-text-soft);
-      }
-
-      .wi-hero-pill-ok {
-        padding: 0.17rem 0.6rem;
-        border-radius: var(--wi-radius-pill);
-        background: rgba(6, 44, 33, 0.78);
-        color: var(--wi-ok);
-        font-size: 0.72rem;
-      }
-
-      .wi-hero-pill-risk {
-        padding: 0.17rem 0.6rem;
-        border-radius: var(--wi-radius-pill);
-        background: rgba(63, 12, 21, 0.82);
-        color: var(--wi-danger);
-        font-size: 0.72rem;
-      }
-
-      .wi-hero-footnote {
-        margin-top: 0.7rem;
-        font-size: 0.7rem;
-        color: var(--wi-text-muted);
-      }
-
-      /* SECTIONS COMMON */
-      section {
-        padding: 3.5rem 0;
-      }
-
-      .wi-section-heading {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-      }
-
-      .wi-section-title {
-        font-size: 1.4rem;
-        font-weight: 620;
-      }
-
-      .wi-section-description {
-        font-size: 0.92rem;
-        color: var(--wi-text-soft);
-        max-width: 30rem;
-      }
-
-      /* FEATURE GRID */
-      .wi-feature-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1.4rem;
-      }
-
-      .wi-card {
-        background: var(--wi-bg-soft);
-        border-radius: var(--wi-radius-lg);
-        border: 1px solid var(--wi-border);
-        padding: 1.2rem 1.25rem 1.35rem;
-        font-size: 0.88rem;
-      }
-
-      .wi-card-label {
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--wi-text-muted);
-        margin-bottom: 0.35rem;
-      }
-
-      .wi-card-title {
-        font-size: 1.02rem;
-        font-weight: 600;
-        margin-bottom: 0.35rem;
-      }
-
-      .wi-card-body {
-        color: var(--wi-text-soft);
-        margin-bottom: 0.65rem;
-      }
-
-      .wi-chip-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-      }
-
-      .wi-chip {
-        font-size: 0.72rem;
-        padding: 0.16rem 0.55rem;
-        border-radius: var(--wi-radius-pill);
-        border: 1px solid rgba(60, 207, 145, 0.2);
-        color: var(--wi-text-muted);
-      }
-
-      /* TOOLS GRID */
-      .wi-tools-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 1.1rem;
-      }
-
-      .wi-tool-card {
-        background: var(--wi-card-bg);
-        border-radius: var(--wi-radius-lg);
-        border: 1px solid var(--wi-border);
-        padding: 1rem 1.05rem 1.1rem;
-        font-size: 0.84rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.4rem;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .wi-tool-tag {
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        letter-spacing: 0.09em;
-        color: var(--wi-text-muted);
-      }
-
-      .wi-tool-title {
-        font-size: 0.98rem;
-        font-weight: 580;
-      }
-
-      .wi-tool-body {
-        color: var(--wi-text-soft);
-      }
-
-      .wi-tool-meta {
-        margin-top: auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.75rem;
-        color: var(--wi-text-muted);
-      }
-
-      .wi-tool-icon {
-        width: 26px;
-        height: 26px;
-        border-radius: 11px;
-        background: rgba(255, 122, 60, 0.12);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.9rem;
-      }
-
-      /* HOW IT WORKS */
-      .wi-steps-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1.25rem;
-      }
-
-      .wi-step-card {
-        background: var(--wi-bg-soft);
-        border-radius: var(--wi-radius-lg);
-        border: 1px dashed var(--wi-border);
-        padding: 1.1rem 1.2rem;
-        font-size: 0.86rem;
-      }
-
-      .wi-step-index {
-        width: 24px;
-        height: 24px;
-        border-radius: var(--wi-radius-pill);
-        border: 1px solid rgba(255, 177, 77, 0.7);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.76rem;
-        margin-bottom: 0.55rem;
-      }
-
-      .wi-step-title {
-        font-weight: 580;
-        margin-bottom: 0.25rem;
-      }
-
-      .wi-step-body {
-        color: var(--wi-text-soft);
-      }
-
-      /* CTA */
-      .wi-cta {
-        padding: 3rem 0 3.5rem;
-      }
-
-      .wi-cta-inner {
-        border-radius: 24px;
-        border: 1px solid rgba(255, 122, 60, 0.4);
-        background:
-          radial-gradient(
-            circle at top left,
-            rgba(255, 177, 77, 0.12),
-            transparent 55%
-          ),
-          rgba(9, 13, 28, 0.95);
-        padding: 2rem 1.8rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1.7rem;
-        box-shadow: var(--wi-shadow-soft);
-      }
-
-      .wi-cta-title {
-        font-size: 1.4rem;
-        font-weight: 650;
-        margin-bottom: 0.4rem;
-      }
-
-      .wi-cta-body {
-        font-size: 0.9rem;
-        color: var(--wi-text-soft);
-      }
-
-      /* FOOTER */
-      footer {
-        border-top: 1px solid var(--wi-border);
-        padding: 1.5rem 0 2.1rem;
-        font-size: 0.78rem;
-        color: var(--wi-text-muted);
-      }
-
-      .wi-footer-inner {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-      }
-
-      .wi-footer-links {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-      }
-
-      .wi-footer-links a:hover {
-        color: var(--wi-text-soft);
-      }
-
-      /* RESPONSIVE */
-      @media (max-width: 960px) {
-        .wi-nav-links {
-          display: none;
-        }
-        .wi-hero-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .wi-hero-panel {
-          order: -1;
-        }
-        .wi-feature-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .wi-tools-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-        .wi-steps-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .wi-cta-inner {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-      }
-
-      @media (max-width: 640px) {
-        .wi-tools-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .wi-hero {
-          padding-top: 3.2rem;
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <!-- NAVBAR -->
-    <header class="wi-nav">
-      <div class="wi-container wi-nav-inner">
-        <div class="wi-logo">
-          <div class="wi-logo-mark"></div>
-          <div class="wi-logo-text">
-            <span class="wi-logo-text-main">Warehouse Intelligence</span>
-            <span class="wi-logo-text-sub">Inventory · Ops · Labour</span>
-          </div>
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="logo-wrap">
+        <div class="logo">
+          Warehouse <span class="highlight">Intelligence</span>
         </div>
-
-        <nav class="wi-nav-links">
-          <a href="#solutions">Solutions</a>
-          <a href="#tools">Tools</a>
-          <a href="#how-it-works">How it works</a>
-          <a href="#about">About</a>
-        </nav>
-
-        <div class="wi-nav-cta">
-          <span class="wi-tag-chip">Built by operators</span>
-          <a href="signin.html" class="wi-btn wi-btn-outline">Sign in</a>
+        <div class="logo-subtitle">
+          Practical tools for real-world warehouse operations.
         </div>
       </div>
-    </header>
 
-    <main>
-      <!-- HERO -->
-      <section class="wi-hero">
-        <div class="wi-container wi-hero-grid">
-          <div>
-            <div class="wi-hero-eyebrow">
-              <span class="wi-dot"></span>
-              Live tools for real warehouses – not slide decks
-            </div>
+      <div class="header-cta">
+        <a href="signin.html" class="btn-outline">Sign in</a>
+      </div>
+    </div>
+  </header>
 
-            <h1 class="wi-hero-title">
-              Turn messy warehouse data into
-              <span class="wi-hero-highlight">clear decisions</span>.
-            </h1>
+  <main>
+    <div class="container">
 
-            <p class="wi-hero-subtitle">
-              Warehouse Intelligence is a suite of practical tools that sit on
-              top of your existing WMS and spreadsheets to give you clean,
-              actionable views of inventory, labour, and MHE performance.
-            </p>
+      <!-- HERO + TOP DESCRIPTION -->
+      <section class="hero">
+        <div>
+          <div class="hero-text-eyebrow">Operational decision support</div>
+          <h1 class="hero-title">Run your warehouse like a live control tower.</h1>
+          <p class="hero-subtitle">
+            Warehouse Intelligence brings your key planning tools into one place – starting with a live
+            scheduling engine built for shift leads, planners and operations managers.
+          </p>
 
-            <div class="wi-hero-actions">
-              <a href="#tools" class="wi-btn wi-btn-primary">
-                View available tools
-              </a>
-
-              <!-- DOWNLOAD: POINTS TO warehouse_scheduling.zip -->
-              <a
-                href="warehouse_scheduling.zip"
-                class="wi-btn wi-btn-outline"
-                download="Warehouse-Scheduling-Tool.zip"
-              >
-                Download sample calculator
-              </a>
-            </div>
-
-            <div class="wi-hero-meta">
-              <span>
-                <strong>Minutes to value</strong>
-                No IT project – export, drop in, start using.
-              </span>
-              <span>
-                <strong>Built on real sites</strong>
-                Designed from large-scale 3PL and retail operations.
-              </span>
-            </div>
+          <div class="hero-cta-row">
+            <a class="btn-primary" href="signin.html">Log in / Register</a>
+            <a class="btn-ghost" href="#tools">View tools overview</a>
           </div>
 
-          <!-- SAMPLE DASHBOARD PANEL -->
-          <aside
-            class="wi-hero-panel"
-            aria-label="Sample warehouse dashboard"
-          >
-            <div class="wi-hero-panel-header">
-              <span>Today – Labour &amp; Inventory Snapshot</span>
-              <span class="wi-pill">Demo · Sample data</span>
-            </div>
-
-            <div class="wi-hero-metrics">
-              <div>
-                <div class="wi-hero-metric-label">Pick productivity</div>
-                <div class="wi-hero-metric-value">112%</div>
-                <div class="wi-hero-metric-badge">▲ 9 pts vs plan</div>
-              </div>
-              <div>
-                <div class="wi-hero-metric-label">Stock accuracy</div>
-                <div class="wi-hero-metric-value">99.3%</div>
-                <div class="wi-hero-metric-badge">▲ weekly improving</div>
-              </div>
-              <div>
-                <div class="wi-hero-metric-label">Labour cost / unit</div>
-                <div class="wi-hero-metric-value">£0.41</div>
-                <div class="wi-hero-metric-badge">▼ 6% vs last week</div>
-              </div>
-            </div>
-
-            <div class="wi-hero-status-list">
-              <div class="wi-hero-status-row">
-                <span class="wi-hero-status-label">
-                  Workforce planner – today
-                </span>
-                <span class="wi-hero-pill-ok">On plan</span>
-              </div>
-              <div class="wi-hero-status-row">
-                <span class="wi-hero-status-label">
-                  Inventory health – air freight SKUs
-                </span>
-                <span class="wi-hero-pill-risk">Risk – excess</span>
-              </div>
-              <div class="wi-hero-status-row">
-                <span class="wi-hero-status-label">
-                  MHE utilisation – nights
-                </span>
-                <span class="wi-hero-pill-ok">Improving</span>
-              </div>
-            </div>
-
-            <p class="wi-hero-footnote">
-              Powered by simple exports from your WMS, time &amp; attendance,
-              and finance. No integration project required.
-            </p>
-          </aside>
-        </div>
-      </section>
-
-      <!-- SOLUTIONS -->
-      <section id="solutions">
-        <div class="wi-container">
-          <div class="wi-section-heading">
-            <div>
-              <h2 class="wi-section-title">
-                One family of tools, three focus areas
-              </h2>
-            </div>
-            <p class="wi-section-description">
-              Start with a single calculator or deploy the full suite. Each
-              module is built to answer a specific operational question, using
-              data you already have.
-            </p>
-          </div>
-
-          <div class="wi-feature-grid">
-            <article class="wi-card">
-              <div class="wi-card-label">Inventory Intelligence</div>
-              <h3 class="wi-card-title">Stock that matches reality</h3>
-              <p class="wi-card-body">
-                Tools to quantify stock accuracy, isolate problem SKUs, and
-                plan targeted cycle counts that actually move the needle – not
-                just tick a compliance box.
-              </p>
-              <div class="wi-chip-row">
-                <span class="wi-chip">Cycle count planning</span>
-                <span class="wi-chip">Stock loss insight</span>
-                <span class="wi-chip">ABC / velocity views</span>
-              </div>
-            </article>
-
-            <article class="wi-card">
-              <div class="wi-card-label">Ops Intelligence</div>
-              <h3 class="wi-card-title">Clear views of flow &amp; cost</h3>
-              <p class="wi-card-body">
-                Map work by process, shed, client, and shift. Understand the
-                true cost per unit and spot where performance is driven by
-                luck, not design.
-              </p>
-              <div class="wi-chip-row">
-                <span class="wi-chip">Cost per unit</span>
-                <span class="wi-chip">Process benchmarks</span>
-                <span class="wi-chip">Client-level dashboards</span>
-              </div>
-            </article>
-
-            <article class="wi-card">
-              <div class="wi-card-label">Labour Intelligence</div>
-              <h3 class="wi-card-title">
-                Plan people before the shift starts
-              </h3>
-              <p class="wi-card-body">
-                Workforce planning tools that translate volume and
-                productivity assumptions into clean, defensible hour plans
-                with real-time variance tracking.
-              </p>
-              <div class="wi-chip-row">
-                <span class="wi-chip">Daily &amp; weekly plans</span>
-                <span class="wi-chip">Plan vs actual</span>
-                <span class="wi-chip">Agency vs perm mix</span>
-              </div>
-            </article>
+          <div class="hero-note">
+            Designed by an operator, for operators. No fluff – just tools you can actually use on the floor.
           </div>
         </div>
+
+        <aside class="hero-panel" aria-label="Current focus">
+          <div class="hero-panel-title">
+            Current focus: <span class="hero-tag">Scheduling</span>
+          </div>
+          <ul class="hero-panel-list">
+            <li>
+              <span>Shift & MHE planning</span>
+              <span>Live</span>
+            </li>
+            <li>
+              <span>Plan vs actual visibility</span>
+              <span>Live</span>
+            </li>
+            <li>
+              <span>User & access levels</span>
+              <span>Live</span>
+            </li>
+            <li>
+              <span>Performance & cost KPIs</span>
+              <span>In development</span>
+            </li>
+          </ul>
+        </aside>
       </section>
 
-      <!-- TOOLS -->
+      <!-- TOOLS OVERVIEW -->
       <section id="tools">
-        <div class="wi-container">
-          <div class="wi-section-heading">
+        <h2 class="section-title">Tools overview</h2>
+        <p class="section-subtitle">
+          Warehouse Intelligence will grow into a suite of tools. The first module – the scheduling
+          tool – is live now, with more operational analytics to follow.
+        </p>
+
+        <div class="tools-grid">
+          <article class="tool-card">
             <div>
-              <h2 class="wi-section-title">Tools available at launch</h2>
+              <div class="tool-title">Scheduling tool</div>
+              <div class="tool-description">
+                Build and adjust daily MHE and labour plans in minutes. See direct vs indirect hours,
+                plan vs actual, and costs at a glance.
+              </div>
             </div>
-            <p class="wi-section-description">
-              Each tool is a self-contained model you can drop straight into
-              your operation. Start with one, roll out more as confidence
-              grows.
-            </p>
-          </div>
+            <div>
+              <span class="tool-label tool-label-live">Live</span>
+            </div>
+          </article>
 
-          <div class="wi-tools-grid">
-            <article class="wi-tool-card">
-              <div class="wi-tool-tag">Labour</div>
-              <h3 class="wi-tool-title">Workforce Planner</h3>
-              <p class="wi-tool-body">
-                Build daily and weekly labour plans by process, shift, and
-                MHE. Compare plan vs actual in real time and understand the
-                cost of every decision.
-              </p>
-              <div class="wi-tool-meta">
-                <span>Excel &amp; HTML versions</span>
-                <div class="wi-tool-icon">↗</div>
+          <article class="tool-card">
+            <div>
+              <div class="tool-title">Users & access</div>
+              <div class="tool-description">
+                Secure access for your team. Set up business accounts, admin vs standard users, and
+                keep data ring-fenced by operation.
               </div>
-            </article>
+            </div>
+            <div>
+              <span class="tool-label tool-label-live">Live</span>
+            </div>
+          </article>
 
-            <article class="wi-tool-card">
-              <div class="wi-tool-tag">Inventory</div>
-              <h3 class="wi-tool-title">Stock Take Calculator</h3>
-              <p class="wi-tool-body">
-                Calculate the people, time, and disruption required for full
-                and sample counts, and track progress against the plan as you
-                go.
-              </p>
-              <div class="wi-tool-meta">
-                <span>Ideal for year-end</span>
-                <div class="wi-tool-icon">✓</div>
+          <article class="tool-card">
+            <div>
+              <div class="tool-title">Performance & cost insights</div>
+              <div class="tool-description">
+                Future modules will surface KPIs such as productivity, cost-per-unit, lane performance
+                and shift comparisons to close the loop from plan to outcome.
               </div>
-            </article>
-
-            <article class="wi-tool-card">
-              <div class="wi-tool-tag">Inventory</div>
-              <h3 class="wi-tool-title">Inventory Health Dashboard</h3>
-              <p class="wi-tool-body">
-                Combine WMS and finance exports to see slow movers, excess
-                stock, and margin-damaging profiles in a single, simple view.
-              </p>
-              <div class="wi-tool-meta">
-                <span>Supabase / HTML front end</span>
-                <div class="wi-tool-icon">∞</div>
-              </div>
-            </article>
-
-            <article class="wi-tool-card">
-              <div class="wi-tool-tag">Ops</div>
-              <h3 class="wi-tool-title">SOP &amp; Playbook Library</h3>
-              <p class="wi-tool-body">
-                Structured SOP templates and playbooks you can adapt to your
-                site, focused on stock control, inventory governance, and
-                daily performance routines.
-              </p>
-              <div class="wi-tool-meta">
-                <span>Downloadable templates</span>
-                <div class="wi-tool-icon">↓</div>
-              </div>
-            </article>
-          </div>
+            </div>
+            <div>
+              <span class="tool-label tool-label-soon">Coming soon</span>
+            </div>
+          </article>
         </div>
       </section>
 
-      <!-- HOW IT WORKS -->
-      <section id="how-it-works">
-        <div class="wi-container">
-          <div class="wi-section-heading">
-            <div>
-              <h2 class="wi-section-title">
-                How it fits into your operation
-              </h2>
-            </div>
-            <p class="wi-section-description">
-              No major systems project. You use exports and data you already
-              have. Tools are designed to sit alongside your WMS, not replace
-              it.
-            </p>
-          </div>
+    </div>
+  </main>
 
-          <div class="wi-steps-grid">
-            <article class="wi-step-card">
-              <div class="wi-step-index">1</div>
-              <h3 class="wi-step-title">Export the data you already trust</h3>
-              <p class="wi-step-body">
-                Pull simple CSV / Excel exports from WMS, time &amp;
-                attendance, and finance. No direct system access or API work
-                required.
-              </p>
-            </article>
+  <footer>
+    © 2025 Warehouse Intelligence. All rights reserved.
+  </footer>
 
-            <article class="wi-step-card">
-              <div class="wi-step-index">2</div>
-              <h3 class="wi-step-title">Drop into a ready-built tool</h3>
-              <p class="wi-step-body">
-                Paste your data into a structured template or connect to a
-                lightweight database. The logic, calculations, and views are
-                already built.
-              </p>
-            </article>
-
-            <article class="wi-step-card">
-              <div class="wi-step-index">3</div>
-              <h3 class="wi-step-title">Use outputs in daily decisions</h3>
-              <p class="wi-step-body">
-                Use outputs in stand-ups, client reviews, and budget
-                discussions. When the operation changes, adjust the
-                assumptions – not the whole model.
-              </p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <!-- ABOUT -->
-      <section id="about">
-        <div class="wi-container">
-          <div class="wi-section-heading">
-            <div>
-              <h2 class="wi-section-title">
-                Built from real warehouse experience
-              </h2>
-            </div>
-            <p class="wi-section-description">
-              Warehouse Intelligence is built by operators who have run
-              national stock functions, multi-site 3PL operations, and
-              large-scale stock takes. The aim is simple: tools you can
-              actually use on a busy day.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- CTA -->
-      <section id="cta" class="wi-cta">
-        <div class="wi-container">
-          <div class="wi-cta-inner">
-            <div>
-              <h2 class="wi-cta-title">
-                Be first to get the Warehouse Intelligence toolkit.
-              </h2>
-              <p class="wi-cta-body">
-                Join the early access list to receive the first set of tools –
-                including the stock take calculator and workforce planner –
-                along with short, practical guides on how to roll them out.
-              </p>
-            </div>
-            <div>
-              <a
-                href="mailto:your.email@example.com?subject=Warehouse%20Intelligence%20Early%20Access"
-                class="wi-btn wi-btn-primary"
-              >
-                Email to request early access
-              </a>
-              <p
-                style="
-                  margin-top: 0.6rem;
-                  font-size: 0.75rem;
-                  color: var(--wi-text-muted);
-                "
-              >
-                Replace this with a simple form or link to your Gumroad /
-                landing page when ready.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- FOOTER -->
-    <footer>
-      <div class="wi-container wi-footer-inner">
-        <span
-          >© <span id="wi-year"></span> Warehouse Intelligence. All rights
-          reserved.</span
-        >
-        <div class="wi-footer-links">
-          <a href="#solutions">Solutions</a>
-          <a href="#tools">Tools</a>
-          <a href="#how-it-works">How it works</a>
-        </div>
-      </div>
-    </footer>
-
-    <script>
-      document.getElementById("wi-year").textContent =
-        new Date().getFullYear();
-    </script>
-  </body>
+</body>
 </html>
