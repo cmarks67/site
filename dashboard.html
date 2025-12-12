@@ -1,487 +1,535 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Warehouse Intelligence – Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<head>
+  <meta charset="utf-8" />
+  <title>Warehouse Intelligence – Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-    <style>
-      :root {
-        --wi-bg: #050b1a;
-        --wi-bg-soft: #0b1224;
-        --wi-card-bg: #11172b;
-        --wi-border: #242b42;
-        --wi-accent: #ff7a3c;
-        --wi-accent-soft: rgba(255, 122, 60, 0.12);
-        --wi-text-main: #f7f7ff;
-        --wi-text-soft: #c4c7d9;
-        --wi-text-muted: #8b90a6;
-        --wi-ok: #3ccf91;
-        --wi-danger: #ff4f5e;
-        --wi-radius-lg: 18px;
-        --wi-radius-pill: 999px;
-        --wi-shadow-soft: 0 22px 48px rgba(0, 0, 0, 0.25);
-        --wi-container-width: 1120px;
-      }
+    header {
+      padding: 12px 20px;
+      border-bottom: 1px solid #1f2937;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #020617;
+    }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+    header .brand {
+      font-weight: 600;
+      font-size: 1rem;
+    }
 
-      body {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          sans-serif;
-        background: radial-gradient(
-          circle at top,
-          #11172b 0,
-          #050814 45%,
-          #02030a 100%
-        );
-        color: var(--wi-text-main);
-        min-height: 100vh;
-      }
+    header .brand span {
+      color: #dc2626;
+    }
 
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
+    header .user-info {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
 
-      .wi-container {
-        max-width: var(--wi-container-width);
-        margin: 0 auto;
-        padding: 0 1.5rem 3rem;
-      }
+    header button {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
 
-      /* SIMPLE HEADER */
-      header {
-        border-bottom: 1px solid rgba(36, 43, 66, 0.6);
-        padding: 1rem 0 0.75rem;
-        margin-bottom: 1.75rem;
-        background: rgba(5, 8, 20, 0.9);
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        backdrop-filter: blur(14px);
-      }
+    main {
+      flex: 1;
+      padding: 16px 20px 28px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
 
-      .nav-inner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        max-width: var(--wi-container-width);
-        margin: 0 auto;
-        padding: 0 1.5rem;
-      }
+    .layout {
+      display: flex;
+      gap: 24px;
+    }
 
-      .logo-wrap {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-      }
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      padding: 12px 10px;
+      height: fit-content;
+    }
 
-      .logo-mark {
-        width: 30px;
-        height: 30px;
-        border-radius: 9px;
-        background: conic-gradient(
-          from 220deg,
-          #ff7a3c,
-          #ffb14d,
-          #3ccf91,
-          #4d9bff,
-          #ff7a3c
-        );
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
-      }
+    .sidebar-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
 
-      .logo-mark::after {
-        content: "";
-        width: 18px;
-        height: 18px;
-        border-radius: 7px;
-        background: #050814;
-      }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 7px 9px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      margin-bottom: 4px;
+      user-select: none;
+    }
 
-      .logo-text-main {
-        font-size: 0.96rem;
-        font-weight: 650;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
+    .nav-item.active {
+      background: #1f2937;
+    }
 
-      .logo-text-sub {
-        font-size: 0.7rem;
-        color: var(--wi-text-muted);
-      }
+    .nav-item:hover {
+      background: #111827;
+    }
 
-      .btn {
-        border-radius: var(--wi-radius-pill);
-        padding: 0.45rem 1.1rem;
-        font-size: 0.84rem;
-        border: 1px solid transparent;
-        cursor: pointer;
-        background: transparent;
-        color: var(--wi-text-soft);
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        transition: all 0.16s ease-out;
-      }
+    /* Content area */
+    .content {
+      flex: 1;
+    }
 
-      .btn-outline {
-        border-color: var(--wi-border);
-      }
+    .card {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+    }
 
-      .btn-outline:hover {
-        border-color: var(--wi-accent);
-        color: var(--wi-text-main);
-        background: rgba(255, 122, 60, 0.06);
-      }
+    h2 {
+      font-size: 1.15rem;
+      margin-bottom: 12px;
+    }
 
-      .btn-primary {
-        background: linear-gradient(135deg, var(--wi-accent), #ffb14d);
-        color: #050814;
-        font-weight: 600;
-        box-shadow: var(--wi-shadow-soft);
-      }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      font-size: 0.75rem;
+      margin-right: 6px;
+    }
 
-      .btn-primary:hover {
-        filter: brightness(1.05);
-        transform: translateY(-1px);
-      }
+    .badge.admin {
+      border-color: #f87171;
+      color: #fecaca;
+    }
 
-      /* DASHBOARD HEADER */
-      .dash-header {
-        margin: 1.5rem 0 1.5rem;
-        padding: 1.4rem 1.6rem;
-        border-radius: 20px;
-        border: 1px solid rgba(52, 62, 104, 0.9);
-        background: radial-gradient(circle at top left, #20315f, #050814 55%);
-        box-shadow: var(--wi-shadow-soft);
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1.5rem;
-      }
+    .badge.standard {
+      border-color: #60a5fa;
+      color: #bfdbfe;
+    }
 
-      .dash-header h1 {
-        font-size: 1.5rem;
-        margin-bottom: 0.25rem;
-      }
+    .badge.business {
+      border-color: #22c55e;
+      color: #bbf7d0;
+    }
 
-      .dash-status {
-        font-size: 0.88rem;
-        color: var(--wi-text-soft);
-      }
+    .badge.single_user {
+      border-color: #a855f7;
+      color: #e9d5ff;
+    }
 
-      .dash-email {
-        font-size: 0.8rem;
-        color: var(--wi-text-muted);
-        margin-top: 0.4rem;
-      }
+    .muted {
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
 
-      /* TOOLS LIBRARY */
-      .tools-section {
-        margin-top: 1.5rem;
-      }
+    .hidden { display: none; }
 
-      .tools-section h2 {
-        font-size: 1.25rem;
-        margin-bottom: 0.25rem;
-      }
+    .btn-primary {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      background: #dc2626;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 6px;
+    }
 
-      .tools-intro {
-        font-size: 0.9rem;
-        color: var(--wi-text-soft);
-        margin-bottom: 1.25rem;
-      }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+    th, td {
+      border-bottom: 1px solid #1f2937;
+      padding: 6px 4px;
+      text-align: left;
+    }
+    th {
+      color: #9ca3af;
+      font-weight: 500;
+    }
 
-      .tools-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1.1rem;
-      }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      color: #d1d5db;
+    }
 
-      .tool-card {
-        background: var(--wi-card-bg);
-        border-radius: var(--wi-radius-lg);
-        border: 1px solid var(--wi-border);
-        padding: 1.1rem 1.2rem 1.2rem;
-        font-size: 0.88rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.45rem;
-      }
+    input {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
 
-      .tool-tag {
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        letter-spacing: 0.09em;
-        color: var(--wi-text-muted);
-      }
+    .btn-small {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: none;
+      background: #22c55e;
+      color: #022c22;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
 
-      .tool-title {
-        font-size: 1rem;
-        font-weight: 580;
-      }
+    .error {
+      color: #fecaca;
+      font-size: 0.8rem;
+      margin-top: 6px;
+    }
 
-      .tool-body {
-        color: var(--wi-text-soft);
-      }
+    .success {
+      color: #bbf7d0;
+      font-size: 0.8rem;
+      margin-top: 6px;
+    }
+  </style>
+</head>
 
-      .tool-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.78rem;
-        color: var(--wi-text-muted);
-        margin-top: 0.3rem;
-      }
+<body>
 
-      .pill-live {
-        padding: 0.1rem 0.55rem;
-        border-radius: var(--wi-radius-pill);
-        background: rgba(6, 44, 33, 0.8);
-        color: var(--wi-ok);
-        font-size: 0.72rem;
-      }
+  <header>
+    <div class="brand">Warehouse <span>Intelligence</span></div>
+    <div class="user-info">
+      <span id="header-user-email"></span>
+      <button id="btn-signout">Sign out</button>
+    </div>
+  </header>
 
-      .pill-coming {
-        padding: 0.1rem 0.55rem;
-        border-radius: var(--wi-radius-pill);
-        background: rgba(63, 12, 21, 0.85);
-        color: var(--wi-danger);
-        font-size: 0.72rem;
-      }
+  <main>
+    <div class="layout">
 
-      .tool-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.6rem;
-      }
+      <!-- LEFT SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-title">Navigation</div>
+        <div id="nav-overview" class="nav-item active">Overview</div>
+        <div id="nav-users" class="nav-item">Users</div>
+      </aside>
 
-      .btn-small {
-        padding: 0.35rem 0.9rem;
-        font-size: 0.8rem;
-      }
+      <!-- MAIN CONTENT -->
+      <section class="content">
 
-      .btn-disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      @media (max-width: 800px) {
-        .dash-header {
-          flex-direction: column;
-        }
-        .tools-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <!-- TOP BAR -->
-    <header>
-      <div class="nav-inner">
-        <div class="logo-wrap">
-          <div class="logo-mark"></div>
-          <div>
-            <div class="logo-text-main">Warehouse Intelligence</div>
-            <div class="logo-text-sub">Tools dashboard</div>
+        <!-- Account Card -->
+        <div class="card" id="account-card">
+          <h2>Account</h2>
+          <div class="muted" id="account-name"></div>
+          <div style="margin-top:6px;">
+            <span id="badge-role" class="badge"></span>
+            <span id="badge-account-type" class="badge"></span>
           </div>
         </div>
 
-        <button id="sign-out" class="btn btn-outline">Sign out</button>
-      </div>
-    </header>
-
-    <main>
-      <div class="wi-container">
-        <!-- DASHBOARD HEADER -->
-        <section class="dash-header">
-          <div>
-            <h1>Dashboard</h1>
-            <p id="status-text" class="dash-status">Checking login…</p>
-            <p class="dash-email">
-              Signed in as: <span id="user-email">—</span>
+        <!-- Overview Section -->
+        <section id="section-overview">
+          <div class="card">
+            <h2>Scheduling tool</h2>
+            <p class="muted">
+              Open your live scheduling tool. All entries are stored against your business account.
             </p>
-          </div>
-          <div>
-            <span class="pill-live">Early access</span>
+            <a href="warehouse_scheduling.html" class="btn-primary">Open scheduling tool</a>
           </div>
         </section>
 
-        <!-- TOOLS LIBRARY -->
-        <section id="tools-section" class="tools-section" style="display:none;">
-          <h2>Tools library</h2>
-          <p class="tools-intro">
-            Choose a tool to open in the browser or download to use locally.
-          </p>
+        <!-- Users Section -->
+        <section id="section-users" class="hidden">
 
-          <div class="tools-grid">
-            <!-- 1. Workforce Planner – web -->
-            <article class="tool-card">
-              <div class="tool-tag">Labour · Live HTML</div>
-              <h3 class="tool-title">Workforce Planner (web)</h3>
-              <p class="tool-body">
-                Browser-based version of the workforce planning tool. Great for
-                sharing in meetings and testing scenarios quickly.
-              </p>
-              <div class="tool-meta">
-                <span>Source: warehouse_scheduling.html</span>
-                <span class="pill-live">Live</span>
-              </div>
-              <div class="tool-actions">
-                <a
-                  href="warehouse_scheduling.html"
-                  target="_blank"
-                  rel="noopener"
-                  class="btn btn-primary btn-small"
-                >
-                  Open planner
-                </a>
-              </div>
-            </article>
+          <div class="card">
+            <h2>Users</h2>
+            <p class="muted" id="users-intro"></p>
 
-            <!-- 2. Workforce Planner – download -->
-            <article class="tool-card">
-              <div class="tool-tag">Labour · Download</div>
-              <h3 class="tool-title">Workforce Planner (download)</h3>
-              <p class="tool-body">
-                Downloadable version of the workforce planning tool as a single
-                HTML file. Store with site reports or email to colleagues.
-              </p>
-              <div class="tool-meta">
-                <span>File: warehouse_scheduling.zip</span>
-                <span class="pill-live">Ready</span>
-              </div>
-              <div class="tool-actions">
-                <a
-                  href="warehouse_scheduling.zip"
-                  download="Warehouse-Scheduling-Tool.zip"
-                  class="btn btn-outline btn-small"
-                >
-                  Download ZIP
-                </a>
-              </div>
-            </article>
+            <div id="users-list-container" class="hidden">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="users-table-body"></tbody>
+              </table>
+            </div>
 
-            <!-- 3. Stock Take Calculator – placeholder -->
-            <article class="tool-card">
-              <div class="tool-tag">Inventory</div>
-              <h3 class="tool-title">Stock Take Calculator</h3>
-              <p class="tool-body">
-                Plan full and sample counts, calculate required hours, and track
-                progress versus plan. This will be the first inventory module
-                to go live.
+            <div id="single-user-note" class="hidden">
+              <p class="muted">
+                This is a <strong>Single-user</strong> account.  
+                Additional users cannot be added.
               </p>
-              <div class="tool-meta">
-                <span>Planned: v1 release</span>
-                <span class="pill-coming">Coming soon</span>
-              </div>
-              <div class="tool-actions">
-                <button class="btn btn-outline btn-small btn-disabled" disabled>
-                  Preview not yet available
-                </button>
-              </div>
-            </article>
+            </div>
 
-            <!-- 4. Inventory Health Dashboard – placeholder -->
-            <article class="tool-card">
-              <div class="tool-tag">Inventory / Ops</div>
-              <h3 class="tool-title">Inventory Health Dashboard</h3>
-              <p class="tool-body">
-                Combined WMS and finance view to highlight slow movers, excess
-                stock and margin-damaging profiles in a single dashboard.
-              </p>
-              <div class="tool-meta">
-                <span>Planned: Supabase + HTML</span>
-                <span class="pill-coming">Coming soon</span>
-              </div>
-              <div class="tool-actions">
-                <button class="btn btn-outline btn-small btn-disabled" disabled>
-                  Preview not yet available
-                </button>
-              </div>
-            </article>
+            <div id="add-user-card" class="hidden" style="margin-top:14px; border-top:1px solid #1f2937; padding-top:12px;">
+              <h3 style="font-size:0.95rem; margin:0 0 8px;">Add a standard user</h3>
+              <form id="add-user-form">
+                <label for="new-user-name">Full name</label>
+                <input id="new-user-name" required />
+
+                <label for="new-user-email">Email</label>
+                <input id="new-user-email" type="email" required />
+
+                <label for="new-user-password">Password</label>
+                <input id="new-user-password" type="password" required />
+
+                <label for="new-user-password-confirm">Confirm password</label>
+                <input id="new-user-password-confirm" type="password" required />
+
+                <button class="btn-small" id="btn-add-user" type="submit">Create user</button>
+              </form>
+              <div id="add-user-message"></div>
+            </div>
+
           </div>
         </section>
-      </div>
-    </main>
+      </section>
 
-    <!-- Supabase + auth check -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-      // TODO: REPLACE THESE TWO LINES WITH YOUR EXISTING VALUES
-      const supabaseUrl = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
-      const supabaseAnonKey = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
+    </div>
+  </main>
 
-      const supabaseClient = supabase.createClient(
-        supabaseUrl,
-        supabaseAnonKey
-      );
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
 
-      async function loadDashboard() {
-        const statusEl = document.getElementById("status-text");
-        const emailEl = document.getElementById("user-email");
-        const toolsSection = document.getElementById("tools-section");
+    const { createClient } = supabase;
+    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        try {
-          const {
-            data: { session },
-            error,
-          } = await supabaseClient.auth.getSession();
+    let currentProfile = null;
 
-          if (error) {
-            console.error("Error getting session:", error);
-            statusEl.textContent = "Error checking login.";
-            return;
-          }
+    const headerEmail = document.getElementById("header-user-email");
+    const accountName = document.getElementById("account-name");
+    const badgeRole = document.getElementById("badge-role");
+    const badgeAccountType = document.getElementById("badge-account-type");
 
-          if (!session || !session.user) {
-            // Not logged in – send back to sign in
-            window.location.href = "signin.html";
-            return;
-          }
+    const navOverview = document.getElementById("nav-overview");
+    const navUsers = document.getElementById("nav-users");
+    const sectionOverview = document.getElementById("section-overview");
+    const sectionUsers = document.getElementById("section-users");
 
-          // Logged in
-          statusEl.textContent = "You are signed in.";
-          emailEl.textContent = session.user.email || "Unknown user";
-          toolsSection.style.display = "block";
-        } catch (err) {
-          console.error("Unexpected error:", err);
-          statusEl.textContent = "Error checking login.";
-        }
+    const usersIntro = document.getElementById("users-intro");
+    const usersTableBody = document.getElementById("users-table-body");
+    const usersListContainer = document.getElementById("users-list-container");
+    const singleUserNote = document.getElementById("single-user-note");
+    const addUserCard = document.getElementById("add-user-card");
+    const addUserForm = document.getElementById("add-user-form");
+    const addUserMsg = document.getElementById("add-user-message");
+
+    function showSection(section) {
+      if (section === "overview") {
+        navOverview.classList.add("active");
+        navUsers.classList.remove("active");
+        sectionOverview.classList.remove("hidden");
+        sectionUsers.classList.add("hidden");
+      } else {
+        navUsers.classList.add("active");
+        navOverview.classList.remove("active");
+        sectionUsers.classList.remove("hidden");
+        sectionOverview.classList.add("hidden");
+      }
+    }
+
+    navOverview.addEventListener("click", () => showSection("overview"));
+    navUsers.addEventListener("click", () => showSection("users"));
+
+    document.getElementById("btn-signout").addEventListener("click", async () => {
+      await client.auth.signOut();
+      window.location.href = "signin.html";
+    });
+
+    function setAddUserMessage(text, type) {
+      addUserMsg.textContent = text || "";
+      addUserMsg.className = "";
+      if (type === "error") addUserMsg.classList.add("error");
+      if (type === "success") addUserMsg.classList.add("success");
+    }
+
+    // INITIAL LOAD
+    (async () => {
+      const { data: sessionData } = await client.auth.getSession();
+      if (!sessionData?.session) {
+        window.location.href = "signin.html";
+        return;
       }
 
-      async function signOut() {
-        const statusEl = document.getElementById("status-text");
-        statusEl.textContent = "Signing out…";
+      const user = sessionData.session.user;
+      headerEmail.textContent = user.email;
 
-        const { error } = await supabaseClient.auth.signOut();
-        if (error) {
-          console.error("Sign-out error:", error);
-          statusEl.textContent = "Could not sign out. Please try again.";
-        } else {
-          window.location.href = "signin.html";
-        }
+      // TRY LOAD PROFILE
+      let { data: profile, error: profileError } = await client
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile || profileError) {
+        // CREATE DEFAULT PROFILE
+        profile = {
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.email,
+          role: "admin",
+          account_type: "single_user",
+          business_owner_id: user.id
+        };
+
+        await client.from("users").upsert(profile, { onConflict: "id" });
       }
 
-      document
-        .getElementById("sign-out")
-        .addEventListener("click", function () {
-          signOut();
+      currentProfile = profile;
+
+      // FILL ACCOUNT CARD
+      accountName.textContent = profile.full_name;
+      badgeRole.textContent = profile.role;
+      badgeRole.classList.add(profile.role);
+
+      badgeAccountType.textContent =
+        profile.account_type === "business"
+          ? "Business account"
+          : "Single user";
+      badgeAccountType.classList.add(profile.account_type);
+
+      // CONFIGURE USERS SECTION
+      if (profile.account_type === "single_user") {
+        usersIntro.textContent = "This is a single-user account.";
+        singleUserNote.classList.remove("hidden");
+        addUserCard.classList.add("hidden");
+      } else if (profile.role !== "admin") {
+        usersIntro.textContent = "Only administrators can add users.";
+        addUserCard.classList.add("hidden");
+      } else {
+        usersIntro.textContent = "Manage users for this business.";
+        addUserCard.classList.remove("hidden");
+      }
+
+      // LOAD BUSINESS USERS
+      const businessOwnerId = profile.business_owner_id || profile.id;
+
+      const { data: users } = await client
+        .from("users")
+        .select("*")
+        .eq("business_owner_id", businessOwnerId)
+        .order("created_at", { ascending: true });
+
+      if (users?.length) {
+        usersListContainer.classList.remove("hidden");
+        usersTableBody.innerHTML = "";
+
+        users.forEach(u => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${u.email}</td>
+            <td>${u.full_name || ""}</td>
+            <td>${u.role}</td>
+            <td>${u.created_at ? new Date(u.created_at).toLocaleString() : ""}</td>
+          `;
+          usersTableBody.appendChild(tr);
+        });
+      }
+    })();
+
+    // ADD USER HANDLER
+    addUserForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setAddUserMessage("");
+
+      if (currentProfile.account_type !== "business" || currentProfile.role !== "admin") {
+        setAddUserMessage("You are not allowed to add users.", "error");
+        return;
+      }
+
+      const fullName = document.getElementById("new-user-name").value.trim();
+      const email = document.getElementById("new-user-email").value.trim();
+      const password = document.getElementById("new-user-password").value;
+      const passwordConfirm = document.getElementById("new-user-password-confirm").value;
+
+      if (password !== passwordConfirm) {
+        setAddUserMessage("Passwords do not match.", "error");
+        return;
+      }
+
+      // Use separate client to avoid overwriting current session
+      const transient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false }
+      });
+
+      // CREATE AUTH USER
+      const { data: newUserData, error: newUserError } = await transient.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName } }
+      });
+
+      if (newUserError) {
+        setAddUserMessage(newUserError.message, "error");
+        return;
+      }
+
+      const newUser = newUserData.user;
+
+      // UPDATE PROFILE ROW
+      const { error: upsertError } = await client
+        .from("users")
+        .upsert({
+          id: newUser.id,
+          email,
+          full_name: fullName,
+          role: "standard",
+          account_type: "business",
+          business_owner_id: currentProfile.business_owner_id
         });
 
-      document.addEventListener("DOMContentLoaded", loadDashboard);
-    </script>
-  </body>
+      if (upsertError) {
+        setAddUserMessage(upsertError.message, "error");
+        return;
+      }
+
+      setAddUserMessage("User created successfully.", "success");
+      setTimeout(() => window.location.reload(), 800);
+    });
+  </script>
+
+</body>
 </html>
