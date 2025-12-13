@@ -2,265 +2,785 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Warehouse Intelligence – Connections</title>
+  <title>Warehouse Intelligence – Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root{
-      --wi-red:#dc2626; --wi-red-dark:#b91c1c;
-      --bg:#f3f4f6; --card:#fff; --border:#e5e7eb;
-      --text:#111827; --muted:#6b7280;
+    :root {
+      --wi-red: #dc2626;
+      --wi-red-dark: #b91c1c;
+      --bg: #f3f4f6;
+      --bg-card: #ffffff;
+      --border: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
     }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}
-    header{background:#fff;border-bottom:1px solid var(--border)}
-    .wrap{max-width:1100px;margin:0 auto;padding:14px 18px}
-    .brand{font-weight:800;font-size:1.2rem}
-    .brand span{color:var(--wi-red)}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .btn{
-      display:inline-block;padding:10px 14px;border-radius:999px;
-      border:1px solid var(--border);background:#fff;cursor:pointer;
-      text-decoration:none;color:var(--text);font-weight:600;font-size:.9rem
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    .btn:hover{background:#f9fafb}
-    .btnPrimary{background:var(--wi-red);border-color:transparent;color:#fff}
-    .btnPrimary:hover{background:var(--wi-red-dark)}
-    main .wrap{padding:22px 18px}
-    .card{
-      background:var(--card);border:1px solid var(--border);border-radius:14px;
-      padding:18px;box-shadow:0 6px 16px rgba(0,0,0,.04);margin-bottom:16px
+
+    /* HEADER */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
     }
-    h1{margin:0 0 6px;font-size:1.35rem}
-    .muted{color:var(--muted);font-size:.95rem;line-height:1.45}
-    .grid{
-      display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:14px
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    @media (max-width: 980px){ .grid{grid-template-columns:repeat(2,1fr)} }
-    @media (max-width: 520px){ .grid{grid-template-columns:1fr} }
-    .tile{
-      border:1px solid var(--border);border-radius:14px;padding:14px;
-      display:flex;gap:12px;align-items:center;background:#fff
+    .brand {
+      font-size: 1.2rem;
+      font-weight: 700;
     }
-    .icon{
-      width:52px;height:52px;border-radius:14px;display:grid;place-items:center;
-      border:1px solid var(--border);background:#f9fafb;font-weight:800;color:var(--muted)
+    .brand span { color: var(--wi-red); }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .tile h3{margin:0;font-size:1rem}
-    .tile .muted{margin:3px 0 0;font-size:.85rem}
-    .right{margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
-    .pill{
-      font-size:.75rem;border:1px solid var(--border);border-radius:999px;padding:3px 8px;
-      color:var(--muted);background:#fff
+    #header-user-email {
+      font-size: 0.9rem;
+      color: var(--text-muted);
     }
-    .pill.on{background:#dcfce7;border-color:#bbf7d0;color:#166534}
-    .pill.off{background:#fee2e2;border-color:#fecaca;color:#991b1b}
-    .small{font-size:.85rem}
-    .warn{background:#fffbeb;border-color:#fde68a}
-    code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace}
+    #btn-signout {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    #btn-signout:hover { background: #f9fafb; }
+
+    /* LAYOUT */
+    main { flex: 1; }
+    .layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 12px 10px;
+      height: fit-content;
+    }
+    .sidebar-section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .nav-item {
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+    .nav-item.active {
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 600;
+    }
+    .nav-item:hover { background: #f3f4f6; }
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 0;
+    }
+    .tools-header {
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 6px 2px;
+      border-radius: 6px;
+    }
+    .tools-header:hover { background: #f3f4f6; }
+    .tools-arrow { font-size: 0.8rem; color: var(--text-muted); }
+    .tool-item {
+      display: block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .tool-item:hover { background: #f3f4f6; }
+
+    /* MAIN CONTENT */
+    .content { flex: 1; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+    }
+    h2 { margin: 0 0 10px; }
+    h3 { margin: 0 0 8px; }
+    .muted { color: var(--text-muted); font-size: 0.9rem; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 0.75rem;
+      margin-right: 6px;
+    }
+    .badge.admin { background: #fee2e2; border-color: #fecaca; color: #991b1b; }
+    .badge.standard { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+    .badge.business { background: #dcfce7; border-color: #bbf7d0; color: #166534; }
+    .badge.single_user { background: #f3e8ff; border-color: #e9d5ff; color: #6b21a8; }
+
+    .account-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.9rem;
+    }
+
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 6px 4px;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    th { font-weight: 500; color: var(--text-muted); }
+
+    /* FORMS & BUTTONS */
+    label {
+      display: block;
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      color: var(--text-main);
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--wi-red);
+      box-shadow: 0 0 0 1px rgba(220,38,38,0.1);
+    }
+
+    .btn-small {
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #16a34a;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .btn-small:hover { background: #15803d; }
+
+    .btn-reset {
+      background: #6366f1;
+      padding: 5px 9px;
+      border-radius: 8px;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      margin-right: 4px;
+    }
+    .btn-reset:hover { background: #4f46e5; }
+
+    .btn-promote {
+      background: #f97316;
+      padding: 5px 9px;
+      border-radius: 8px;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      margin-right: 4px;
+    }
+    .btn-promote:hover { background: #ea580c; }
+
+    .btn-delete {
+      background: #b91c1c;
+      padding: 5px 9px;
+      border-radius: 8px;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+    .btn-delete:hover { background: #991b1b; }
+
+    .btn-primary {
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: var(--wi-red);
+      color: #fff;
+      border: none;
+      display: inline-block;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .btn-primary:hover { background: var(--wi-red-dark); }
+
+    .error { color: #b91c1c; font-size: 0.8rem; margin-top: 6px; }
+    .success { color: #166534; font-size: 0.8rem; margin-top: 6px; }
+    .hidden { display: none; }
+
+    /* Upgrade card styling */
+    .upgrade-card {
+      margin-top: 14px;
+      border-style: dashed;
+    }
+
+    @media (max-width: 900px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; }
+    }
   </style>
 </head>
+
 <body>
 
 <header>
-  <div class="wrap topbar">
+  <div class="header-inner">
     <div class="brand">Warehouse <span>Intelligence</span></div>
-    <div style="display:flex;gap:10px;align-items:center;">
-      <a class="btn" href="dashboard.html">Back to dashboard</a>
+    <div class="user-info">
+      <span id="header-user-email"></span>
+      <button id="btn-signout">Sign out</button>
     </div>
   </div>
 </header>
 
 <main>
-  <div class="wrap">
+  <div class="layout">
 
-    <div class="card">
-      <h1>Connections</h1>
-      <p class="muted">
-        Choose where your schedules and KPI exports are saved. Connections are stored per user in this browser.
-        You will be redirected to sign in with the provider when you click connect.
-      </p>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section-title">Navigation</div>
+      <div id="nav-overview" class="nav-item active">Overview</div>
+      <div id="nav-users" class="nav-item">Users</div>
+      <div id="nav-settings" class="nav-item">Settings</div>
 
-      <div id="statusBox" class="card warn" style="margin-top:12px;">
-        <div class="muted small" id="statusText">Loading status…</div>
+      <div class="sidebar-divider"></div>
+
+      <div class="tools-header" id="tools-toggle">
+        <span class="sidebar-section-title" style="margin-bottom:0;">Tools</span>
+        <span class="tools-arrow" id="tools-arrow">▾</span>
+      </div>
+      <div id="sidebar-tools-list">
+        <a href="warehouse_scheduling.html" class="tool-item">Scheduling tool</a>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <section class="content">
+
+      <!-- ACCOUNT -->
+      <div class="card">
+        <h2>Account</h2>
+        <div class="muted" id="account-name"></div>
+        <div style="margin-top:6px;">
+          <span id="badge-role" class="badge"></span>
+          <span id="badge-account-type" class="badge"></span>
+        </div>
+        <div class="muted" style="margin-top:6px;">
+          Account ID: <span id="account-id" class="account-id"></span>
+        </div>
+        <div class="muted" style="margin-top:6px;">
+          All users and tools are scoped to this account.
+        </div>
       </div>
 
-      <div class="grid" style="margin-top:14px;">
+      <!-- OVERVIEW -->
+      <section id="section-overview">
+        <div class="card">
+          <h2>Scheduling tool</h2>
+          <p class="muted">
+            Plan MHE and labour, track indirect time, and compare plan vs actual by shift.
+          </p>
+          <a href="warehouse_scheduling.html" class="btn-primary">Open scheduling tool</a>
+        </div>
+      </section>
 
-        <!-- Dropbox -->
-        <div class="tile">
-          <div class="icon">DB</div>
-          <div>
-            <h3>Dropbox</h3>
-            <div class="muted">OAuth sign-in, token saved locally</div>
+      <!-- USERS -->
+      <section id="section-users" class="hidden">
+        <div class="card">
+          <h2>Users</h2>
+          <p class="muted" id="users-intro"></p>
+
+          <div id="users-list-container" class="hidden">
+            <table>
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body"></tbody>
+            </table>
           </div>
-          <div class="right">
-            <span id="pillDropbox" class="pill off">Not connected</span>
-            <button id="btn-dropbox-connect" class="btn btnPrimary">Connect</button>
-            <button id="btn-dropbox-disconnect" class="btn small">Disconnect</button>
+
+          <div id="single-user-note" class="hidden">
+            <p class="muted">
+              This account is configured as <strong>Single user</strong>. Additional users cannot be added.
+            </p>
+          </div>
+
+          <!-- Upgrade account card – only visible for single-user accounts -->
+          <div id="upgrade-account-card" class="card upgrade-card hidden">
+            <h3>Upgrade your account</h3>
+            <p class="muted">
+              You are currently using a single-user plan. Upgrade to enable multiple users,
+              admin controls and additional features.
+            </p>
+            <button id="btn-upgrade-account" class="btn-primary">
+              Upgrade account
+            </button>
+          </div>
+
+          <div id="add-user-card" class="hidden" style="margin-top:14px;">
+            <h3>Add a standard user</h3>
+            <form id="add-user-form" style="margin-top:8px;">
+              <label>Full name</label>
+              <input id="new-user-name" required />
+
+              <label>Email</label>
+              <input id="new-user-email" type="email" required />
+
+              <label>Password</label>
+              <input id="new-user-password" type="password" required />
+
+              <label>Confirm password</label>
+              <input id="new-user-password-confirm" type="password" required />
+
+              <button class="btn-small" type="submit">Create user</button>
+            </form>
+            <div id="add-user-message"></div>
           </div>
         </div>
+      </section>
 
-        <!-- OneDrive (placeholder - requires MSAL config) -->
-        <div class="tile">
-          <div class="icon">OD</div>
-          <div>
-            <h3>OneDrive</h3>
-            <div class="muted">Requires MSAL Client ID</div>
-          </div>
-          <div class="right">
-            <span id="pillOneDrive" class="pill off">Not configured</span>
-            <button id="btn-onedrive-connect" class="btn">Connect</button>
-          </div>
+      <!-- SETTINGS -->
+      <section id="section-settings" class="hidden">
+        <div class="card">
+          <h2>Settings</h2>
+          <h3 style="margin-top:6px;">Change your password</h3>
+          <p class="muted">
+            This will update the password for your own account only.
+          </p>
+          <form id="password-form" style="margin-top:10px;">
+            <label>New password</label>
+            <input id="password-new" type="password" required />
+
+            <label>Confirm new password</label>
+            <input id="password-new-confirm" type="password" required />
+
+            <button class="btn-small" type="submit">Update password</button>
+          </form>
+          <div id="password-message"></div>
         </div>
+      </section>
 
-        <!-- Azure (placeholder) -->
-        <div class="tile">
-          <div class="icon">AZ</div>
-          <div>
-            <h3>Azure</h3>
-            <div class="muted">Planned</div>
-          </div>
-          <div class="right">
-            <span class="pill">Coming soon</span>
-            <button class="btn" disabled>Connect</button>
-          </div>
-        </div>
-
-        <!-- Local folder (placeholder - requires File System Access API) -->
-        <div class="tile">
-          <div class="icon">PC</div>
-          <div>
-            <h3>Local folder</h3>
-            <div class="muted">Browser folder picker (Chrome/Edge)</div>
-          </div>
-          <div class="right">
-            <span id="pillLocal" class="pill off">Not connected</span>
-            <button id="btn-local-connect" class="btn">Choose folder</button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
+    </section>
   </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* =========================
-   Storage keys (same as dashboard summary)
-========================= */
-const K_ACTIVE = "wi_storage_active_v1";
-const K_DB_TOKENS = "wi_dropbox_tokens_v1";
-const K_OD_FLAG = "wi_onedrive_flag_v1";
-const K_LOCAL = "wi_local_folder_handle_v1";
+const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
 
-/* =========================
-   DROPBOX CONFIG
-   IMPORTANT: Uses correct authorize endpoint
-========================= */
-const DROPBOX_APP_KEY = "k8fsr7ttwve6k8m";
+const { createClient } = supabase;
+const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Force redirect URI to match what you whitelisted in Dropbox console.
-// Add both www and non-www in Dropbox console to be safe.
-const DROPBOX_REDIRECT_URI =
-  (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-    ? "http://localhost:5500/storage-connect.html"
-    : "https://warehouseintelligence.co.uk/storage-connect.html";
+let currentProfile = null;
 
-function setActive(provider) {
-  localStorage.setItem(K_ACTIVE, provider);
+/* ELEMENTS */
+const headerEmail = document.getElementById("header-user-email");
+const btnSignout = document.getElementById("btn-signout");
+
+const navOverview = document.getElementById("nav-overview");
+const navUsers = document.getElementById("nav-users");
+const navSettings = document.getElementById("nav-settings");
+const sectionOverview = document.getElementById("section-overview");
+const sectionUsers = document.getElementById("section-users");
+const sectionSettings = document.getElementById("section-settings");
+
+const toolsToggle = document.getElementById("tools-toggle");
+const toolsArrow = document.getElementById("tools-arrow");
+const toolsList = document.getElementById("sidebar-tools-list");
+
+const accountName = document.getElementById("account-name");
+const badgeRole = document.getElementById("badge-role");
+const badgeAccountType = document.getElementById("badge-account-type");
+const accountIdSpan = document.getElementById("account-id");
+
+const usersIntro = document.getElementById("users-intro");
+const usersTableBody = document.getElementById("users-table-body");
+const usersListContainer = document.getElementById("users-list-container");
+const singleUserNote = document.getElementById("single-user-note");
+const addUserCard = document.getElementById("add-user-card");
+const addUserForm = document.getElementById("add-user-form");
+const addUserMsg = document.getElementById("add-user-message");
+
+const passwordForm = document.getElementById("password-form");
+const passwordMsg = document.getElementById("password-message");
+
+/* Upgrade card elements */
+const upgradeAccountCard = document.getElementById("upgrade-account-card");
+const btnUpgradeAccount = document.getElementById("btn-upgrade-account");
+
+/* NAVIGATION */
+function showSection(section) {
+  navOverview.classList.remove("active");
+  navUsers.classList.remove("active");
+  navSettings.classList.remove("active");
+  sectionOverview.classList.add("hidden");
+  sectionUsers.classList.add("hidden");
+  sectionSettings.classList.add("hidden");
+
+  if (section === "overview") {
+    navOverview.classList.add("active");
+    sectionOverview.classList.remove("hidden");
+  } else if (section === "users") {
+    navUsers.classList.add("active");
+    sectionUsers.classList.remove("hidden");
+  } else if (section === "settings") {
+    navSettings.classList.add("active");
+    sectionSettings.classList.remove("hidden");
+  }
 }
 
-function setStatus() {
-  const pillDropbox = document.getElementById("pillDropbox");
-  const pillOneDrive = document.getElementById("pillOneDrive");
-  const pillLocal = document.getElementById("pillLocal");
-  const statusText = document.getElementById("statusText");
+navOverview.addEventListener("click", () => showSection("overview"));
+navUsers.addEventListener("click", () => showSection("users"));
+navSettings.addEventListener("click", () => showSection("settings"));
 
-  const db = !!localStorage.getItem(K_DB_TOKENS);
-  const od = !!localStorage.getItem(K_OD_FLAG);
-  const lf = !!localStorage.getItem(K_LOCAL);
+/* TOOLS TOGGLE */
+let toolsExpanded = true;
+toolsToggle.addEventListener("click", () => {
+  toolsExpanded = !toolsExpanded;
+  toolsList.classList.toggle("hidden", !toolsExpanded);
+  toolsArrow.textContent = toolsExpanded ? "▾" : "▸";
+});
 
-  pillDropbox.className = "pill " + (db ? "on" : "off");
-  pillDropbox.textContent = db ? "Connected" : "Not connected";
+/* SIGN OUT */
+btnSignout.addEventListener("click", async () => {
+  await client.auth.signOut();
+  window.location.href = "signin.html";
+});
 
-  pillOneDrive.className = "pill " + (od ? "on" : "off");
-  pillOneDrive.textContent = od ? "Connected" : "Not configured";
-
-  pillLocal.className = "pill " + (lf ? "on" : "off");
-  pillLocal.textContent = lf ? "Connected" : "Not connected";
-
-  const active = localStorage.getItem(K_ACTIVE) || "(none)";
-  statusText.innerHTML = `
-    <div><strong>Active:</strong> ${active}</div>
-    <div class="muted small" style="margin-top:6px;">
-      Redirect URI in use for Dropbox: <code>${DROPBOX_REDIRECT_URI}</code>
-    </div>
-    <div class="muted small" style="margin-top:6px;">
-      Tip: Ensure you are not opening this page as <code>file:///</code>. Use <code>http://localhost:5500/storage-connect.html</code> or your live domain.
-    </div>
-  `;
+/* HELPERS */
+function setAddUserMessage(text, type) {
+  addUserMsg.textContent = text || "";
+  addUserMsg.className = type || "";
+}
+function setPasswordMessage(text, type) {
+  passwordMsg.textContent = text || "";
+  passwordMsg.className = type || "";
 }
 
-/* Handle Dropbox returning with access_token in the URL hash */
-function handleDropboxReturn() {
-  if (!location.hash || !location.hash.includes("access_token=")) return;
-
-  const hash = new URLSearchParams(location.hash.slice(1));
-  const accessToken = hash.get("access_token");
-  const tokenType = hash.get("token_type");
-  const uid = hash.get("uid");
-  const accountId = hash.get("account_id");
-
-  if (accessToken) {
-    localStorage.setItem(K_DB_TOKENS, JSON.stringify({
-      access_token: accessToken,
-      token_type: tokenType,
-      uid,
-      account_id: accountId,
-      obtained_at: new Date().toISOString()
-    }));
-    setActive("dropbox");
+/* INITIAL LOAD */
+(async () => {
+  const { data: sessionData } = await client.auth.getSession();
+  if (!sessionData?.session) {
+    window.location.href = "signin.html";
+    return;
   }
 
-  // Clean URL (remove token from address bar)
-  history.replaceState({}, document.title, location.pathname);
-}
+  const authUser = sessionData.session.user;
+  headerEmail.textContent = authUser.email;
 
-/* Start Dropbox OAuth (Implicit flow) */
-function connectDropbox() {
-  // If you are serving on a different port, update the redirect list + DROPBOX_REDIRECT_URI.
-  const authUrl =
-    "https://www.dropbox.com/oauth2/authorize" +
-    "?client_id=" + encodeURIComponent(DROPBOX_APP_KEY) +
-    "&response_type=token" +
-    "&redirect_uri=" + encodeURIComponent(DROPBOX_REDIRECT_URI);
+  // Load profile
+  let { data: profile } = await client
+    .from("users")
+    .select("*")
+    .eq("id", authUser.id)
+    .single();
 
-  window.location.href = authUrl;
-}
+  if (!profile) {
+    // New user fallback
+    profile = {
+      id: authUser.id,
+      email: authUser.email,
+      full_name: authUser.user_metadata?.full_name || authUser.email,
+      role: "admin",
+      account_type: "single_user",
+      business_owner_id: authUser.id,
+      is_active: true
+    };
+    await client.from("users").upsert(profile);
+  }
 
-function disconnectDropbox() {
-  localStorage.removeItem(K_DB_TOKENS);
-  const active = localStorage.getItem(K_ACTIVE);
-  if (active === "dropbox") localStorage.setItem(K_ACTIVE, "(none)");
-  setStatus();
-}
+  // Block deleted users
+  if (profile.is_active === false) {
+    alert("This user has been deactivated. Please contact your administrator.");
+    await client.auth.signOut();
+    window.location.href = "signin.html";
+    return;
+  }
 
-/* Wire buttons */
-document.getElementById("btn-dropbox-connect").addEventListener("click", connectDropbox);
-document.getElementById("btn-dropbox-disconnect").addEventListener("click", disconnectDropbox);
+  currentProfile = profile;
 
-document.getElementById("btn-onedrive-connect").addEventListener("click", () => {
-  alert("OneDrive requires MSAL client configuration. We can add this next.");
+  // Account card
+  accountName.textContent = profile.full_name || profile.email || "";
+  badgeRole.textContent = profile.role === "admin" ? "Admin" : "Standard";
+  badgeRole.classList.add(profile.role === "admin" ? "admin" : "standard");
+
+  badgeAccountType.textContent =
+    profile.account_type === "business" ? "Business account" : "Single user";
+  badgeAccountType.classList.add(profile.account_type);
+
+  const rawId = profile.business_owner_id || profile.id;
+  const shortId = "WI-" + rawId.slice(0, 8).toUpperCase();
+  accountIdSpan.textContent = shortId;
+  accountIdSpan.title = rawId;
+
+  // Users section config + upgrade card visibility
+  if (profile.account_type === "single_user") {
+    usersIntro.textContent = "This is a single-user account.";
+    singleUserNote.classList.remove("hidden");
+    addUserCard.classList.add("hidden");
+    if (upgradeAccountCard) upgradeAccountCard.classList.remove("hidden");
+  } else if (profile.role !== "admin") {
+    usersIntro.textContent =
+      "You can view users in your business. Only admins can manage them.";
+    singleUserNote.classList.add("hidden");
+    addUserCard.classList.add("hidden");
+    if (upgradeAccountCard) upgradeAccountCard.classList.add("hidden");
+  } else {
+    usersIntro.textContent = "Manage users under this business account.";
+    singleUserNote.classList.add("hidden");
+    addUserCard.classList.remove("hidden");
+    if (upgradeAccountCard) upgradeAccountCard.classList.add("hidden");
+  }
+
+  // Load active users in business
+  const businessOwnerId = profile.business_owner_id || profile.id;
+  const { data: users } = await client
+    .from("users")
+    .select("*")
+    .eq("business_owner_id", businessOwnerId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: true });
+
+  if (users?.length) {
+    usersListContainer.classList.remove("hidden");
+    usersTableBody.innerHTML = "";
+
+    users.forEach(u => {
+      const tr = document.createElement("tr");
+      const canManage = currentProfile.role === "admin";
+      const isSelf = u.id === currentProfile.id;
+
+      let actionsHtml = "";
+      if (canManage && !isSelf) {
+        actionsHtml = `
+          <button class="btn-reset" data-email="${u.email}">Reset</button>
+          ${
+            u.role !== "admin"
+              ? `<button class="btn-promote" data-id="${u.id}">Promote</button>`
+              : ""
+          }
+          <button class="btn-delete" data-id="${u.id}">Delete</button>
+        `;
+      }
+
+      tr.innerHTML = `
+        <td>${u.email}</td>
+        <td>${u.full_name || ""}</td>
+        <td>${u.role}</td>
+        <td>${u.created_at ? new Date(u.created_at).toLocaleString() : ""}</td>
+        <td>${actionsHtml}</td>
+      `;
+
+      usersTableBody.appendChild(tr);
+    });
+
+    // Attach admin-only actions
+    if (currentProfile.role === "admin") {
+      // Reset password (email link)
+      document.querySelectorAll(".btn-reset").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const email = btn.dataset.email;
+
+          const { error } = await client.auth.resetPasswordForEmail(email, {
+            redirectTo: "https://warehouseintelligence.co.uk/password-reset.html"
+          });
+
+          if (error) {
+            console.error(error);
+            alert("Unable to send reset email. Please try again.");
+            return;
+          }
+
+          alert("If an account exists, a reset email has been sent to " + email);
+        });
+      });
+
+      // Promote to admin
+      document.querySelectorAll(".btn-promote").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const userId = btn.dataset.id;
+          if (!confirm("Promote this user to admin?")) return;
+          const { error } = await client
+            .from("users")
+            .update({ role: "admin" })
+            .eq("id", userId);
+          if (error) {
+            alert("Error promoting user: " + error.message);
+          } else {
+            window.location.reload();
+          }
+        });
+      });
+
+      // Delete user (soft delete: is_active = false)
+      document.querySelectorAll(".btn-delete").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const userId = btn.dataset.id;
+          if (
+            !confirm(
+              "Delete this user? They will be deactivated and unable to access the account."
+            )
+          )
+            return;
+          const { error } = await client
+            .from("users")
+            .update({ is_active: false })
+            .eq("id", userId);
+          if (error) {
+            alert("Error deleting user: " + error.message);
+          } else {
+            window.location.reload();
+          }
+        });
+      });
+    }
+  }
+})();
+
+/* ADD USER – ADMIN + BUSINESS ONLY */
+addUserForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  setAddUserMessage("", "");
+
+  if (!currentProfile || currentProfile.account_type !== "business" || currentProfile.role !== "admin") {
+    setAddUserMessage("You are not allowed to add users.", "error");
+    return;
+  }
+
+  const fullName = document.getElementById("new-user-name").value.trim();
+  const email = document.getElementById("new-user-email").value.trim();
+  const password = document.getElementById("new-user-password").value;
+  const confirm = document.getElementById("new-user-password-confirm").value;
+
+  if (password !== confirm) {
+    setAddUserMessage("Passwords do not match.", "error");
+    return;
+  }
+
+  const transient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false }
+  });
+
+  const { data, error } = await transient.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName } }
+  });
+
+  if (error) {
+    setAddUserMessage(error.message, "error");
+    return;
+  }
+
+  const newUser = data.user;
+
+  const { error: upsertErr } = await client
+    .from("users")
+    .upsert({
+      id: newUser.id,
+      email,
+      full_name: fullName,
+      role: "standard",
+      account_type: "business",
+      business_owner_id: currentProfile.business_owner_id || currentProfile.id,
+      is_active: true
+    });
+
+  if (upsertErr) {
+    setAddUserMessage(upsertErr.message, "error");
+    return;
+  }
+
+  setAddUserMessage("User created successfully.", "success");
+  setTimeout(() => window.location.reload(), 800);
 });
 
-document.getElementById("btn-local-connect").addEventListener("click", () => {
-  alert("Local folder requires the browser Folder Picker API. We can implement this next (Chrome/Edge).");
+/* SETTINGS – CHANGE OWN PASSWORD */
+passwordForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  setPasswordMessage("", "");
+
+  const pw1 = document.getElementById("password-new").value;
+  const pw2 = document.getElementById("password-new-confirm").value;
+
+  if (pw1 !== pw2) {
+    setPasswordMessage("Passwords do not match.", "error");
+    return;
+  }
+
+  const { error } = await client.auth.updateUser({ password: pw1 });
+
+  if (error) {
+    setPasswordMessage(error.message, "error");
+    return;
+  }
+
+  setPasswordMessage("Password updated. You may be asked to sign in again on other devices.", "success");
+  passwordForm.reset();
 });
 
-/* Init */
-handleDropboxReturn();
-setStatus();
+/* UPGRADE ACCOUNT – BUTTON HANDLER */
+if (btnUpgradeAccount) {
+  btnUpgradeAccount.addEventListener("click", () => {
+    // Change this to your real upgrade / pricing flow when ready
+    window.location.href = "pricing.html";
+    // e.g. "https://warehouseintelligence.co.uk/pricing.html"
+  });
+}
 </script>
 
 </body>

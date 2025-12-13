@@ -2,253 +2,143 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Warehouse Intelligence – Storage Connections</title>
+  <title>Warehouse Intelligence – Connections</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
-      --wi-red:#dc2626;
-      --wi-red-dark:#b91c1c;
-      --bg:#f3f4f6;
-      --card:#ffffff;
-      --border:#e5e7eb;
-      --text:#111827;
-      --muted:#6b7280;
-      --ok:#16a34a;
-      --warn:#f59e0b;
-      --bad:#b91c1c;
+      --wi-red:#dc2626; --wi-red-dark:#b91c1c;
+      --bg:#f3f4f6; --card:#fff; --border:#e5e7eb;
+      --text:#111827; --muted:#6b7280;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      min-height:100vh;
-    }
-    header{
-      background:#fff;
-      border-bottom:1px solid var(--border);
-    }
-    .header-inner{
-      max-width:1100px;
-      margin:0 auto;
-      padding:14px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .brand{
-      font-weight:800;
-      font-size:1.1rem;
-      letter-spacing:0.2px;
-    }
+    body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}
+    header{background:#fff;border-bottom:1px solid var(--border)}
+    .wrap{max-width:1100px;margin:0 auto;padding:14px 18px}
+    .brand{font-weight:800;font-size:1.2rem}
     .brand span{color:var(--wi-red)}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .btn{
-      border:1px solid var(--border);
-      background:#fff;
-      color:var(--text);
-      padding:8px 12px;
-      border-radius:999px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:0.9rem;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
+      display:inline-block;padding:10px 14px;border-radius:999px;
+      border:1px solid var(--border);background:#fff;cursor:pointer;
+      text-decoration:none;color:var(--text);font-weight:600;font-size:.9rem
     }
     .btn:hover{background:#f9fafb}
-    .btn-primary{
-      background:var(--wi-red);
-      border-color:var(--wi-red);
-      color:#fff;
-    }
-    .btn-primary:hover{background:var(--wi-red-dark)}
-    main{
-      max-width:1100px;
-      margin:0 auto;
-      padding:18px;
-    }
-    .hero{
-      background:linear-gradient(180deg,#ffffff, #ffffff);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:18px;
-      box-shadow:0 10px 22px rgba(0,0,0,0.04);
-    }
-    h1{margin:0 0 6px 0; font-size:1.35rem}
-    .sub{margin:0; color:var(--muted); font-size:0.95rem}
-    .grid{
-      margin-top:14px;
-      display:grid;
-      grid-template-columns:repeat(12,1fr);
-      gap:14px;
-    }
+    .btnPrimary{background:var(--wi-red);border-color:transparent;color:#fff}
+    .btnPrimary:hover{background:var(--wi-red-dark)}
+    main .wrap{padding:22px 18px}
     .card{
-      grid-column:span 6;
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:16px;
-      box-shadow:0 10px 22px rgba(0,0,0,0.04);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-height:170px;
+      background:var(--card);border:1px solid var(--border);border-radius:14px;
+      padding:18px;box-shadow:0 6px 16px rgba(0,0,0,.04);margin-bottom:16px
     }
-    .card h2{margin:0; font-size:1.05rem}
-    .muted{color:var(--muted); font-size:0.92rem; margin:0}
-    .row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-top:auto;
+    h1{margin:0 0 6px;font-size:1.35rem}
+    .muted{color:var(--muted);font-size:.95rem;line-height:1.45}
+    .grid{
+      display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:14px
     }
+    @media (max-width: 980px){ .grid{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width: 520px){ .grid{grid-template-columns:1fr} }
+    .tile{
+      border:1px solid var(--border);border-radius:14px;padding:14px;
+      display:flex;gap:12px;align-items:center;background:#fff
+    }
+    .icon{
+      width:52px;height:52px;border-radius:14px;display:grid;place-items:center;
+      border:1px solid var(--border);background:#f9fafb;font-weight:800;color:var(--muted)
+    }
+    .tile h3{margin:0;font-size:1rem}
+    .tile .muted{margin:3px 0 0;font-size:.85rem}
+    .right{margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
     .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      font-size:0.82rem;
-      color:var(--muted);
-      background:#fff;
+      font-size:.75rem;border:1px solid var(--border);border-radius:999px;padding:3px 8px;
+      color:var(--muted);background:#fff
     }
-    .dot{width:9px;height:9px;border-radius:999px;background:var(--muted)}
-    .dot.ok{background:var(--ok)}
-    .dot.bad{background:var(--bad)}
-    .dot.warn{background:var(--warn)}
-
-    /* Config banner */
-    .notice{
-      margin-top:14px;
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius:14px;
-      padding:14px;
-    }
-    .notice h3{margin:0 0 6px 0; font-size:1rem}
-    .kv{
-      display:grid;
-      grid-template-columns:180px 1fr;
-      gap:8px 12px;
-      margin-top:10px;
-      font-size:0.9rem;
-    }
-    .k{color:var(--muted)}
-    code{
-      background:#f9fafb;
-      border:1px solid var(--border);
-      padding:2px 6px;
-      border-radius:8px;
-    }
-
-    @media (max-width:900px){
-      .card{grid-column:span 12}
-      .kv{grid-template-columns:1fr}
-    }
+    .pill.on{background:#dcfce7;border-color:#bbf7d0;color:#166534}
+    .pill.off{background:#fee2e2;border-color:#fecaca;color:#991b1b}
+    .small{font-size:.85rem}
+    .warn{background:#fffbeb;border-color:#fde68a}
+    code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace}
   </style>
 </head>
 <body>
 
 <header>
-  <div class="header-inner">
+  <div class="wrap topbar">
     <div class="brand">Warehouse <span>Intelligence</span></div>
-    <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+    <div style="display:flex;gap:10px;align-items:center;">
       <a class="btn" href="dashboard.html">Back to dashboard</a>
-      <a class="btn" href="index.html">Home</a>
     </div>
   </div>
 </header>
 
 <main>
-  <div class="hero">
-    <h1>Storage Connections</h1>
-    <p class="sub">
-      Choose where schedules, exports and KPI outputs should be saved. Connections are per user and saved in this browser.
-    </p>
+  <div class="wrap">
 
-    <div class="grid">
-      <!-- Dropbox -->
-      <div class="card">
-        <h2>Dropbox</h2>
-        <p class="muted">
-          Sign in via Dropbox and allow access. Files can then be exported directly to your Dropbox folder.
-        </p>
-
-        <div class="row">
-          <span id="pill-dropbox" class="pill">
-            <span id="dot-dropbox" class="dot warn"></span>
-            <span id="text-dropbox">Not connected</span>
-          </span>
-
-          <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-            <button id="btn-dropbox-connect" class="btn btn-primary" type="button">Connect</button>
-            <button id="btn-dropbox-disconnect" class="btn" type="button">Disconnect</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- OneDrive (placeholder for next) -->
-      <div class="card">
-        <h2>OneDrive</h2>
-        <p class="muted">
-          Coming next. This will use Microsoft sign-in and save exports into a user-selected OneDrive folder.
-        </p>
-        <div class="row">
-          <span class="pill"><span class="dot warn"></span>Not enabled</span>
-          <button class="btn" type="button" disabled>Connect</button>
-        </div>
-      </div>
-
-      <!-- Azure (placeholder) -->
-      <div class="card">
-        <h2>Azure</h2>
-        <p class="muted">
-          Coming later. For business deployments that want a shared storage account / container.
-        </p>
-        <div class="row">
-          <span class="pill"><span class="dot warn"></span>Not enabled</span>
-          <button class="btn" type="button" disabled>Connect</button>
-        </div>
-      </div>
-
-      <!-- Local folder (placeholder) -->
-      <div class="card">
-        <h2>Local folder</h2>
-        <p class="muted">
-          Coming next. Uses the browser’s folder picker (File System Access API) where supported.
-        </p>
-        <div class="row">
-          <span class="pill"><span class="dot warn"></span>Not enabled</span>
-          <button class="btn" type="button" disabled>Select folder</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="notice" id="configNotice">
-      <h3>Configuration check</h3>
-      <p class="muted" style="margin:0;">
-        If Dropbox shows <em>invalid_redirect_uri</em>, your Dropbox App Redirect URI must match the value below exactly.
+    <div class="card">
+      <h1>Connections</h1>
+      <p class="muted">
+        Choose where your schedules and KPI exports are saved. Connections are stored per user in this browser.
+        You will be redirected to sign in with the provider when you click connect.
       </p>
 
-      <div class="kv">
-        <div class="k">Current page</div>
-        <div><code id="kvPage"></code></div>
+      <div id="statusBox" class="card warn" style="margin-top:12px;">
+        <div class="muted small" id="statusText">Loading status…</div>
+      </div>
 
-        <div class="k">Redirect URI sent</div>
-        <div><code id="kvRedirect"></code></div>
+      <div class="grid" style="margin-top:14px;">
 
-        <div class="k">Dropbox App key</div>
-        <div><code id="kvAppKey"></code></div>
-
-        <div class="k">What to add in Dropbox</div>
-        <div class="muted">
-          Add <code id="kvMustAdd"></code> under Dropbox Developer Console → OAuth 2 → Redirect URIs
+        <!-- Dropbox -->
+        <div class="tile">
+          <div class="icon">DB</div>
+          <div>
+            <h3>Dropbox</h3>
+            <div class="muted">OAuth sign-in, token saved locally</div>
+          </div>
+          <div class="right">
+            <span id="pillDropbox" class="pill off">Not connected</span>
+            <button id="btn-dropbox-connect" class="btn btnPrimary">Connect</button>
+            <button id="btn-dropbox-disconnect" class="btn small">Disconnect</button>
+          </div>
         </div>
+
+        <!-- OneDrive (placeholder - requires MSAL config) -->
+        <div class="tile">
+          <div class="icon">OD</div>
+          <div>
+            <h3>OneDrive</h3>
+            <div class="muted">Requires MSAL Client ID</div>
+          </div>
+          <div class="right">
+            <span id="pillOneDrive" class="pill off">Not configured</span>
+            <button id="btn-onedrive-connect" class="btn">Connect</button>
+          </div>
+        </div>
+
+        <!-- Azure (placeholder) -->
+        <div class="tile">
+          <div class="icon">AZ</div>
+          <div>
+            <h3>Azure</h3>
+            <div class="muted">Planned</div>
+          </div>
+          <div class="right">
+            <span class="pill">Coming soon</span>
+            <button class="btn" disabled>Connect</button>
+          </div>
+        </div>
+
+        <!-- Local folder (placeholder - requires File System Access API) -->
+        <div class="tile">
+          <div class="icon">PC</div>
+          <div>
+            <h3>Local folder</h3>
+            <div class="muted">Browser folder picker (Chrome/Edge)</div>
+          </div>
+          <div class="right">
+            <span id="pillLocal" class="pill off">Not connected</span>
+            <button id="btn-local-connect" class="btn">Choose folder</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -256,34 +146,90 @@
 </main>
 
 <script>
-/* =========================================================
-   Dropbox OAuth (Implicit flow)
-   - Works for static hosting (GitHub Pages) without secrets.
-   - Stores tokens in localStorage (per browser).
-   ========================================================= */
+/* =========================
+   Storage keys (same as dashboard summary)
+========================= */
+const K_ACTIVE = "wi_storage_active_v1";
+const K_DB_TOKENS = "wi_dropbox_tokens_v1";
+const K_OD_FLAG = "wi_onedrive_flag_v1";
+const K_LOCAL = "wi_local_folder_handle_v1";
 
-// Put your Dropbox App Key here:
+/* =========================
+   DROPBOX CONFIG
+   IMPORTANT: Uses correct authorize endpoint
+========================= */
 const DROPBOX_APP_KEY = "k8fsr7ttwve6k8m";
 
-// Always redirect back to *this page* (no query/hash)
-const DROPBOX_REDIRECT_URI = window.location.origin + window.location.pathname;
+// Force redirect URI to match what you whitelisted in Dropbox console.
+// Add both www and non-www in Dropbox console to be safe.
+const DROPBOX_REDIRECT_URI =
+  (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+    ? "http://localhost:5500/storage-connect.html"
+    : "https://warehouseintelligence.co.uk/storage-connect.html";
 
-// Storage keys (match your dashboard summary expectations)
-const LS_DROPBOX = "wi_dropbox_tokens_v1";
-const LS_ACTIVE = "wi_storage_active_v1";
-
-function setDropboxPill(connected) {
-  const dot = document.getElementById("dot-dropbox");
-  const text = document.getElementById("text-dropbox");
-  if (!dot || !text) return;
-
-  dot.classList.remove("ok","bad","warn");
-  dot.classList.add(connected ? "ok" : "warn");
-  text.textContent = connected ? "Connected" : "Not connected";
+function setActive(provider) {
+  localStorage.setItem(K_ACTIVE, provider);
 }
 
+function setStatus() {
+  const pillDropbox = document.getElementById("pillDropbox");
+  const pillOneDrive = document.getElementById("pillOneDrive");
+  const pillLocal = document.getElementById("pillLocal");
+  const statusText = document.getElementById("statusText");
+
+  const db = !!localStorage.getItem(K_DB_TOKENS);
+  const od = !!localStorage.getItem(K_OD_FLAG);
+  const lf = !!localStorage.getItem(K_LOCAL);
+
+  pillDropbox.className = "pill " + (db ? "on" : "off");
+  pillDropbox.textContent = db ? "Connected" : "Not connected";
+
+  pillOneDrive.className = "pill " + (od ? "on" : "off");
+  pillOneDrive.textContent = od ? "Connected" : "Not configured";
+
+  pillLocal.className = "pill " + (lf ? "on" : "off");
+  pillLocal.textContent = lf ? "Connected" : "Not connected";
+
+  const active = localStorage.getItem(K_ACTIVE) || "(none)";
+  statusText.innerHTML = `
+    <div><strong>Active:</strong> ${active}</div>
+    <div class="muted small" style="margin-top:6px;">
+      Redirect URI in use for Dropbox: <code>${DROPBOX_REDIRECT_URI}</code>
+    </div>
+    <div class="muted small" style="margin-top:6px;">
+      Tip: Ensure you are not opening this page as <code>file:///</code>. Use <code>http://localhost:5500/storage-connect.html</code> or your live domain.
+    </div>
+  `;
+}
+
+/* Handle Dropbox returning with access_token in the URL hash */
+function handleDropboxReturn() {
+  if (!location.hash || !location.hash.includes("access_token=")) return;
+
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const accessToken = hash.get("access_token");
+  const tokenType = hash.get("token_type");
+  const uid = hash.get("uid");
+  const accountId = hash.get("account_id");
+
+  if (accessToken) {
+    localStorage.setItem(K_DB_TOKENS, JSON.stringify({
+      access_token: accessToken,
+      token_type: tokenType,
+      uid,
+      account_id: accountId,
+      obtained_at: new Date().toISOString()
+    }));
+    setActive("dropbox");
+  }
+
+  // Clean URL (remove token from address bar)
+  history.replaceState({}, document.title, location.pathname);
+}
+
+/* Start Dropbox OAuth (Implicit flow) */
 function connectDropbox() {
-  // Build Dropbox OAuth URL
+  // If you are serving on a different port, update the redirect list + DROPBOX_REDIRECT_URI.
   const authUrl =
     "https://www.dropbox.com/oauth2/authorize" +
     "?client_id=" + encodeURIComponent(DROPBOX_APP_KEY) +
@@ -294,68 +240,27 @@ function connectDropbox() {
 }
 
 function disconnectDropbox() {
-  localStorage.removeItem(LS_DROPBOX);
-  if ((localStorage.getItem(LS_ACTIVE) || "").toLowerCase() === "dropbox") {
-    localStorage.removeItem(LS_ACTIVE);
-  }
-  setDropboxPill(false);
-}
-
-function handleDropboxReturn() {
-  // Dropbox returns tokens in the URL hash (#access_token=...)
-  if (!window.location.hash) return;
-
-  const hash = new URLSearchParams(window.location.hash.slice(1));
-  const accessToken = hash.get("access_token");
-  const tokenType = hash.get("token_type");
-  const uid = hash.get("uid"); // sometimes provided
-
-  if (accessToken) {
-    localStorage.setItem(LS_DROPBOX, JSON.stringify({
-      access_token: accessToken,
-      token_type: tokenType || "bearer",
-      uid: uid || null,
-      created_at: new Date().toISOString(),
-      redirect_uri: DROPBOX_REDIRECT_URI
-    }));
-    localStorage.setItem(LS_ACTIVE, "dropbox");
-
-    // Clean the URL (removes token from address bar)
-    history.replaceState(null, "", window.location.pathname);
-  }
-}
-
-function refreshUI() {
-  let connected = false;
-  try {
-    const t = JSON.parse(localStorage.getItem(LS_DROPBOX) || "null");
-    connected = !!(t && t.access_token);
-  } catch {}
-  setDropboxPill(connected);
-
-  // Config panel
-  const kvPage = document.getElementById("kvPage");
-  const kvRedirect = document.getElementById("kvRedirect");
-  const kvAppKey = document.getElementById("kvAppKey");
-  const kvMustAdd = document.getElementById("kvMustAdd");
-
-  if (kvPage) kvPage.textContent = window.location.href;
-  if (kvRedirect) kvRedirect.textContent = DROPBOX_REDIRECT_URI;
-  if (kvAppKey) kvAppKey.textContent = DROPBOX_APP_KEY || "(missing)";
-  if (kvMustAdd) kvMustAdd.textContent = DROPBOX_REDIRECT_URI;
+  localStorage.removeItem(K_DB_TOKENS);
+  const active = localStorage.getItem(K_ACTIVE);
+  if (active === "dropbox") localStorage.setItem(K_ACTIVE, "(none)");
+  setStatus();
 }
 
 /* Wire buttons */
-document.addEventListener("DOMContentLoaded", () => {
-  const btnConnect = document.getElementById("btn-dropbox-connect");
-  const btnDisconnect = document.getElementById("btn-dropbox-disconnect");
+document.getElementById("btn-dropbox-connect").addEventListener("click", connectDropbox);
+document.getElementById("btn-dropbox-disconnect").addEventListener("click", disconnectDropbox);
 
-  if (btnConnect) btnConnect.addEventListener("click", connectDropbox);
-  if (btnDisconnect) btnDisconnect.addEventListener("click", disconnectDropbox);
-
-  handleDropboxReturn();
-  refreshUI();
+document.getElementById("btn-onedrive-connect").addEventListener("click", () => {
+  alert("OneDrive requires MSAL client configuration. We can add this next.");
 });
+
+document.getElementById("btn-local-connect").addEventListener("click", () => {
+  alert("Local folder requires the browser Folder Picker API. We can implement this next (Chrome/Edge).");
+});
+
+/* Init */
+handleDropboxReturn();
+setStatus();
 </script>
 
 </body>
