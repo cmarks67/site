@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Warehouse Intelligence – Storage Connections</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --wi-red:#dc2626;
+      --wi-red-dark:#b91c1c;
+      --bg:#f3f4f6;
+      --card:#ffffff;
+      --border:#e5e7eb;
+      --text:#111827;
+      --muted:#6b7280;
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --bad:#b91c1c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+    header{
+      background:#fff;
+      border-bottom:1px solid var(--border);
+    }
+    .header-inner{
+      max-width:1100px;
+      margin:0 auto;
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{
+      font-weight:800;
+      font-size:1.1rem;
+      letter-spacing:0.2px;
+    }
+    .brand span{color:var(--wi-red)}
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      padding:8px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:0.9rem;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .btn:hover{background:#f9fafb}
+    .btn-primary{
+      background:var(--wi-red);
+      border-color:var(--wi-red);
+      color:#fff;
+    }
+    .btn-primary:hover{background:var(--wi-red-dark)}
+    main{
+      max-width:1100px;
+      margin:0 auto;
+      padding:18px;
+    }
+    .hero{
+      background:linear-gradient(180deg,#ffffff, #ffffff);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 10px 22px rgba(0,0,0,0.04);
+    }
+    h1{margin:0 0 6px 0; font-size:1.35rem}
+    .sub{margin:0; color:var(--muted); font-size:0.95rem}
+    .grid{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:repeat(12,1fr);
+      gap:14px;
+    }
+    .card{
+      grid-column:span 6;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:16px;
+      box-shadow:0 10px 22px rgba(0,0,0,0.04);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:170px;
+    }
+    .card h2{margin:0; font-size:1.05rem}
+    .muted{color:var(--muted); font-size:0.92rem; margin:0}
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:auto;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      font-size:0.82rem;
+      color:var(--muted);
+      background:#fff;
+    }
+    .dot{width:9px;height:9px;border-radius:999px;background:var(--muted)}
+    .dot.ok{background:var(--ok)}
+    .dot.bad{background:var(--bad)}
+    .dot.warn{background:var(--warn)}
+
+    /* Config banner */
+    .notice{
+      margin-top:14px;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:14px;
+      padding:14px;
+    }
+    .notice h3{margin:0 0 6px 0; font-size:1rem}
+    .kv{
+      display:grid;
+      grid-template-columns:180px 1fr;
+      gap:8px 12px;
+      margin-top:10px;
+      font-size:0.9rem;
+    }
+    .k{color:var(--muted)}
+    code{
+      background:#f9fafb;
+      border:1px solid var(--border);
+      padding:2px 6px;
+      border-radius:8px;
+    }
+
+    @media (max-width:900px){
+      .card{grid-column:span 12}
+      .kv{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">Warehouse <span>Intelligence</span></div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+      <a class="btn" href="dashboard.html">Back to dashboard</a>
+      <a class="btn" href="index.html">Home</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>Storage Connections</h1>
+    <p class="sub">
+      Choose where schedules, exports and KPI outputs should be saved. Connections are per user and saved in this browser.
+    </p>
+
+    <div class="grid">
+      <!-- Dropbox -->
+      <div class="card">
+        <h2>Dropbox</h2>
+        <p class="muted">
+          Sign in via Dropbox and allow access. Files can then be exported directly to your Dropbox folder.
+        </p>
+
+        <div class="row">
+          <span id="pill-dropbox" class="pill">
+            <span id="dot-dropbox" class="dot warn"></span>
+            <span id="text-dropbox">Not connected</span>
+          </span>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+            <button id="btn-dropbox-connect" class="btn btn-primary" type="button">Connect</button>
+            <button id="btn-dropbox-disconnect" class="btn" type="button">Disconnect</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- OneDrive (placeholder for next) -->
+      <div class="card">
+        <h2>OneDrive</h2>
+        <p class="muted">
+          Coming next. This will use Microsoft sign-in and save exports into a user-selected OneDrive folder.
+        </p>
+        <div class="row">
+          <span class="pill"><span class="dot warn"></span>Not enabled</span>
+          <button class="btn" type="button" disabled>Connect</button>
+        </div>
+      </div>
+
+      <!-- Azure (placeholder) -->
+      <div class="card">
+        <h2>Azure</h2>
+        <p class="muted">
+          Coming later. For business deployments that want a shared storage account / container.
+        </p>
+        <div class="row">
+          <span class="pill"><span class="dot warn"></span>Not enabled</span>
+          <button class="btn" type="button" disabled>Connect</button>
+        </div>
+      </div>
+
+      <!-- Local folder (placeholder) -->
+      <div class="card">
+        <h2>Local folder</h2>
+        <p class="muted">
+          Coming next. Uses the browser’s folder picker (File System Access API) where supported.
+        </p>
+        <div class="row">
+          <span class="pill"><span class="dot warn"></span>Not enabled</span>
+          <button class="btn" type="button" disabled>Select folder</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="notice" id="configNotice">
+      <h3>Configuration check</h3>
+      <p class="muted" style="margin:0;">
+        If Dropbox shows <em>invalid_redirect_uri</em>, your Dropbox App Redirect URI must match the value below exactly.
+      </p>
+
+      <div class="kv">
+        <div class="k">Current page</div>
+        <div><code id="kvPage"></code></div>
+
+        <div class="k">Redirect URI sent</div>
+        <div><code id="kvRedirect"></code></div>
+
+        <div class="k">Dropbox App key</div>
+        <div><code id="kvAppKey"></code></div>
+
+        <div class="k">What to add in Dropbox</div>
+        <div class="muted">
+          Add <code id="kvMustAdd"></code> under Dropbox Developer Console → OAuth 2 → Redirect URIs
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+/* =========================================================
+   Dropbox OAuth (Implicit flow)
+   - Works for static hosting (GitHub Pages) without secrets.
+   - Stores tokens in localStorage (per browser).
+   ========================================================= */
+
+// Put your Dropbox App Key here:
+const DROPBOX_APP_KEY = "k8fsr7ttwve6k8m";
+
+// Always redirect back to *this page* (no query/hash)
+const DROPBOX_REDIRECT_URI = window.location.origin + window.location.pathname;
+
+// Storage keys (match your dashboard summary expectations)
+const LS_DROPBOX = "wi_dropbox_tokens_v1";
+const LS_ACTIVE = "wi_storage_active_v1";
+
+function setDropboxPill(connected) {
+  const dot = document.getElementById("dot-dropbox");
+  const text = document.getElementById("text-dropbox");
+  if (!dot || !text) return;
+
+  dot.classList.remove("ok","bad","warn");
+  dot.classList.add(connected ? "ok" : "warn");
+  text.textContent = connected ? "Connected" : "Not connected";
+}
+
+function connectDropbox() {
+  // Build Dropbox OAuth URL
+  const authUrl =
+    "https://www.dropbox.com/oauth2/authorize" +
+    "?client_id=" + encodeURIComponent(DROPBOX_APP_KEY) +
+    "&response_type=token" +
+    "&redirect_uri=" + encodeURIComponent(DROPBOX_REDIRECT_URI);
+
+  window.location.href = authUrl;
+}
+
+function disconnectDropbox() {
+  localStorage.removeItem(LS_DROPBOX);
+  if ((localStorage.getItem(LS_ACTIVE) || "").toLowerCase() === "dropbox") {
+    localStorage.removeItem(LS_ACTIVE);
+  }
+  setDropboxPill(false);
+}
+
+function handleDropboxReturn() {
+  // Dropbox returns tokens in the URL hash (#access_token=...)
+  if (!window.location.hash) return;
+
+  const hash = new URLSearchParams(window.location.hash.slice(1));
+  const accessToken = hash.get("access_token");
+  const tokenType = hash.get("token_type");
+  const uid = hash.get("uid"); // sometimes provided
+
+  if (accessToken) {
+    localStorage.setItem(LS_DROPBOX, JSON.stringify({
+      access_token: accessToken,
+      token_type: tokenType || "bearer",
+      uid: uid || null,
+      created_at: new Date().toISOString(),
+      redirect_uri: DROPBOX_REDIRECT_URI
+    }));
+    localStorage.setItem(LS_ACTIVE, "dropbox");
+
+    // Clean the URL (removes token from address bar)
+    history.replaceState(null, "", window.location.pathname);
+  }
+}
+
+function refreshUI() {
+  let connected = false;
+  try {
+    const t = JSON.parse(localStorage.getItem(LS_DROPBOX) || "null");
+    connected = !!(t && t.access_token);
+  } catch {}
+  setDropboxPill(connected);
+
+  // Config panel
+  const kvPage = document.getElementById("kvPage");
+  const kvRedirect = document.getElementById("kvRedirect");
+  const kvAppKey = document.getElementById("kvAppKey");
+  const kvMustAdd = document.getElementById("kvMustAdd");
+
+  if (kvPage) kvPage.textContent = window.location.href;
+  if (kvRedirect) kvRedirect.textContent = DROPBOX_REDIRECT_URI;
+  if (kvAppKey) kvAppKey.textContent = DROPBOX_APP_KEY || "(missing)";
+  if (kvMustAdd) kvMustAdd.textContent = DROPBOX_REDIRECT_URI;
+}
+
+/* Wire buttons */
+document.addEventListener("DOMContentLoaded", () => {
+  const btnConnect = document.getElementById("btn-dropbox-connect");
+  const btnDisconnect = document.getElementById("btn-dropbox-disconnect");
+
+  if (btnConnect) btnConnect.addEventListener("click", connectDropbox);
+  if (btnDisconnect) btnDisconnect.addEventListener("click", disconnectDropbox);
+
+  handleDropboxReturn();
+  refreshUI();
+});
+</script>
+
+</body>
+</html>
