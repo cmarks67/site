@@ -103,29 +103,44 @@
       font-weight: 600;
     }
     .nav-item:hover { background: #f3f4f6; }
+
     .sidebar-divider {
       height: 1px;
       background: var(--border);
       margin: 12px 0;
     }
-    .tools-header {
+
+    /* Dropdown headers (Tools / Settings) */
+    .dropdown-header {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       cursor: pointer;
       padding: 6px 2px;
       border-radius: 6px;
     }
-    .tools-header:hover { background: #f3f4f6; }
-    .tools-arrow { font-size: 0.8rem; color: var(--text-muted); }
-    .tool-item {
+    .dropdown-header:hover { background: #f3f4f6; }
+    .dropdown-arrow { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* Dropdown items */
+    .tool-item,
+    .settings-item {
       display: block;
       padding: 6px 10px;
       border-radius: 6px;
       color: var(--text-main);
       text-decoration: none;
       font-size: 0.9rem;
+      cursor: pointer;
     }
-    .tool-item:hover { background: #f3f4f6; }
+    .tool-item:hover,
+    .settings-item:hover { background: #f3f4f6; }
+
+    .settings-item.active {
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 600;
+    }
 
     /* MAIN CONTENT */
     .content { flex: 1; }
@@ -167,6 +182,7 @@
       padding: 6px 4px;
       text-align: left;
       font-size: 0.9rem;
+      vertical-align: top;
     }
     th { font-weight: 500; color: var(--text-muted); }
 
@@ -287,17 +303,29 @@
     <aside class="sidebar">
       <div class="sidebar-section-title">Navigation</div>
       <div id="nav-overview" class="nav-item active">Overview</div>
-      <div id="nav-users" class="nav-item">Users</div>
-      <div id="nav-settings" class="nav-item">Settings</div>
 
       <div class="sidebar-divider"></div>
 
-      <div class="tools-header" id="tools-toggle">
+      <!-- Tools dropdown -->
+      <div class="dropdown-header" id="tools-toggle">
         <span class="sidebar-section-title" style="margin-bottom:0;">Tools</span>
-        <span class="tools-arrow" id="tools-arrow">▾</span>
+        <span class="dropdown-arrow" id="tools-arrow">▾</span>
       </div>
       <div id="sidebar-tools-list">
         <a href="warehouse_scheduling.html" class="tool-item">Scheduling tool</a>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Settings dropdown (same format as Tools) -->
+      <div class="dropdown-header" id="settings-toggle">
+        <span class="sidebar-section-title" style="margin-bottom:0;">Settings</span>
+        <span class="dropdown-arrow" id="settings-arrow">▾</span>
+      </div>
+      <div id="sidebar-settings-list">
+        <div id="set-users" class="settings-item">Users</div>
+        <div id="set-password" class="settings-item">Password reset</div>
+        <div id="set-connections" class="settings-item">Connections</div>
       </div>
     </aside>
 
@@ -392,14 +420,16 @@
         </div>
       </section>
 
-      <!-- SETTINGS -->
-      <section id="section-settings" class="hidden">
+      <!-- PASSWORD RESET (Settings dropdown item) -->
+      <section id="section-password" class="hidden">
         <div class="card">
-          <h2>Settings</h2>
-          <h3 style="margin-top:6px;">Change your password</h3>
+          <h2>Password reset</h2>
+
+          <h3 style="margin-top:10px;">Change your password</h3>
           <p class="muted">
-            This will update the password for your own account only.
+            This updates the password for your own user only.
           </p>
+
           <form id="password-form" style="margin-top:10px;">
             <label>New password</label>
             <input id="password-new" type="password" required />
@@ -410,6 +440,46 @@
             <button class="btn-small" type="submit">Update password</button>
           </form>
           <div id="password-message"></div>
+        </div>
+
+        <div class="card hidden" id="admin-reset-card">
+          <h3>Admin: send a password reset email</h3>
+          <p class="muted">
+            This sends a reset link to the email address. If the user exists, they will receive an email.
+          </p>
+
+          <form id="admin-reset-form" style="margin-top:10px;">
+            <label>User email</label>
+            <input id="admin-reset-email" type="email" placeholder="name@company.com" required />
+            <button class="btn-small" type="submit">Send reset email</button>
+          </form>
+          <div id="admin-reset-message"></div>
+        </div>
+      </section>
+
+      <!-- CONNECTIONS (Settings dropdown item) -->
+      <section id="section-connections" class="hidden">
+        <div class="card">
+          <h2>Connections</h2>
+          <p class="muted">
+            Supabase connection details and a quick connectivity check.
+          </p>
+
+          <div style="margin-top:10px;">
+            <div class="muted" style="margin-bottom:6px;">Supabase URL</div>
+            <div class="account-id" id="conn-supabase-url"></div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <button id="btn-test-connection" class="btn-primary" type="button">Test connection</button>
+            <div id="conn-test-message" style="margin-top:8px;"></div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div class="muted">
+              Note: You should not expose service-role keys in the browser. This page uses your anon key (client-side safe).
+            </div>
+          </div>
         </div>
       </section>
 
@@ -431,22 +501,36 @@ let currentProfile = null;
 const headerEmail = document.getElementById("header-user-email");
 const btnSignout = document.getElementById("btn-signout");
 
+/* Sidebar navigation */
 const navOverview = document.getElementById("nav-overview");
-const navUsers = document.getElementById("nav-users");
-const navSettings = document.getElementById("nav-settings");
-const sectionOverview = document.getElementById("section-overview");
-const sectionUsers = document.getElementById("section-users");
-const sectionSettings = document.getElementById("section-settings");
 
+/* Tools dropdown */
 const toolsToggle = document.getElementById("tools-toggle");
 const toolsArrow = document.getElementById("tools-arrow");
 const toolsList = document.getElementById("sidebar-tools-list");
 
+/* Settings dropdown */
+const settingsToggle = document.getElementById("settings-toggle");
+const settingsArrow = document.getElementById("settings-arrow");
+const settingsList = document.getElementById("sidebar-settings-list");
+
+const setUsers = document.getElementById("set-users");
+const setPassword = document.getElementById("set-password");
+const setConnections = document.getElementById("set-connections");
+
+/* Sections */
+const sectionOverview = document.getElementById("section-overview");
+const sectionUsers = document.getElementById("section-users");
+const sectionPassword = document.getElementById("section-password");
+const sectionConnections = document.getElementById("section-connections");
+
+/* Account card */
 const accountName = document.getElementById("account-name");
 const badgeRole = document.getElementById("badge-role");
 const badgeAccountType = document.getElementById("badge-account-type");
 const accountIdSpan = document.getElementById("account-id");
 
+/* Users section */
 const usersIntro = document.getElementById("users-intro");
 const usersTableBody = document.getElementById("users-table-body");
 const usersListContainer = document.getElementById("users-list-container");
@@ -455,44 +539,82 @@ const addUserCard = document.getElementById("add-user-card");
 const addUserForm = document.getElementById("add-user-form");
 const addUserMsg = document.getElementById("add-user-message");
 
+/* Password reset section */
 const passwordForm = document.getElementById("password-form");
 const passwordMsg = document.getElementById("password-message");
+
+const adminResetCard = document.getElementById("admin-reset-card");
+const adminResetForm = document.getElementById("admin-reset-form");
+const adminResetEmail = document.getElementById("admin-reset-email");
+const adminResetMsg = document.getElementById("admin-reset-message");
+
+/* Connections section */
+const connSupabaseUrl = document.getElementById("conn-supabase-url");
+const btnTestConnection = document.getElementById("btn-test-connection");
+const connTestMsg = document.getElementById("conn-test-message");
 
 /* Upgrade card elements */
 const upgradeAccountCard = document.getElementById("upgrade-account-card");
 const btnUpgradeAccount = document.getElementById("btn-upgrade-account");
 
-/* NAVIGATION */
-function showSection(section) {
+/* HELPERS */
+function clearActiveSidebar() {
   navOverview.classList.remove("active");
-  navUsers.classList.remove("active");
-  navSettings.classList.remove("active");
+  [setUsers, setPassword, setConnections].forEach(el => el.classList.remove("active"));
+}
+
+function hideAllSections() {
   sectionOverview.classList.add("hidden");
   sectionUsers.classList.add("hidden");
-  sectionSettings.classList.add("hidden");
+  sectionPassword.classList.add("hidden");
+  sectionConnections.classList.add("hidden");
+}
+
+function showSection(section) {
+  clearActiveSidebar();
+  hideAllSections();
 
   if (section === "overview") {
     navOverview.classList.add("active");
     sectionOverview.classList.remove("hidden");
-  } else if (section === "users") {
-    navUsers.classList.add("active");
+    return;
+  }
+  if (section === "users") {
+    setUsers.classList.add("active");
     sectionUsers.classList.remove("hidden");
-  } else if (section === "settings") {
-    navSettings.classList.add("active");
-    sectionSettings.classList.remove("hidden");
+    return;
+  }
+  if (section === "password") {
+    setPassword.classList.add("active");
+    sectionPassword.classList.remove("hidden");
+    return;
+  }
+  if (section === "connections") {
+    setConnections.classList.add("active");
+    sectionConnections.classList.remove("hidden");
+    return;
   }
 }
 
+/* NAVIGATION EVENTS */
 navOverview.addEventListener("click", () => showSection("overview"));
-navUsers.addEventListener("click", () => showSection("users"));
-navSettings.addEventListener("click", () => showSection("settings"));
+setUsers.addEventListener("click", () => showSection("users"));
+setPassword.addEventListener("click", () => showSection("password"));
+setConnections.addEventListener("click", () => showSection("connections"));
 
-/* TOOLS TOGGLE */
+/* DROPDOWNS */
 let toolsExpanded = true;
 toolsToggle.addEventListener("click", () => {
   toolsExpanded = !toolsExpanded;
   toolsList.classList.toggle("hidden", !toolsExpanded);
   toolsArrow.textContent = toolsExpanded ? "▾" : "▸";
+});
+
+let settingsExpanded = true;
+settingsToggle.addEventListener("click", () => {
+  settingsExpanded = !settingsExpanded;
+  settingsList.classList.toggle("hidden", !settingsExpanded);
+  settingsArrow.textContent = settingsExpanded ? "▾" : "▸";
 });
 
 /* SIGN OUT */
@@ -510,9 +632,19 @@ function setPasswordMessage(text, type) {
   passwordMsg.textContent = text || "";
   passwordMsg.className = type || "";
 }
+function setAdminResetMessage(text, type) {
+  adminResetMsg.textContent = text || "";
+  adminResetMsg.className = type || "";
+}
+function setConnMessage(text, type) {
+  connTestMsg.textContent = text || "";
+  connTestMsg.className = type || "";
+}
 
 /* INITIAL LOAD */
 (async () => {
+  connSupabaseUrl.textContent = SUPABASE_URL;
+
   const { data: sessionData } = await client.auth.getSession();
   if (!sessionData?.session) {
     window.location.href = "signin.html";
@@ -566,6 +698,13 @@ function setPasswordMessage(text, type) {
   const shortId = "WI-" + rawId.slice(0, 8).toUpperCase();
   accountIdSpan.textContent = shortId;
   accountIdSpan.title = rawId;
+
+  // Password reset: show admin card only for admins
+  if (currentProfile.role === "admin") {
+    adminResetCard.classList.remove("hidden");
+  } else {
+    adminResetCard.classList.add("hidden");
+  }
 
   // Users section config + upgrade card visibility
   if (profile.account_type === "single_user") {
@@ -674,12 +813,13 @@ function setPasswordMessage(text, type) {
             !confirm(
               "Delete this user? They will be deactivated and unable to access the account."
             )
-          )
-            return;
+          ) return;
+
           const { error } = await client
             .from("users")
             .update({ is_active: false })
             .eq("id", userId);
+
           if (error) {
             alert("Error deleting user: " + error.message);
           } else {
@@ -689,6 +829,9 @@ function setPasswordMessage(text, type) {
       });
     }
   }
+
+  // Default landing section
+  showSection("overview");
 })();
 
 /* ADD USER – ADMIN + BUSINESS ONLY */
@@ -704,9 +847,9 @@ addUserForm.addEventListener("submit", async (e) => {
   const fullName = document.getElementById("new-user-name").value.trim();
   const email = document.getElementById("new-user-email").value.trim();
   const password = document.getElementById("new-user-password").value;
-  const confirm = document.getElementById("new-user-password-confirm").value;
+  const confirmPw = document.getElementById("new-user-password-confirm").value;
 
-  if (password !== confirm) {
+  if (password !== confirmPw) {
     setAddUserMessage("Passwords do not match.", "error");
     return;
   }
@@ -749,7 +892,7 @@ addUserForm.addEventListener("submit", async (e) => {
   setTimeout(() => window.location.reload(), 800);
 });
 
-/* SETTINGS – CHANGE OWN PASSWORD */
+/* PASSWORD – CHANGE OWN PASSWORD */
 passwordForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   setPasswordMessage("", "");
@@ -773,12 +916,60 @@ passwordForm.addEventListener("submit", async (e) => {
   passwordForm.reset();
 });
 
+/* ADMIN PASSWORD RESET (EMAIL LINK) */
+if (adminResetForm) {
+  adminResetForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setAdminResetMessage("", "");
+
+    if (!currentProfile || currentProfile.role !== "admin") {
+      setAdminResetMessage("Admin access required.", "error");
+      return;
+    }
+
+    const email = (adminResetEmail.value || "").trim();
+    if (!email) {
+      setAdminResetMessage("Please enter an email address.", "error");
+      return;
+    }
+
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://warehouseintelligence.co.uk/password-reset.html"
+    });
+
+    if (error) {
+      console.error(error);
+      setAdminResetMessage("Unable to send reset email. Please try again.", "error");
+      return;
+    }
+
+    setAdminResetMessage("If an account exists, a reset email has been sent to " + email + ".", "success");
+    adminResetForm.reset();
+  });
+}
+
+/* CONNECTION TEST */
+btnTestConnection.addEventListener("click", async () => {
+  setConnMessage("Testing...", "muted");
+
+  // A minimal query that should work if RLS allows reading own row; we do a very small select.
+  const { error } = await client
+    .from("users")
+    .select("id")
+    .limit(1);
+
+  if (error) {
+    setConnMessage("Connection failed: " + error.message, "error");
+    return;
+  }
+
+  setConnMessage("Connection OK.", "success");
+});
+
 /* UPGRADE ACCOUNT – BUTTON HANDLER */
 if (btnUpgradeAccount) {
   btnUpgradeAccount.addEventListener("click", () => {
-    // Change this to your real upgrade / pricing flow when ready
     window.location.href = "pricing.html";
-    // e.g. "https://warehouseintelligence.co.uk/pricing.html"
   });
 }
 </script>
