@@ -325,7 +325,11 @@
       <div id="sidebar-settings-list">
         <div id="set-users" class="settings-item">Users</div>
         <div id="set-password" class="settings-item">Password reset</div>
-        <div id="set-connections" class="settings-item">Connections</div>
+
+        <!-- IMPORTANT: this is now a real link to a published page -->
+        <a id="set-connections-link" class="settings-item" href="storage-connect.html">
+          Connections
+        </a>
       </div>
     </aside>
 
@@ -457,32 +461,6 @@
         </div>
       </section>
 
-      <!-- CONNECTIONS (Settings dropdown item) -->
-      <section id="section-connections" class="hidden">
-        <div class="card">
-          <h2>Connections</h2>
-          <p class="muted">
-            Supabase connection details and a quick connectivity check.
-          </p>
-
-          <div style="margin-top:10px;">
-            <div class="muted" style="margin-bottom:6px;">Supabase URL</div>
-            <div class="account-id" id="conn-supabase-url"></div>
-          </div>
-
-          <div style="margin-top:12px;">
-            <button id="btn-test-connection" class="btn-primary" type="button">Test connection</button>
-            <div id="conn-test-message" style="margin-top:8px;"></div>
-          </div>
-
-          <div style="margin-top:14px;">
-            <div class="muted">
-              Note: You should not expose service-role keys in the browser. This page uses your anon key (client-side safe).
-            </div>
-          </div>
-        </div>
-      </section>
-
     </section>
   </div>
 </main>
@@ -516,13 +494,12 @@ const settingsList = document.getElementById("sidebar-settings-list");
 
 const setUsers = document.getElementById("set-users");
 const setPassword = document.getElementById("set-password");
-const setConnections = document.getElementById("set-connections");
+const setConnectionsLink = document.getElementById("set-connections-link");
 
 /* Sections */
 const sectionOverview = document.getElementById("section-overview");
 const sectionUsers = document.getElementById("section-users");
 const sectionPassword = document.getElementById("section-password");
-const sectionConnections = document.getElementById("section-connections");
 
 /* Account card */
 const accountName = document.getElementById("account-name");
@@ -548,11 +525,6 @@ const adminResetForm = document.getElementById("admin-reset-form");
 const adminResetEmail = document.getElementById("admin-reset-email");
 const adminResetMsg = document.getElementById("admin-reset-message");
 
-/* Connections section */
-const connSupabaseUrl = document.getElementById("conn-supabase-url");
-const btnTestConnection = document.getElementById("btn-test-connection");
-const connTestMsg = document.getElementById("conn-test-message");
-
 /* Upgrade card elements */
 const upgradeAccountCard = document.getElementById("upgrade-account-card");
 const btnUpgradeAccount = document.getElementById("btn-upgrade-account");
@@ -560,14 +532,14 @@ const btnUpgradeAccount = document.getElementById("btn-upgrade-account");
 /* HELPERS */
 function clearActiveSidebar() {
   navOverview.classList.remove("active");
-  [setUsers, setPassword, setConnections].forEach(el => el.classList.remove("active"));
+  [setUsers, setPassword].forEach(el => el.classList.remove("active"));
+  // Note: Connections is a link now; we do not force active state.
 }
 
 function hideAllSections() {
   sectionOverview.classList.add("hidden");
   sectionUsers.classList.add("hidden");
   sectionPassword.classList.add("hidden");
-  sectionConnections.classList.add("hidden");
 }
 
 function showSection(section) {
@@ -589,18 +561,12 @@ function showSection(section) {
     sectionPassword.classList.remove("hidden");
     return;
   }
-  if (section === "connections") {
-    setConnections.classList.add("active");
-    sectionConnections.classList.remove("hidden");
-    return;
-  }
 }
 
 /* NAVIGATION EVENTS */
 navOverview.addEventListener("click", () => showSection("overview"));
 setUsers.addEventListener("click", () => showSection("users"));
 setPassword.addEventListener("click", () => showSection("password"));
-setConnections.addEventListener("click", () => showSection("connections"));
 
 /* DROPDOWNS */
 let toolsExpanded = true;
@@ -636,15 +602,9 @@ function setAdminResetMessage(text, type) {
   adminResetMsg.textContent = text || "";
   adminResetMsg.className = type || "";
 }
-function setConnMessage(text, type) {
-  connTestMsg.textContent = text || "";
-  connTestMsg.className = type || "";
-}
 
 /* INITIAL LOAD */
 (async () => {
-  connSupabaseUrl.textContent = SUPABASE_URL;
-
   const { data: sessionData } = await client.auth.getSession();
   if (!sessionData?.session) {
     window.location.href = "signin.html";
@@ -809,11 +769,7 @@ function setConnMessage(text, type) {
       document.querySelectorAll(".btn-delete").forEach(btn => {
         btn.addEventListener("click", async () => {
           const userId = btn.dataset.id;
-          if (
-            !confirm(
-              "Delete this user? They will be deactivated and unable to access the account."
-            )
-          ) return;
+          if (!confirm("Delete this user? They will be deactivated and unable to access the account.")) return;
 
           const { error } = await client
             .from("users")
@@ -947,24 +903,6 @@ if (adminResetForm) {
     adminResetForm.reset();
   });
 }
-
-/* CONNECTION TEST */
-btnTestConnection.addEventListener("click", async () => {
-  setConnMessage("Testing...", "muted");
-
-  // A minimal query that should work if RLS allows reading own row; we do a very small select.
-  const { error } = await client
-    .from("users")
-    .select("id")
-    .limit(1);
-
-  if (error) {
-    setConnMessage("Connection failed: " + error.message, "error");
-    return;
-  }
-
-  setConnMessage("Connection OK.", "success");
-});
 
 /* UPGRADE ACCOUNT – BUTTON HANDLER */
 if (btnUpgradeAccount) {
