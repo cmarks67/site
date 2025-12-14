@@ -286,7 +286,7 @@ function initOneDriveIfPossible(){
   msalApp = new msal.PublicClientApplication({
     auth: {
       clientId: AZURE_CLIENT_ID,
-      authority: "https://login.microsoftonline.com/consumers",
+      authority: "authority: "https://login.microsoftonline.com/common",
       redirectUri: REDIRECT_URI
     },
     cache: {
