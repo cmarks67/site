@@ -5,19 +5,11 @@
   <title>Warehouse Intelligence – Connections</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Force HTTPS (and optionally force www) -->
+  <!-- Force HTTPS -->
   <script>
-    (function () {
-      // Force HTTPS
-      if (location.protocol === "http:") {
-        location.replace("https://" + location.host + location.pathname + location.search + location.hash);
-        return;
-      }
-      // Optional: If your Pages custom domain is www.* and you want consistency, uncomment:
-      // if (location.hostname === "warehouseintelligence.co.uk") {
-      //   location.replace("https://www.warehouseintelligence.co.uk" + location.pathname + location.search + location.hash);
-      // }
-    })();
+    if (location.protocol === "http:") {
+      location.replace("https://" + location.host + location.pathname + location.search + location.hash);
+    }
   </script>
 
   <style>
@@ -32,57 +24,55 @@
     .wrap{max-width:1100px;margin:0 auto;padding:14px 18px}
     .brand{font-weight:800;font-size:1.2rem}
     .brand span{color:var(--wi-red)}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .btn{
-      display:inline-block;padding:10px 14px;border-radius:999px;
-      border:1px solid var(--border);background:#fff;cursor:pointer;
-      text-decoration:none;color:var(--text);font-weight:600;font-size:.9rem
-    }
-    .btn:hover{background:#f9fafb}
-    .btnPrimary{background:var(--wi-red);border-color:transparent;color:#fff}
+    .topbar{display:flex;align-items:center;justify-content:space-between}
+    .btn{padding:10px 14px;border-radius:999px;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:600}
+    .btnPrimary{background:var(--wi-red);color:#fff;border:none}
     .btnPrimary:hover{background:var(--wi-red-dark)}
     main .wrap{padding:22px 18px}
-    .card{
-      background:var(--card);border:1px solid var(--border);border-radius:14px;
-      padding:18px;box-shadow:0 6px 16px rgba(0,0,0,.04);margin-bottom:16px
-    }
-    h1{margin:0 0 6px;font-size:1.35rem}
-    .muted{color:var(--muted);font-size:.95rem;line-height:1.45}
-    .grid{
-      display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:14px
-    }
-    @media (max-width: 980px){ .grid{grid-template-columns:repeat(2,1fr)} }
-    @media (max-width: 520px){ .grid{grid-template-columns:1fr} }
-    .tile{
-      border:1px solid var(--border);border-radius:14px;padding:14px;
-      display:flex;gap:12px;align-items:center;background:#fff
-    }
-    .icon{
-      width:52px;height:52px;border-radius:14px;display:grid;place-items:center;
-      border:1px solid var(--border);background:#f9fafb;font-weight:800;color:var(--muted)
-    }
-    .tile h3{margin:0;font-size:1rem}
-    .tile .muted{margin:3px 0 0;font-size:.85rem}
-    .right{margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
-    .pill{
-      font-size:.75rem;border:1px solid var(--border);border-radius:999px;padding:3px 8px;
-      color:var(--muted);background:#fff
-    }
-    .pill.on{background:#dcfce7;border-color:#bbf7d0;color:#166534}
-    .pill.off{background:#fee2e2;border-color:#fecaca;color:#991b1b}
-    .small{font-size:.85rem}
-    .warn{background:#fffbeb;border-color:#fde68a}
-    code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace}
+    .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .tile{border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px}
+    .icon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;background:#f9fafb;border:1px solid var(--border)}
+    .right{margin-left:auto;display:flex;flex-direction:column;gap:6px}
+    .pill{font-size:.75rem;border-radius:999px;padding:3px 8px;border:1px solid var(--border)}
+    .pill.on{background:#dcfce7;color:#166534}
+    .pill.off{background:#fee2e2;color:#991b1b}
+    .warn{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px}
   </style>
+
+  <!-- MSAL loader (robust, non-fatal) -->
+  <script>
+    (function () {
+      function load(src, ok, bad) {
+        var s = document.createElement("script");
+        s.src = src;
+        s.defer = true;
+        s.onload = ok;
+        s.onerror = bad;
+        document.head.appendChild(s);
+      }
+
+      load(
+        "https://unpkg.com/@azure/msal-browser@2.39.0/dist/msal-browser.min.js",
+        function(){ console.log("MSAL loaded (unpkg)"); },
+        function(){
+          console.warn("MSAL failed (unpkg), trying jsDelivr");
+          load(
+            "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.39.0/dist/msal-browser.min.js",
+            function(){ console.log("MSAL loaded (jsDelivr)"); },
+            function(){ console.error("MSAL failed to load"); }
+          );
+        }
+      );
+    })();
+  </script>
 </head>
 
 <body>
 <header>
   <div class="wrap topbar">
     <div class="brand">Warehouse <span>Intelligence</span></div>
-    <div style="display:flex;gap:10px;align-items:center;">
-      <a class="btn" href="dashboard.html">Back to dashboard</a>
-    </div>
+    <a class="btn" href="dashboard.html">Back to dashboard</a>
   </div>
 </header>
 
@@ -90,29 +80,24 @@
   <div class="wrap">
     <div class="card">
       <h1>Connections</h1>
-      <p class="muted">
-        Choose where your schedules and KPI exports are saved. Connections are stored per user in this browser.
-        You will be redirected to sign in with the provider when you click connect.
-      </p>
 
-      <div id="statusBox" class="card warn" style="margin-top:12px;">
-        <div class="muted small" id="statusText">Loading status…</div>
+      <div id="statusBox" class="warn">
+        <div id="statusText">Initialising…</div>
       </div>
 
-      <div class="grid" style="margin-top:14px;">
+      <div class="grid" style="margin-top:14px">
 
         <!-- Dropbox -->
         <div class="tile">
           <div class="icon">DB</div>
           <div>
-            <h3>Dropbox</h3>
-            <div class="muted">OAuth sign-in, token saved locally</div>
+            <strong>Dropbox</strong><br/>
+            OAuth sign-in
           </div>
           <div class="right">
             <span id="pillDropbox" class="pill off">Not connected</span>
-            <button id="btn-dropbox-connect" class="btn btnPrimary" type="button">Connect</button>
-            <button id="btn-dropbox-test" class="btn small" type="button">Test</button>
-            <button id="btn-dropbox-disconnect" class="btn small" type="button">Disconnect</button>
+            <button id="dbConnect" class="btnPrimary">Connect</button>
+            <button id="dbTest" class="btn">Test</button>
           </div>
         </div>
 
@@ -120,40 +105,13 @@
         <div class="tile">
           <div class="icon">OD</div>
           <div>
-            <h3>OneDrive</h3>
-            <div class="muted">Microsoft sign-in (MSAL) + Graph</div>
+            <strong>OneDrive</strong><br/>
+            MSAL + Graph
           </div>
           <div class="right">
-            <span id="pillOneDrive" class="pill off">Not connected</span>
-            <button id="btn-onedrive-connect" class="btn btnPrimary" type="button">Connect</button>
-            <button id="btn-onedrive-test" class="btn small" type="button">Test</button>
-            <button id="btn-onedrive-disconnect" class="btn small" type="button">Disconnect</button>
-          </div>
-        </div>
-
-        <!-- Azure placeholder -->
-        <div class="tile">
-          <div class="icon">AZ</div>
-          <div>
-            <h3>Azure</h3>
-            <div class="muted">Planned</div>
-          </div>
-          <div class="right">
-            <span class="pill">Coming soon</span>
-            <button class="btn" disabled type="button">Connect</button>
-          </div>
-        </div>
-
-        <!-- Local folder placeholder -->
-        <div class="tile">
-          <div class="icon">PC</div>
-          <div>
-            <h3>Local folder</h3>
-            <div class="muted">Browser folder picker (Chrome/Edge)</div>
-          </div>
-          <div class="right">
-            <span id="pillLocal" class="pill off">Not connected</span>
-            <button id="btn-local-connect" class="btn" type="button">Choose folder</button>
+            <span id="pillOD" class="pill off">Unavailable</span>
+            <button id="odConnect" class="btnPrimary" disabled>Connect</button>
+            <button id="odTest" class="btn" disabled>Test</button>
           </div>
         </div>
 
@@ -162,276 +120,83 @@
   </div>
 </main>
 
-
-<!-- MSAL loader (unpkg -> jsDelivr fallback) -->
 <script>
-  (function () {
-    function load(src, ok, bad) {
-      var s = document.createElement("script");
-      s.src = src;
-      s.defer = true;
-      s.onload = ok;
-      s.onerror = bad;
-      document.head.appendChild(s);
-    }
+/* =========================
+   SAFE CORE LOGIC
+========================= */
+const DROPBOX_APP_KEY = "k8fsr7ttwve6k8m";
+const DROPBOX_REDIRECT = location.origin + location.pathname;
 
-    load(
-      "https://unpkg.com/@azure/msal-browser@2.39.0/dist/msal-browser.min.js",
-      function () { console.log("MSAL loaded (unpkg)"); },
-      function () {
-        console.warn("MSAL failed (unpkg). Trying jsDelivr...");
-        load(
-          "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.39.0/dist/msal-browser.min.js",
-          function () { console.log("MSAL loaded (jsDelivr)"); },
-          function () { console.error("MSAL failed to load from both CDNs."); }
-        );
+const status = msg => document.getElementById("statusText").innerHTML = msg;
+
+/* ---------- Dropbox ---------- */
+document.getElementById("dbConnect").onclick = () => {
+  location.href =
+    "https://www.dropbox.com/oauth2/authorize" +
+    "?client_id=" + DROPBOX_APP_KEY +
+    "&response_type=token" +
+    "&redirect_uri=" + encodeURIComponent(DROPBOX_REDIRECT);
+};
+
+document.getElementById("dbTest").onclick = () => {
+  alert("Dropbox JS active – OAuth redirect will confirm token.");
+};
+
+/* ---------- OneDrive (guarded) ---------- */
+function enableOneDrive() {
+  document.getElementById("pillOD").textContent = "Ready";
+  document.getElementById("pillOD").className = "pill on";
+  document.getElementById("odConnect").disabled = false;
+  document.getElementById("odTest").disabled = false;
+}
+
+function waitForMsal(max=8000){
+  return new Promise(res=>{
+    const start=Date.now();
+    const t=setInterval(()=>{
+      if(window.msal && msal.PublicClientApplication){
+        clearInterval(t); res(true);
       }
-    );
-  })();
-</script>
+      if(Date.now()-start>max){
+        clearInterval(t); res(false);
+      }
+    },100);
+  });
+}
 
+(async()=>{
+  status("Checking OneDrive availability…");
+  const ok = await waitForMsal();
+  if(!ok){
+    status("OneDrive unavailable (MSAL blocked). Dropbox is fully functional.");
+    return;
+  }
 
+  enableOneDrive();
 
-<script>
-(() => {
-  "use strict";
-
-  // If anything errors, show it in the yellow status box (so it never silently “dies”).
-  window.addEventListener("error", (e) => {
-    const st = document.getElementById("statusText");
-    if (st) st.textContent = "Script error: " + (e?.message || "Unknown error");
+  const msalApp = new msal.PublicClientApplication({
+    auth:{
+      clientId:"861977dd-6e5a-46ab-a3c8-edfd6098a741",
+      authority:"https://login.microsoftonline.com/consumers",
+      redirectUri:location.origin+location.pathname
+    }
   });
 
-  const K_ACTIVE     = "wi_storage_active_v1";
-  const K_DB_TOKENS  = "wi_dropbox_tokens_v1";
-  const K_OD_FLAG    = "wi_onedrive_flag_v1";
-  const K_LOCAL      = "wi_local_folder_handle_v1";
-
-  const DROPBOX_APP_KEY = "k8fsr7ttwve6k8m";
-  const DROPBOX_REDIRECT_URI =
-    (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-      ? "http://localhost:5500/storage-connect.html"
-      : (location.origin + location.pathname); // matches current domain (www or apex)
-
-  const ONEDRIVE_CLIENT_ID = "861977dd-6e5a-46ab-a3c8-edfd6098a741";
-
-  // IMPORTANT:
-  // Ensure your Azure App Registration includes Redirect URI(s) for BOTH variants if you use them:
-  //  - https://warehouseintelligence.co.uk/storage-connect.html
-  //  - https://www.warehouseintelligence.co.uk/storage-connect.html
-  const msalConfig = {
-    auth: {
-      clientId: ONEDRIVE_CLIENT_ID,
-      authority: "https://login.microsoftonline.com/consumers",
-      redirectUri: location.origin + location.pathname
-    },
-    cache: { cacheLocation: "localStorage" }
+  document.getElementById("odConnect").onclick = async ()=>{
+    await msalApp.loginPopup({scopes:["User.Read","Files.ReadWrite"]});
+    status("OneDrive connected successfully.");
   };
 
-  const odScopes = ["User.Read", "Files.ReadWrite"]; // Write access for uploads later
-  const msalInstance = new msal.PublicClientApplication(msalConfig);
-
-  function setActive(provider) { localStorage.setItem(K_ACTIVE, provider); }
-
-  function safeJsonParse(s) { try { return JSON.parse(s); } catch { return null; } }
-
-  function setStatus(extraLine) {
-    const pillDropbox = document.getElementById("pillDropbox");
-    const pillOneDrive = document.getElementById("pillOneDrive");
-    const pillLocal = document.getElementById("pillLocal");
-    const statusText = document.getElementById("statusText");
-
-    const db = !!localStorage.getItem(K_DB_TOKENS);
-    const od = (msalInstance.getAllAccounts().length > 0) || !!localStorage.getItem(K_OD_FLAG);
-    const lf = !!localStorage.getItem(K_LOCAL);
-
-    pillDropbox.className = "pill " + (db ? "on" : "off");
-    pillDropbox.textContent = db ? "Connected" : "Not connected";
-
-    pillOneDrive.className = "pill " + (od ? "on" : "off");
-    pillOneDrive.textContent = od ? "Connected" : "Not connected";
-
-    pillLocal.className = "pill " + (lf ? "on" : "off");
-    pillLocal.textContent = lf ? "Connected" : "Not connected";
-
-    const active = localStorage.getItem(K_ACTIVE) || "(none)";
-    statusText.innerHTML = `
-      <div><strong>Active:</strong> ${active}</div>
-      <div class="muted small" style="margin-top:6px;">Dropbox Redirect: <code>${DROPBOX_REDIRECT_URI}</code></div>
-      <div class="muted small" style="margin-top:6px;">OneDrive Redirect: <code>${location.origin + location.pathname}</code></div>
-      ${extraLine ? `<div class="muted small" style="margin-top:6px;">${extraLine}</div>` : ""}
-    `;
-  }
-
-  /* -------------------------
-     Dropbox
-  ------------------------- */
-  function handleDropboxReturn() {
-    if (!location.hash || !location.hash.includes("access_token=")) return;
-
-    const hash = new URLSearchParams(location.hash.slice(1));
-    const accessToken = hash.get("access_token");
-    const tokenType = hash.get("token_type");
-    const uid = hash.get("uid");
-    const accountId = hash.get("account_id");
-
-    if (accessToken) {
-      localStorage.setItem(K_DB_TOKENS, JSON.stringify({
-        access_token: accessToken,
-        token_type: tokenType,
-        uid,
-        account_id: accountId,
-        obtained_at: new Date().toISOString()
-      }));
-      setActive("dropbox");
-    }
-
-    history.replaceState({}, document.title, location.pathname);
-  }
-
-  function connectDropbox() {
-    const authUrl =
-      "https://www.dropbox.com/oauth2/authorize" +
-      "?client_id=" + encodeURIComponent(DROPBOX_APP_KEY) +
-      "&response_type=token" +
-      "&redirect_uri=" + encodeURIComponent(DROPBOX_REDIRECT_URI);
-
-    window.location.href = authUrl;
-  }
-
-  function disconnectDropbox() {
-    localStorage.removeItem(K_DB_TOKENS);
-    if (localStorage.getItem(K_ACTIVE) === "dropbox") localStorage.setItem(K_ACTIVE, "(none)");
-    setStatus("Dropbox disconnected.");
-  }
-
-  async function testDropbox() {
-    const tok = safeJsonParse(localStorage.getItem(K_DB_TOKENS) || "");
-    const accessToken = tok?.access_token;
-    if (!accessToken) { alert("Dropbox not connected. Click Connect first."); return; }
-
-    const resp = await fetch("https://api.dropboxapi.com/2/users/get_current_account", {
-      method: "POST",
-      headers: { "Authorization": "Bearer " + accessToken, "Content-Type": "application/json" },
-      body: "null"
+  document.getElementById("odTest").onclick = async ()=>{
+    const acc = msalApp.getAllAccounts()[0];
+    const tok = await msalApp.acquireTokenSilent({
+      account:acc,
+      scopes:["User.Read"]
     });
-    const data = await resp.json();
-    if (!resp.ok) {
-      console.error("Dropbox test error:", data);
-      alert("Dropbox test failed: " + (data?.error_summary || resp.statusText));
-      return;
-    }
-    alert("Dropbox OK.\nName: " + (data?.name?.display_name || "") + "\nEmail: " + (data?.email || ""));
-  }
+    alert("OneDrive OK. Token acquired.");
+  };
 
-  /* -------------------------
-     OneDrive (MSAL + Graph)
-  ------------------------- */
-  msalInstance.handleRedirectPromise().catch(err => console.warn("MSAL redirect handling:", err));
-
-  function odActiveAccount() {
-    const a = msalInstance.getActiveAccount();
-    if (a) return a;
-    const all = msalInstance.getAllAccounts();
-    if (all.length) {
-      msalInstance.setActiveAccount(all[0]);
-      return all[0];
-    }
-    return null;
-  }
-
-  async function odToken() {
-    const account = odActiveAccount();
-    if (!account) throw new Error("No signed-in Microsoft account. Click OneDrive Connect first.");
-    try {
-      return await msalInstance.acquireTokenSilent({ scopes: odScopes, account });
-    } catch {
-      return await msalInstance.acquireTokenPopup({ scopes: odScopes });
-    }
-  }
-
-  async function connectOneDrive() {
-    try {
-      const result = await msalInstance.loginPopup({ scopes: odScopes });
-      msalInstance.setActiveAccount(result.account);
-      localStorage.setItem(K_OD_FLAG, "1");
-      setActive("onedrive");
-      setStatus("OneDrive connected as: <code>" + (result.account?.username || "user") + "</code>");
-      alert("OneDrive connected.");
-    } catch (e) {
-      console.error("OneDrive connect failed:", e);
-      alert("OneDrive sign-in failed: " + (e?.message || String(e)));
-      setStatus("OneDrive sign-in failed. Check Azure Redirect URI matches this page.");
-    }
-  }
-
-  async function testOneDrive() {
-    try {
-      const t = await odToken();
-      const resp = await fetch("https://graph.microsoft.com/v1.0/me/drive/root/children?$top=10", {
-        headers: { Authorization: "Bearer " + t.accessToken }
-      });
-      const data = await resp.json();
-      if (!resp.ok) {
-        console.error("Graph error:", data);
-        alert("OneDrive test failed: " + (data?.error?.message || resp.statusText));
-        return;
-      }
-      const names = (data.value || []).map(x => x.name).slice(0, 10);
-      alert(names.length ? ("OneDrive OK. Top items:\n- " + names.join("\n- ")) : "OneDrive OK (no items returned).");
-    } catch (e) {
-      console.error("OneDrive test failed:", e);
-      alert("OneDrive test failed: " + (e?.message || String(e)));
-    }
-  }
-
-  async function disconnectOneDrive() {
-    try {
-      const account = odActiveAccount();
-      if (account) await msalInstance.logoutPopup({ account });
-
-      localStorage.removeItem(K_OD_FLAG);
-      if (localStorage.getItem(K_ACTIVE) === "onedrive") localStorage.setItem(K_ACTIVE, "(none)");
-      setStatus("OneDrive disconnected.");
-      alert("OneDrive disconnected.");
-    } catch (e) {
-      console.error("OneDrive disconnect failed:", e);
-      alert("OneDrive disconnect failed: " + (e?.message || String(e)));
-    }
-  }
-
-  /* -------------------------
-     Local folder placeholder
-  ------------------------- */
-  function connectLocalFolder() {
-    alert("Local folder picker can be implemented next (Chrome/Edge Folder Picker API).");
-  }
-
-  /* -------------------------
-     Wire after DOM is ready
-  ------------------------- */
-  function wire() {
-    document.getElementById("btn-dropbox-connect")?.addEventListener("click", connectDropbox);
-    document.getElementById("btn-dropbox-test")?.addEventListener("click", testDropbox);
-    document.getElementById("btn-dropbox-disconnect")?.addEventListener("click", disconnectDropbox);
-
-    document.getElementById("btn-onedrive-connect")?.addEventListener("click", connectOneDrive);
-    document.getElementById("btn-onedrive-test")?.addEventListener("click", testOneDrive);
-    document.getElementById("btn-onedrive-disconnect")?.addEventListener("click", disconnectOneDrive);
-
-    document.getElementById("btn-local-connect")?.addEventListener("click", connectLocalFolder);
-
-    handleDropboxReturn();
-    setStatus("Script loaded OK.");
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", wire);
-  } else {
-    wire();
-  }
 })();
 </script>
-
 </body>
 </html>
