@@ -158,285 +158,162 @@
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/dist/msal-browser.min.js"></script>
 
 <script>
+(() => {
+  "use strict";
 
-console.log("storage-connect.html script loaded");
+  // Hard proof the script is running
+  console.log("storage-connect.html script loaded (boot)");
 
-document.addEventListener("click", (e) => {
-  if (e.target && e.target.id) console.log("Clicked:", e.target.id);
-});
+  // More reliable click logger (works even if you click inner elements)
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("button, a");
+    if (el) console.log("Clicked:", el.id || el.className || el.textContent.trim());
+  });
 
-  
+  /* =========================
+     Storage keys
+  ========================= */
+  const K_ACTIVE   = "wi_storage_active_v1";
+  const K_DB_TOKENS= "wi_dropbox_tokens_v1";
+  const K_OD_FLAG  = "wi_onedrive_flag_v1";
+  const K_LOCAL    = "wi_local_folder_handle_v1";
 
-/* =========================
-   Storage keys (same as dashboard summary)
-========================= */
-const K_ACTIVE   = "wi_storage_active_v1";
-const K_DB_TOKENS= "wi_dropbox_tokens_v1";
-const K_OD_FLAG  = "wi_onedrive_flag_v1";
-const K_LOCAL    = "wi_local_folder_handle_v1";
+  /* =========================
+     Dropbox config
+  ========================= */
+  const DROPBOX_APP_KEY = "k8fsr7ttwve6k8m";
+  const DROPBOX_REDIRECT_URI =
+    (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+      ? "http://localhost:5500/storage-connect.html"
+      : "https://warehouseintelligence.co.uk/storage-connect.html";
 
-/* =========================
-   DROPBOX CONFIG
-========================= */
-const DROPBOX_APP_KEY = "k8fsr7ttwve6k8m";
-
-// Force redirect URI to match what you whitelisted in Dropbox console.
-const DROPBOX_REDIRECT_URI =
-  (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-    ? "http://localhost:5500/storage-connect.html"
-    : "https://warehouseintelligence.co.uk/storage-connect.html";
-
-/* =========================
-   ONEDRIVE (AZURE) CONFIG
-========================= */
-const ONEDRIVE_CLIENT_ID = "861977dd-6e5a-46ab-a3c8-edfd6098a741";
-
-// For personal Microsoft accounts use consumers.
-// If your app is multi-tenant (work + personal) you can change to "common".
-const msalConfig = {
-  auth: {
-    clientId: ONEDRIVE_CLIENT_ID,
-    authority: "https://login.microsoftonline.com/consumers",
-    redirectUri: window.location.origin + window.location.pathname
-  },
-  cache: {
-    cacheLocation: "localStorage",
-    storeAuthStateInCookie: false
-  }
-};
-
-// Minimal scopes for sign-in + OneDrive read access (Graph)
-const odLoginRequest = { scopes: ["User.Read", "Files.Read"] };
-
-const msalInstance = new msal.PublicClientApplication(msalConfig);
-
-/* =========================
-   Shared helpers
-========================= */
-function setActive(provider) {
-  localStorage.setItem(K_ACTIVE, provider);
-}
-
-function setStatus() {
-  const pillDropbox = document.getElementById("pillDropbox");
-  const pillOneDrive = document.getElementById("pillOneDrive");
-  const pillLocal = document.getElementById("pillLocal");
-  const statusText = document.getElementById("statusText");
-
-  const db = !!localStorage.getItem(K_DB_TOKENS);
-
-  // OneDrive status: prefer real MSAL account state, then fallback to flag.
-  const od = !!(msalInstance.getAllAccounts().length) || !!localStorage.getItem(K_OD_FLAG);
-
-  const lf = !!localStorage.getItem(K_LOCAL);
-
-  pillDropbox.className = "pill " + (db ? "on" : "off");
-  pillDropbox.textContent = db ? "Connected" : "Not connected";
-
-  pillOneDrive.className = "pill " + (od ? "on" : "off");
-  pillOneDrive.textContent = od ? "Connected" : "Not connected";
-
-  pillLocal.className = "pill " + (lf ? "on" : "off");
-  pillLocal.textContent = lf ? "Connected" : "Not connected";
-
-  const active = localStorage.getItem(K_ACTIVE) || "(none)";
-  statusText.innerHTML = `
-    <div><strong>Active:</strong> ${active}</div>
-    <div class="muted small" style="margin-top:6px;">
-      Redirect URI in use for Dropbox: <code>${DROPBOX_REDIRECT_URI}</code>
-    </div>
-    <div class="muted small" style="margin-top:6px;">
-      OneDrive redirect URI in use: <code>${window.location.origin + window.location.pathname}</code>
-    </div>
-    <div class="muted small" style="margin-top:6px;">
-      Tip: Ensure you are not opening this page as <code>file:///</code>. Use <code>http://localhost:5500/storage-connect.html</code> or your live domain.
-    </div>
-  `;
-}
-
-/* =========================
-   Dropbox OAuth (implicit)
-========================= */
-function handleDropboxReturn() {
-  if (!location.hash || !location.hash.includes("access_token=")) return;
-
-  const hash = new URLSearchParams(location.hash.slice(1));
-  const accessToken = hash.get("access_token");
-  const tokenType = hash.get("token_type");
-  const uid = hash.get("uid");
-  const accountId = hash.get("account_id");
-
-  if (accessToken) {
-    localStorage.setItem(K_DB_TOKENS, JSON.stringify({
-      access_token: accessToken,
-      token_type: tokenType,
-      uid,
-      account_id: accountId,
-      obtained_at: new Date().toISOString()
-    }));
-    setActive("dropbox");
+  function setActive(provider) {
+    localStorage.setItem(K_ACTIVE, provider);
   }
 
-  history.replaceState({}, document.title, location.pathname);
-}
+  function setStatus() {
+    const pillDropbox = document.getElementById("pillDropbox");
+    const pillOneDrive = document.getElementById("pillOneDrive");
+    const pillLocal = document.getElementById("pillLocal");
+    const statusText = document.getElementById("statusText");
 
-function connectDropbox() {
-  const authUrl =
-    "https://www.dropbox.com/oauth2/authorize" +
-    "?client_id=" + encodeURIComponent(DROPBOX_APP_KEY) +
-    "&response_type=token" +
-    "&redirect_uri=" + encodeURIComponent(DROPBOX_REDIRECT_URI);
+    const db = !!localStorage.getItem(K_DB_TOKENS);
+    const od = !!localStorage.getItem(K_OD_FLAG);
+    const lf = !!localStorage.getItem(K_LOCAL);
 
-  window.location.href = authUrl;
-}
+    pillDropbox.className = "pill " + (db ? "on" : "off");
+    pillDropbox.textContent = db ? "Connected" : "Not connected";
 
-function disconnectDropbox() {
-  localStorage.removeItem(K_DB_TOKENS);
-  const active = localStorage.getItem(K_ACTIVE);
-  if (active === "dropbox") localStorage.setItem(K_ACTIVE, "(none)");
-  setStatus();
-}
+    pillOneDrive.className = "pill " + (od ? "on" : "off");
+    pillOneDrive.textContent = od ? "Connected" : "Not connected";
 
-/* =========================
-   OneDrive / MSAL
-========================= */
-function setOneDriveMiniNote(text){
-  const el = document.getElementById("onedriveMiniNote");
-  if (el) el.textContent = text || "";
-}
+    pillLocal.className = "pill " + (lf ? "on" : "off");
+    pillLocal.textContent = lf ? "Connected" : "Not connected";
 
-async function ensureActiveAccount() {
-  const accounts = msalInstance.getAllAccounts();
-  if (accounts.length) {
-    msalInstance.setActiveAccount(accounts[0]);
-    return accounts[0];
+    const active = localStorage.getItem(K_ACTIVE) || "(none)";
+    statusText.innerHTML = `
+      <div><strong>Active:</strong> ${active}</div>
+      <div class="muted small" style="margin-top:6px;">
+        Dropbox Redirect URI: <code>${DROPBOX_REDIRECT_URI}</code>
+      </div>
+      <div class="muted small" style="margin-top:6px;">
+        Page URL: <code>${location.origin + location.pathname}</code>
+      </div>
+    `;
+
+    console.log("Status updated");
   }
-  return null;
-}
 
-async function acquireOneDriveToken() {
-  const account = await ensureActiveAccount();
-  if (!account) throw new Error("No signed-in Microsoft account found. Click Connect first.");
-  try {
-    return await msalInstance.acquireTokenSilent({ ...odLoginRequest, account });
-  } catch {
-    return await msalInstance.acquireTokenPopup(odLoginRequest);
+  function handleDropboxReturn() {
+    if (!location.hash || !location.hash.includes("access_token=")) return;
+
+    const hash = new URLSearchParams(location.hash.slice(1));
+    const accessToken = hash.get("access_token");
+    const tokenType = hash.get("token_type");
+    const uid = hash.get("uid");
+    const accountId = hash.get("account_id");
+
+    if (accessToken) {
+      localStorage.setItem(K_DB_TOKENS, JSON.stringify({
+        access_token: accessToken,
+        token_type: tokenType,
+        uid,
+        account_id: accountId,
+        obtained_at: new Date().toISOString()
+      }));
+      setActive("dropbox");
+    }
+
+    history.replaceState({}, document.title, location.pathname);
   }
-}
 
-async function initMsalRedirectHandling() {
-  // Safe even if we use popup; it prevents edge cases if MSAL ever uses redirect.
-  try {
-    await msalInstance.handleRedirectPromise();
-  } catch (e) {
-    setOneDriveMiniNote("MSAL session error. Try Incognito or clear Microsoft cookies.");
-    console.warn(e);
+  function connectDropbox() {
+    const authUrl =
+      "https://www.dropbox.com/oauth2/authorize" +
+      "?client_id=" + encodeURIComponent(DROPBOX_APP_KEY) +
+      "&response_type=token" +
+      "&redirect_uri=" + encodeURIComponent(DROPBOX_REDIRECT_URI);
+
+    window.location.href = authUrl;
   }
-}
 
-async function connectOneDrive() {
-  setOneDriveMiniNote("Signing in…");
-  try {
-    const result = await msalInstance.loginPopup(odLoginRequest);
-    msalInstance.setActiveAccount(result.account);
-
-    // Mark “connected” in your existing status pattern
-    localStorage.setItem(K_OD_FLAG, "1");
-    setActive("onedrive");
-
-    setOneDriveMiniNote("Signed in as: " + (result.account?.username || "Microsoft user"));
+  function disconnectDropbox() {
+    localStorage.removeItem(K_DB_TOKENS);
+    if (localStorage.getItem(K_ACTIVE) === "dropbox") localStorage.setItem(K_ACTIVE, "(none)");
     setStatus();
-  } catch (e) {
-    setOneDriveMiniNote("Sign-in cancelled or failed.");
-    alert("OneDrive sign-in failed: " + (e?.message || String(e)));
   }
-}
 
-async function testOneDrive() {
-  setOneDriveMiniNote("Testing connection (listing files)…");
-  try {
-    const token = await acquireOneDriveToken();
-    const resp = await fetch("https://graph.microsoft.com/v1.0/me/drive/root/children?$top=10", {
-      headers: { Authorization: "Bearer " + token.accessToken }
-    });
-    const data = await resp.json();
-
-    if (!resp.ok) {
-      console.error(data);
-      alert("OneDrive test failed: " + (data?.error?.message || resp.statusText));
-      setOneDriveMiniNote("Test failed. Check permissions in Azure (Files.Read).");
-      return;
-    }
-
-    const names = (data.value || []).map(x => x.name).slice(0, 10);
-    setOneDriveMiniNote(names.length ? ("OK: " + names.join(", ")) : "OK: Connected (no items returned).");
-  } catch (e) {
-    console.error(e);
-    alert("OneDrive test failed: " + (e?.message || String(e)));
-    setOneDriveMiniNote("Test failed. If this loops, try Incognito and ensure redirect URI matches.");
+  /* =========================
+     OneDrive (minimal wiring for now)
+     (We’ll add MSAL calls once we confirm JS runs on live site)
+  ========================= */
+  function connectOneDrive() {
+    alert("OneDrive click received (JS is running). Next step: MSAL sign-in.");
   }
-}
 
-async function disconnectOneDrive() {
-  setOneDriveMiniNote("Signing out…");
-  try {
-    const account = await ensureActiveAccount();
-    if (account) {
-      await msalInstance.logoutPopup({ account });
-    }
+  function testOneDrive() {
+    alert("OneDrive test click received.");
+  }
 
-    // Clear your local “connected” flag
+  function disconnectOneDrive() {
     localStorage.removeItem(K_OD_FLAG);
-
-    const active = localStorage.getItem(K_ACTIVE);
-    if (active === "onedrive") localStorage.setItem(K_ACTIVE, "(none)");
-
-    setOneDriveMiniNote("Signed out.");
+    if (localStorage.getItem(K_ACTIVE) === "onedrive") localStorage.setItem(K_ACTIVE, "(none)");
     setStatus();
-  } catch (e) {
-    console.error(e);
-    alert("OneDrive sign-out failed: " + (e?.message || String(e)));
-    setOneDriveMiniNote("Sign-out failed.");
   }
-}
 
-/* =========================
-   Local folder (simple placeholder)
-========================= */
-function connectLocalFolder() {
-  alert("Local folder requires the browser Folder Picker API. If you want this fully implemented, I can add it (Chrome/Edge).");
-}
+  /* =========================
+     Local folder placeholder
+  ========================= */
+  function connectLocalFolder() {
+    alert("Local folder click received.");
+  }
 
-/* =========================
-   Wire buttons
-========================= */
-document.getElementById("btn-dropbox-connect").addEventListener("click", connectDropbox);
-document.getElementById("btn-dropbox-disconnect").addEventListener("click", disconnectDropbox);
+  // Wire buttons (guarded)
+  const dbConnectBtn = document.getElementById("btn-dropbox-connect");
+  const dbDisconnectBtn = document.getElementById("btn-dropbox-disconnect");
+  const odConnectBtn = document.getElementById("btn-onedrive-connect");
+  const odTestBtn = document.getElementById("btn-onedrive-test");
+  const odDisconnectBtn = document.getElementById("btn-onedrive-disconnect");
+  const localBtn = document.getElementById("btn-local-connect");
 
-document.getElementById("btn-onedrive-connect").addEventListener("click", connectOneDrive);
-document.getElementById("btn-onedrive-test").addEventListener("click", testOneDrive);
-document.getElementById("btn-onedrive-disconnect").addEventListener("click", disconnectOneDrive);
+  if (!dbConnectBtn) console.error("Missing #btn-dropbox-connect");
+  if (!dbDisconnectBtn) console.error("Missing #btn-dropbox-disconnect");
+  if (!odConnectBtn) console.error("Missing #btn-onedrive-connect");
+  if (!odTestBtn) console.error("Missing #btn-onedrive-test");
+  if (!odDisconnectBtn) console.error("Missing #btn-onedrive-disconnect");
+  if (!localBtn) console.error("Missing #btn-local-connect");
 
-document.getElementById("btn-local-connect").addEventListener("click", connectLocalFolder);
+  dbConnectBtn?.addEventListener("click", connectDropbox);
+  dbDisconnectBtn?.addEventListener("click", disconnectDropbox);
 
-/* =========================
-   Init
-========================= */
-(async function boot(){
+  odConnectBtn?.addEventListener("click", connectOneDrive);
+  odTestBtn?.addEventListener("click", testOneDrive);
+  odDisconnectBtn?.addEventListener("click", disconnectOneDrive);
+
+  localBtn?.addEventListener("click", connectLocalFolder);
+
+  // Init
   handleDropboxReturn();
-  await initMsalRedirectHandling();
   setStatus();
-
-  // Set initial mini note if already signed in
-  const accounts = msalInstance.getAllAccounts();
-  if (accounts.length) {
-    setOneDriveMiniNote("Signed in as: " + (accounts[0]?.username || "Microsoft user"));
-    localStorage.setItem(K_OD_FLAG, "1");
-  } else {
-    setOneDriveMiniNote("Not signed in.");
-  }
 })();
 </script>
-
-</body>
-</html>
