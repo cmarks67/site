@@ -162,8 +162,34 @@
   </div>
 </main>
 
-<!-- MSAL -->
-<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.39.0/dist/msal-browser.min.js"></script>
+
+<!-- MSAL loader (unpkg -> jsDelivr fallback) -->
+<script>
+  (function () {
+    function load(src, ok, bad) {
+      var s = document.createElement("script");
+      s.src = src;
+      s.defer = true;
+      s.onload = ok;
+      s.onerror = bad;
+      document.head.appendChild(s);
+    }
+
+    load(
+      "https://unpkg.com/@azure/msal-browser@2.39.0/dist/msal-browser.min.js",
+      function () { console.log("MSAL loaded (unpkg)"); },
+      function () {
+        console.warn("MSAL failed (unpkg). Trying jsDelivr...");
+        load(
+          "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.39.0/dist/msal-browser.min.js",
+          function () { console.log("MSAL loaded (jsDelivr)"); },
+          function () { console.error("MSAL failed to load from both CDNs."); }
+        );
+      }
+    );
+  })();
+</script>
+
 
 
 <script>
