@@ -1,20 +1,25 @@
 <!doctype html>
 <html lang="en">
 <head>
-
-<script>
-  (function () {
-    if (location.protocol === "http:") {
-      location.replace("https://" + location.host + location.pathname + location.search + location.hash);
-    }
-  })();
-</script>
-
-
-
   <meta charset="utf-8" />
   <title>Warehouse Intelligence – Connections</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Force HTTPS (and optionally force www) -->
+  <script>
+    (function () {
+      // Force HTTPS
+      if (location.protocol === "http:") {
+        location.replace("https://" + location.host + location.pathname + location.search + location.hash);
+        return;
+      }
+      // Optional: If your Pages custom domain is www.* and you want consistency, uncomment:
+      // if (location.hostname === "warehouseintelligence.co.uk") {
+      //   location.replace("https://www.warehouseintelligence.co.uk" + location.pathname + location.search + location.hash);
+      // }
+    })();
+  </script>
+
   <style>
     :root{
       --wi-red:#dc2626; --wi-red-dark:#b91c1c;
@@ -70,8 +75,8 @@
     code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace}
   </style>
 </head>
-<body>
 
+<body>
 <header>
   <div class="wrap topbar">
     <div class="brand">Warehouse <span>Intelligence</span></div>
@@ -83,7 +88,6 @@
 
 <main>
   <div class="wrap">
-
     <div class="card">
       <h1>Connections</h1>
       <p class="muted">
@@ -106,9 +110,9 @@
           </div>
           <div class="right">
             <span id="pillDropbox" class="pill off">Not connected</span>
-            <button id="btn-dropbox-connect" class="btn btnPrimary">Connect</button>
-            <button id="btn-dropbox-test" class="btn small">Test</button>
-            <button id="btn-dropbox-disconnect" class="btn small">Disconnect</button>
+            <button id="btn-dropbox-connect" class="btn btnPrimary" type="button">Connect</button>
+            <button id="btn-dropbox-test" class="btn small" type="button">Test</button>
+            <button id="btn-dropbox-disconnect" class="btn small" type="button">Disconnect</button>
           </div>
         </div>
 
@@ -121,13 +125,13 @@
           </div>
           <div class="right">
             <span id="pillOneDrive" class="pill off">Not connected</span>
-            <button id="btn-onedrive-connect" class="btn btnPrimary">Connect</button>
-            <button id="btn-onedrive-test" class="btn small">Test</button>
-            <button id="btn-onedrive-disconnect" class="btn small">Disconnect</button>
+            <button id="btn-onedrive-connect" class="btn btnPrimary" type="button">Connect</button>
+            <button id="btn-onedrive-test" class="btn small" type="button">Test</button>
+            <button id="btn-onedrive-disconnect" class="btn small" type="button">Disconnect</button>
           </div>
         </div>
 
-        <!-- Azure (placeholder) -->
+        <!-- Azure placeholder -->
         <div class="tile">
           <div class="icon">AZ</div>
           <div>
@@ -136,11 +140,11 @@
           </div>
           <div class="right">
             <span class="pill">Coming soon</span>
-            <button class="btn" disabled>Connect</button>
+            <button class="btn" disabled type="button">Connect</button>
           </div>
         </div>
 
-        <!-- Local folder (placeholder) -->
+        <!-- Local folder placeholder -->
         <div class="tile">
           <div class="icon">PC</div>
           <div>
@@ -149,70 +153,62 @@
           </div>
           <div class="right">
             <span id="pillLocal" class="pill off">Not connected</span>
-            <button id="btn-local-connect" class="btn">Choose folder</button>
+            <button id="btn-local-connect" class="btn" type="button">Choose folder</button>
           </div>
         </div>
 
       </div>
     </div>
-
   </div>
 </main>
 
-<!-- MSAL (Microsoft Authentication Library) -->
+<!-- MSAL -->
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/dist/msal-browser.min.js"></script>
 
 <script>
 (() => {
   "use strict";
 
-  console.log("storage-connect.html script loaded (boot)");
+  // If anything errors, show it in the yellow status box (so it never silently “dies”).
+  window.addEventListener("error", (e) => {
+    const st = document.getElementById("statusText");
+    if (st) st.textContent = "Script error: " + (e?.message || "Unknown error");
+  });
 
-  /* =========================
-     Storage keys
-  ========================= */
-  const K_ACTIVE    = "wi_storage_active_v1";
-  const K_DB_TOKENS = "wi_dropbox_tokens_v1";
-  const K_OD_FLAG   = "wi_onedrive_flag_v1";
-  const K_LOCAL     = "wi_local_folder_handle_v1";
+  const K_ACTIVE     = "wi_storage_active_v1";
+  const K_DB_TOKENS  = "wi_dropbox_tokens_v1";
+  const K_OD_FLAG    = "wi_onedrive_flag_v1";
+  const K_LOCAL      = "wi_local_folder_handle_v1";
 
-  /* =========================
-     Dropbox config
-  ========================= */
   const DROPBOX_APP_KEY = "k8fsr7ttwve6k8m";
   const DROPBOX_REDIRECT_URI =
     (location.hostname === "localhost" || location.hostname === "127.0.0.1")
       ? "http://localhost:5500/storage-connect.html"
-      : "https://warehouseintelligence.co.uk/storage-connect.html";
+      : (location.origin + location.pathname); // matches current domain (www or apex)
 
-  /* =========================
-     OneDrive (MSAL) config
-  ========================= */
   const ONEDRIVE_CLIENT_ID = "861977dd-6e5a-46ab-a3c8-edfd6098a741";
 
+  // IMPORTANT:
+  // Ensure your Azure App Registration includes Redirect URI(s) for BOTH variants if you use them:
+  //  - https://warehouseintelligence.co.uk/storage-connect.html
+  //  - https://www.warehouseintelligence.co.uk/storage-connect.html
   const msalConfig = {
     auth: {
       clientId: ONEDRIVE_CLIENT_ID,
       authority: "https://login.microsoftonline.com/consumers",
       redirectUri: location.origin + location.pathname
     },
-    cache: {
-      cacheLocation: "localStorage",
-      storeAuthStateInCookie: false
-    }
+    cache: { cacheLocation: "localStorage" }
   };
 
-  const odLoginRequest = { scopes: ["User.Read", "Files.Read"] };
+  const odScopes = ["User.Read", "Files.ReadWrite"]; // Write access for uploads later
   const msalInstance = new msal.PublicClientApplication(msalConfig);
 
-  // Safe to call even when using popup (helps if MSAL ever returns via redirect)
-  msalInstance.handleRedirectPromise().catch(err => console.warn("MSAL redirect handling:", err));
+  function setActive(provider) { localStorage.setItem(K_ACTIVE, provider); }
 
-  function setActive(provider) {
-    localStorage.setItem(K_ACTIVE, provider);
-  }
+  function safeJsonParse(s) { try { return JSON.parse(s); } catch { return null; } }
 
-  function setStatus() {
+  function setStatus(extraLine) {
     const pillDropbox = document.getElementById("pillDropbox");
     const pillOneDrive = document.getElementById("pillOneDrive");
     const pillLocal = document.getElementById("pillLocal");
@@ -234,21 +230,15 @@
     const active = localStorage.getItem(K_ACTIVE) || "(none)";
     statusText.innerHTML = `
       <div><strong>Active:</strong> ${active}</div>
-      <div class="muted small" style="margin-top:6px;">
-        Dropbox Redirect URI: <code>${DROPBOX_REDIRECT_URI}</code>
-      </div>
-      <div class="muted small" style="margin-top:6px;">
-        OneDrive Redirect URI: <code>${location.origin + location.pathname}</code>
-      </div>
-      <div class="muted small" style="margin-top:6px;">
-        Tip: Use <code>https://</code> for OneDrive/MSAL. Avoid <code>file:///</code>.
-      </div>
+      <div class="muted small" style="margin-top:6px;">Dropbox Redirect: <code>${DROPBOX_REDIRECT_URI}</code></div>
+      <div class="muted small" style="margin-top:6px;">OneDrive Redirect: <code>${location.origin + location.pathname}</code></div>
+      ${extraLine ? `<div class="muted small" style="margin-top:6px;">${extraLine}</div>` : ""}
     `;
   }
 
-  /* =========================
-     Dropbox (implicit)
-  ========================= */
+  /* -------------------------
+     Dropbox
+  ------------------------- */
   function handleDropboxReturn() {
     if (!location.hash || !location.hash.includes("access_token=")) return;
 
@@ -285,109 +275,81 @@
   function disconnectDropbox() {
     localStorage.removeItem(K_DB_TOKENS);
     if (localStorage.getItem(K_ACTIVE) === "dropbox") localStorage.setItem(K_ACTIVE, "(none)");
-    setStatus();
-    alert("Dropbox disconnected.");
+    setStatus("Dropbox disconnected.");
   }
 
   async function testDropbox() {
-    const raw = localStorage.getItem(K_DB_TOKENS);
-    if (!raw) {
-      alert("Dropbox not connected. Click Connect first.");
-      return;
-    }
-    let tok;
-    try {
-      tok = JSON.parse(raw);
-    } catch {
-      alert("Dropbox token data is invalid. Disconnect and reconnect Dropbox.");
-      return;
-    }
-
+    const tok = safeJsonParse(localStorage.getItem(K_DB_TOKENS) || "");
     const accessToken = tok?.access_token;
-    if (!accessToken) {
-      alert("Dropbox access token missing. Disconnect and reconnect Dropbox.");
+    if (!accessToken) { alert("Dropbox not connected. Click Connect first."); return; }
+
+    const resp = await fetch("https://api.dropboxapi.com/2/users/get_current_account", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + accessToken, "Content-Type": "application/json" },
+      body: "null"
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      console.error("Dropbox test error:", data);
+      alert("Dropbox test failed: " + (data?.error_summary || resp.statusText));
       return;
     }
-
-    // Simple “does token work” test: get current account info
-    try {
-      const resp = await fetch("https://api.dropboxapi.com/2/users/get_current_account", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + accessToken,
-          "Content-Type": "application/json"
-        },
-        body: "null"
-      });
-      const data = await resp.json();
-
-      if (!resp.ok) {
-        console.error("Dropbox test error:", data);
-        alert("Dropbox test failed: " + (data?.error_summary || resp.statusText));
-        return;
-      }
-
-      const email = data?.email || "(no email)";
-      const name = data?.name?.display_name || "(no name)";
-      alert("Dropbox OK.\nName: " + name + "\nEmail: " + email);
-    } catch (e) {
-      console.error(e);
-      alert("Dropbox test failed: " + (e?.message || String(e)));
-    }
+    alert("Dropbox OK.\nName: " + (data?.name?.display_name || "") + "\nEmail: " + (data?.email || ""));
   }
 
-  /* =========================
+  /* -------------------------
      OneDrive (MSAL + Graph)
-  ========================= */
-  async function odEnsureAccount() {
-    const accounts = msalInstance.getAllAccounts();
-    if (accounts.length) {
-      msalInstance.setActiveAccount(accounts[0]);
-      return accounts[0];
+  ------------------------- */
+  msalInstance.handleRedirectPromise().catch(err => console.warn("MSAL redirect handling:", err));
+
+  function odActiveAccount() {
+    const a = msalInstance.getActiveAccount();
+    if (a) return a;
+    const all = msalInstance.getAllAccounts();
+    if (all.length) {
+      msalInstance.setActiveAccount(all[0]);
+      return all[0];
     }
     return null;
   }
 
-  async function odAcquireToken() {
-    const account = await odEnsureAccount();
+  async function odToken() {
+    const account = odActiveAccount();
     if (!account) throw new Error("No signed-in Microsoft account. Click OneDrive Connect first.");
     try {
-      return await msalInstance.acquireTokenSilent({ ...odLoginRequest, account });
+      return await msalInstance.acquireTokenSilent({ scopes: odScopes, account });
     } catch {
-      return await msalInstance.acquireTokenPopup(odLoginRequest);
+      return await msalInstance.acquireTokenPopup({ scopes: odScopes });
     }
   }
 
   async function connectOneDrive() {
     try {
-      const result = await msalInstance.loginPopup(odLoginRequest);
+      const result = await msalInstance.loginPopup({ scopes: odScopes });
       msalInstance.setActiveAccount(result.account);
-
       localStorage.setItem(K_OD_FLAG, "1");
       setActive("onedrive");
-      setStatus();
-
-      alert("OneDrive connected as: " + (result.account?.username || "Microsoft user"));
+      setStatus("OneDrive connected as: <code>" + (result.account?.username || "user") + "</code>");
+      alert("OneDrive connected.");
     } catch (e) {
-      console.error("OneDrive login failed:", e);
+      console.error("OneDrive connect failed:", e);
       alert("OneDrive sign-in failed: " + (e?.message || String(e)));
+      setStatus("OneDrive sign-in failed. Check Azure Redirect URI matches this page.");
     }
   }
 
   async function testOneDrive() {
     try {
-      const token = await odAcquireToken();
+      const t = await odToken();
       const resp = await fetch("https://graph.microsoft.com/v1.0/me/drive/root/children?$top=10", {
-        headers: { Authorization: "Bearer " + token.accessToken }
+        headers: { Authorization: "Bearer " + t.accessToken }
       });
       const data = await resp.json();
-
       if (!resp.ok) {
         console.error("Graph error:", data);
         alert("OneDrive test failed: " + (data?.error?.message || resp.statusText));
         return;
       }
-
       const names = (data.value || []).map(x => x.name).slice(0, 10);
       alert(names.length ? ("OneDrive OK. Top items:\n- " + names.join("\n- ")) : "OneDrive OK (no items returned).");
     } catch (e) {
@@ -398,45 +360,49 @@
 
   async function disconnectOneDrive() {
     try {
-      const account = await odEnsureAccount();
+      const account = odActiveAccount();
       if (account) await msalInstance.logoutPopup({ account });
 
       localStorage.removeItem(K_OD_FLAG);
       if (localStorage.getItem(K_ACTIVE) === "onedrive") localStorage.setItem(K_ACTIVE, "(none)");
-      setStatus();
-
+      setStatus("OneDrive disconnected.");
       alert("OneDrive disconnected.");
     } catch (e) {
-      console.error("OneDrive logout failed:", e);
+      console.error("OneDrive disconnect failed:", e);
       alert("OneDrive disconnect failed: " + (e?.message || String(e)));
     }
   }
 
-  /* =========================
-     Local folder (placeholder)
-  ========================= */
+  /* -------------------------
+     Local folder placeholder
+  ------------------------- */
   function connectLocalFolder() {
     alert("Local folder picker can be implemented next (Chrome/Edge Folder Picker API).");
   }
 
-  /* =========================
-     Wire buttons (guarded)
-  ========================= */
-  document.getElementById("btn-dropbox-connect")?.addEventListener("click", connectDropbox);
-  document.getElementById("btn-dropbox-test")?.addEventListener("click", testDropbox);
-  document.getElementById("btn-dropbox-disconnect")?.addEventListener("click", disconnectDropbox);
+  /* -------------------------
+     Wire after DOM is ready
+  ------------------------- */
+  function wire() {
+    document.getElementById("btn-dropbox-connect")?.addEventListener("click", connectDropbox);
+    document.getElementById("btn-dropbox-test")?.addEventListener("click", testDropbox);
+    document.getElementById("btn-dropbox-disconnect")?.addEventListener("click", disconnectDropbox);
 
-  document.getElementById("btn-onedrive-connect")?.addEventListener("click", connectOneDrive);
-  document.getElementById("btn-onedrive-test")?.addEventListener("click", testOneDrive);
-  document.getElementById("btn-onedrive-disconnect")?.addEventListener("click", disconnectOneDrive);
+    document.getElementById("btn-onedrive-connect")?.addEventListener("click", connectOneDrive);
+    document.getElementById("btn-onedrive-test")?.addEventListener("click", testOneDrive);
+    document.getElementById("btn-onedrive-disconnect")?.addEventListener("click", disconnectOneDrive);
 
-  document.getElementById("btn-local-connect")?.addEventListener("click", connectLocalFolder);
+    document.getElementById("btn-local-connect")?.addEventListener("click", connectLocalFolder);
 
-  /* =========================
-     Init
-  ========================= */
-  handleDropboxReturn();
-  setStatus();
+    handleDropboxReturn();
+    setStatus("Script loaded OK.");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", wire);
+  } else {
+    wire();
+  }
 })();
 </script>
 
