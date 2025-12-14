@@ -4,16 +4,6 @@
   <meta charset="utf-8" />
   <title>Warehouse Intelligence – Connections</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Force HTTPS (prevents “Not secure” when someone hits http://…) -->
-  <script>
-    (function () {
-      if (location.protocol === "http:") {
-        location.replace("https://" + location.host + location.pathname + location.search + location.hash);
-      }
-    })();
-  </script>
-
   <style>
     :root{
       --wi-red:#dc2626; --wi-red-dark:#b91c1c;
@@ -69,8 +59,8 @@
     code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace}
   </style>
 </head>
-
 <body>
+
 <header>
   <div class="wrap topbar">
     <div class="brand">Warehouse <span>Intelligence</span></div>
@@ -105,9 +95,9 @@
           </div>
           <div class="right">
             <span id="pillDropbox" class="pill off">Not connected</span>
-            <button id="btn-dropbox-connect" class="btn btnPrimary" type="button">Connect</button>
-            <button id="btn-dropbox-test" class="btn small" type="button">Test</button>
-            <button id="btn-dropbox-disconnect" class="btn small" type="button">Disconnect</button>
+            <button id="btn-dropbox-connect" class="btn btnPrimary">Connect</button>
+            <button id="btn-dropbox-test" class="btn small">Test</button>
+            <button id="btn-dropbox-disconnect" class="btn small">Disconnect</button>
           </div>
         </div>
 
@@ -120,9 +110,9 @@
           </div>
           <div class="right">
             <span id="pillOneDrive" class="pill off">Not connected</span>
-            <button id="btn-onedrive-connect" class="btn btnPrimary" type="button">Connect</button>
-            <button id="btn-onedrive-test" class="btn small" type="button">Test</button>
-            <button id="btn-onedrive-disconnect" class="btn small" type="button">Disconnect</button>
+            <button id="btn-onedrive-connect" class="btn btnPrimary">Connect</button>
+            <button id="btn-onedrive-test" class="btn small">Test</button>
+            <button id="btn-onedrive-disconnect" class="btn small">Disconnect</button>
           </div>
         </div>
 
@@ -135,9 +125,9 @@
           </div>
           <div class="right">
             <span class="pill warn">Coming soon</span>
-            <button class="btn" type="button" disabled>Connect</button>
-            <button class="btn small" type="button" disabled>Test</button>
-            <button class="btn small" type="button" disabled>Disconnect</button>
+            <button class="btn" disabled>Connect</button>
+            <button class="btn small" disabled>Test</button>
+            <button class="btn small" disabled>Disconnect</button>
           </div>
         </div>
 
@@ -150,9 +140,9 @@
           </div>
           <div class="right">
             <span id="pillLocal" class="pill off">Not connected</span>
-            <button id="btn-local-connect" class="btn" type="button">Choose folder</button>
-            <button id="btn-local-test" class="btn small" type="button">Test</button>
-            <button id="btn-local-disconnect" class="btn small" type="button">Disconnect</button>
+            <button id="btn-local-connect" class="btn">Choose folder</button>
+            <button id="btn-local-test" class="btn small">Test</button>
+            <button id="btn-local-disconnect" class="btn small">Disconnect</button>
           </div>
         </div>
 
@@ -161,8 +151,12 @@
   </div>
 </main>
 
-<!-- MSAL loader (local-first, CDN fallback).
-     IMPORTANT: do NOT use @2.39.0 (it 404s on CDNs). :contentReference[oaicite:2]{index=2} -->
+<!--
+  MSAL LOADING NOTES (important)
+  - Your previous CDNs returned 404.
+  - Use ONE stable MS CDN path.
+  - If this ever fails, OneDrive gets disabled but Dropbox still works.
+-->
 <script>
 (function () {
   function load(src, ok, bad) {
@@ -174,19 +168,11 @@
     document.head.appendChild(s);
   }
 
-  // 1) Local vendored copy (recommended)
+  // MS official CDN (this is the most reliable option vs unpkg/jsdelivr in your case)
   load(
-    "assets/vendor/msal-browser.min.js",
-    function(){ console.log("MSAL loaded (local)"); },
-    function(){
-      console.warn("Local MSAL missing. Falling back to jsdelivr…");
-      // 2) CDN fallback (valid path uses /lib/) :contentReference[oaicite:3]{index=3}
-      load(
-        "https://cdn.jsdelivr.net/npm/@azure/msal-browser/lib/msal-browser.min.js",
-        function(){ console.log("MSAL loaded (jsdelivr)"); },
-        function(){ console.error("MSAL failed to load from both local and CDN."); }
-      );
-    }
+    "https://alcdn.msauth.net/browser/3.0.0/js/msal-browser.min.js",
+    function(){ console.log("MSAL loaded (alcdn.msauth.net)"); },
+    function(){ console.error("MSAL failed to load from alcdn.msauth.net"); }
   );
 })();
 </script>
@@ -196,6 +182,9 @@
    Diagnostics
 ========================= */
 console.log("storage-connect.html script loaded");
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id) console.log("Clicked:", e.target.id);
+});
 
 /* =========================
    Storage keys
@@ -208,8 +197,8 @@ const K_LOCAL     = "wi_local_folder_handle_v1";
 /* =========================
    App IDs (your values)
 ========================= */
-const DROPBOX_APP_KEY = "k8fsr7ttwve6k8m";
-const AZURE_CLIENT_ID = "8188141f-0dfe-40d9-a71a-d6a624922123";
+const DROPBOX_APP_KEY  = "k8fsr7ttwve6k8m";
+const AZURE_CLIENT_ID  = "8188141f-0dfe-40d9-a71a-d6a624922123";
 
 /* =========================
    URLs
@@ -261,7 +250,7 @@ function refreshUI(){
 }
 
 /* =========================
-   Dropbox OAuth
+   Dropbox OAuth (Implicit flow)
 ========================= */
 function handleDropboxReturn(){
   if (!location.hash || !location.hash.includes("access_token=")) return;
@@ -326,18 +315,20 @@ async function testDropbox(){
     alert("Dropbox test failed:\n" + r.status + "\n" + body);
     return;
   }
+
   const me = JSON.parse(body);
   alert("Dropbox OK:\n" + (me.name?.display_name || me.email || "Connected"));
 }
 
 /* =========================
    OneDrive (MSAL + Graph)
+   IMPORTANT: MSAL v3+ requires initialize() before other calls
 ========================= */
 let msalApp = null;
+let msalInitPromise = null;
 
 function initOneDriveIfPossible(){
   if (!msalAvailable()){
-    // Don't break the page: just disable OneDrive
     document.getElementById("btn-onedrive-connect").disabled = true;
     document.getElementById("btn-onedrive-test").disabled = true;
     return;
@@ -355,13 +346,23 @@ function initOneDriveIfPossible(){
     }
   });
 
+  msalInitPromise = msalApp.initialize();
+
   document.getElementById("btn-onedrive-connect").disabled = false;
   document.getElementById("btn-onedrive-test").disabled = false;
+}
+
+async function ensureMsalReady(){
+  if (!msalApp) throw new Error("MSAL not available.");
+  if (msalInitPromise) await msalInitPromise;
 }
 
 async function connectOneDrive(){
   setErr("");
   if (!msalApp) { alert("OneDrive unavailable because MSAL did not load."); return; }
+
+  await ensureMsalReady();
+  await msalApp.handleRedirectPromise();
 
   const login = await msalApp.loginPopup({
     scopes: ["User.Read", "Files.ReadWrite"]
@@ -379,6 +380,8 @@ async function connectOneDrive(){
 }
 
 async function getGraphToken(){
+  await ensureMsalReady();
+
   const accounts = msalApp.getAllAccounts();
   const account = accounts && accounts[0];
   if (!account) throw new Error("No signed-in account found.");
@@ -395,19 +398,24 @@ async function testOneDrive(){
   setErr("");
   if (!msalApp) { alert("OneDrive unavailable because MSAL did not load."); return; }
 
-  const token = await getGraphToken();
-  const r = await fetch("https://graph.microsoft.com/v1.0/me", {
-    headers: { "Authorization": "Bearer " + token }
-  });
+  try {
+    const token = await getGraphToken();
 
-  const txt = await r.text();
-  if (!r.ok){
-    alert("OneDrive test failed:\n" + r.status + "\n" + txt);
-    return;
+    const r = await fetch("https://graph.microsoft.com/v1.0/me", {
+      headers: { "Authorization": "Bearer " + token }
+    });
+
+    const txt = await r.text();
+    if (!r.ok){
+      alert("OneDrive test failed:\n" + r.status + "\n" + txt);
+      return;
+    }
+
+    const me = JSON.parse(txt);
+    alert("OneDrive OK:\n" + (me.displayName || me.userPrincipalName || "Connected"));
+  } catch (e) {
+    alert("OneDrive test error:\n" + (e?.message || String(e)));
   }
-
-  const me = JSON.parse(txt);
-  alert("OneDrive OK:\n" + (me.displayName || me.userPrincipalName || "Connected"));
 }
 
 async function disconnectOneDrive(){
@@ -415,9 +423,9 @@ async function disconnectOneDrive(){
   if (localStorage.getItem(K_ACTIVE) === "onedrive") localStorage.setItem(K_ACTIVE, "(none)");
   refreshUI();
 
-  // Optional: clear MSAL session
   try {
     if (msalApp){
+      await ensureMsalReady();
       const acc = msalApp.getAllAccounts()[0];
       if (acc) await msalApp.logoutPopup({ account: acc });
     }
@@ -457,7 +465,7 @@ try{
   handleDropboxReturn();
   refreshUI();
 
-  // MSAL may load slightly later; poll briefly without breaking the page
+  // MSAL loads async; poll briefly then init OneDrive
   let tries = 0;
   const timer = setInterval(() => {
     tries++;
@@ -465,9 +473,11 @@ try{
       clearInterval(timer);
       initOneDriveIfPossible();
       refreshUI();
-    } else if (tries >= 30){
+    } else if (tries >= 40){
       clearInterval(timer);
       // OneDrive stays disabled; Dropbox still works
+      document.getElementById("btn-onedrive-connect").disabled = true;
+      document.getElementById("btn-onedrive-test").disabled = true;
       refreshUI();
     }
   }, 200);
