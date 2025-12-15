@@ -1,2448 +1,1014 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
+  <meta charset="utf-8" />
+  <title>Warehouse Intelligence – Scheduling</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<script>
-  (function () {
-    if (location.protocol === "http:") {
-      location.replace("https://" + location.host + location.pathname + location.search + location.hash);
-    }
-  })();
-</script>
+  <script>
+    (function () {
+      if (location.protocol === "http:") {
+        location.replace("https://" + location.host + location.pathname + location.search + location.hash);
+      }
+    })();
+  </script>
 
+  <!-- Supabase JS v2 (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-  <meta charset="UTF-8">
-  <title>Warehouse Scheduling – Plan vs Actual</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    :root {
-      /* Brand-level colours – align these to your main site */
-      --brand-primary: #1b6ac9;   /* primary accent */
-      --brand-primary-soft: #e3efff;
-      --brand-dark: #0b1b3a;
-      --brand-border: #d0d4dc;
-      --brand-bg: #f5f7fb;
-
-      /* UI tokens derived from brand */
-      --bg: var(--brand-bg);
-      --card-bg: #ffffff;
-      --border: var(--brand-border);
-      --accent: var(--brand-primary);
-      --accent-soft: var(--brand-primary-soft);
-      --text-main: #1f2933;
-      --text-muted: #6b7280;
-      --danger: #c0392b;
-      --success: #1e8449;
-      --neutral: #7f8c8d;
-      --radius-lg: 12px;
-      --shadow-soft: 0 6px 18px rgba(15, 23, 42, 0.08);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text-main);
-    }
-
-    .page {
-      max-width: 1200px;
-      margin: 24px auto 40px;
-      padding: 0 16px;
-    }
-
-    /* Sticky wrapper for header + KPIs */
-    .sticky-header {
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      background: linear-gradient(to bottom, #f9fafb, var(--bg));
-      padding-bottom: 8px;
-    }
-
-    .top-bar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 12px;
-      padding: 10px 12px;
-      border-radius: var(--radius-lg);
-      background: #ffffff;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid #e2e8f0;
-    }
-
-    .brand-wrap {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .logo-wrap {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: var(--accent-soft);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .logo-img {
-      max-width: 32px;
-      max-height: 32px;
-      display: block;
-    }
-
-    .title-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .top-bar h1 {
-      margin: 0;
-      font-size: 1.3rem;
-      color: var(--brand-dark);
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-
-    .top-bar .subtitle {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    input[type="date"],
-    select,
-    input[type="number"],
-    input[type="text"] {
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      font-size: 0.85rem;
-      min-width: 80px;
-      background: #f9fafb;
-    }
-
-    input[type="number"] { text-align: right; }
-    input[type="file"]   { font-size: 0.8rem; }
-
-    /* Generic buttons */
-    .btn {
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: #f1f5f9;
-      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    .btn:hover {
-      background: #e2e8f0;
-      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #ffffff;
-    }
-    .btn-primary:hover {
-      background: #1555a0;
-      border-color: #1555a0;
-    }
-
-    .btn-ghost {
-      background: #ffffff;
-      border-color: #d1d5db;
-      color: var(--text-main);
-    }
-    .btn-ghost:hover {
-      background: #f3f4f6;
-    }
-
-    /* Back button */
-    .back-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      border: 1px solid #d1d5db;
-      background: #ffffff;
-      color: var(--text-main);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .back-button span {
-      font-size: 0.9rem;
-    }
-    .back-button:hover {
-      background: #f3f4f6;
-      border-color: #cbd5f5;
-    }
-
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      margin-top: 10px;
-      margin-bottom: 8px;
-    }
-
-    .kpi-card {
-      background: var(--card-bg);
-      border-radius: var(--radius-lg);
-      padding: 10px 12px;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
-    }
-
-    .kpi-card h2 {
-      margin: 0 0 4px;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .kpi-card p {
-      margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .kpi-card small {
-      margin-top: 4px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .kpi-card.ok {
-      border-left: 4px solid var(--success);
-      background: #e6f4ea;
-    }
-    .kpi-card.ok h2,
-    .kpi-card.ok p {
-      color: #145a32;
-    }
-
-    .kpi-card.warning {
-      border-left: 4px solid var(--danger);
-      background: #fdecea;
-    }
-    .kpi-card.warning h2,
-    .kpi-card.warning p {
-      color: #922b21;
-    }
-
-    .kpi-card input.indirect-limit-input {
-      width: 60px;
-      padding: 2px 4px;
-      font-size: 0.75rem;
-      text-align: right;
-      margin-left: 4px;
-      margin-right: 2px;
-    }
-
-    @keyframes flash-red {
-      from { box-shadow: 0 0 0 rgba(192,57,43,0.2); }
-      to   { box-shadow: 0 0 18px rgba(192,57,43,0.8); }
-    }
-
-    .indirect-alert {
-      animation: flash-red 0.9s ease-in-out infinite alternate;
-    }
-
-    .panel {
-      background: var(--card-bg);
-      border-radius: var(--radius-lg);
-      padding: 14px 16px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid #e2e8f0;
-    }
-
-    .panel-header {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .panel h2 {
-      margin: 0;
-      font-size: 1rem;
-      color: var(--brand-dark);
-    }
-
-    .panel-header small {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-    }
-
-    thead { background: #f8fafc; }
-
-    th, td {
-      border: 1px solid var(--border);
-      padding: 6px 8px;
-      text-align: left;
-    }
-
-    th {
-      font-weight: 600;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    td.numeric {
-      text-align: right;
-      white-space: nowrap;
-    }
-
-    td input[type="number"] { width: 100%; }
-
-    .variance { font-weight: 600; }
-    .variance.pos     { color: var(--success); }
-    .variance.neg     { color: var(--danger); }
-    .variance.neutral { color: var(--neutral); }
-
-    .pill {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-
-    .footer-note {
-      margin-top: 8px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-align: right;
-    }
-
-    .inline-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.8rem;
-      margin-bottom: 8px;
-    }
-
-    .inline-controls button {
-      /* use generic button styling */
-      font-size: 0.78rem;
-    }
-
-    .message {
-      margin-top: 6px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .message.error   { color: var(--danger); }
-    .message.success { color: var(--success); }
-
-    .read-only-note {
-      margin-top: 4px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-align: left;
-    }
-
-    .sidebar-toggle {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: var(--accent-soft);
-      font-size: 0.8rem;
-      cursor: pointer;
-      margin-left: 4px;
-      color: var(--accent);
-    }
-
-    .sidebar-toggle:hover {
-      background: #cbdfff;
-    }
-
-    .sidebar {
-      position: fixed;
-      top: 0;
-      right: -520px;
-      width: 520px;
-      height: 100%;
-      background: #ffffff;
-      box-shadow: -4px 0 12px rgba(15, 23, 42, 0.25);
-      padding: 16px 16px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: right 0.25s ease-in-out;
-      z-index: 1000;
-      overflow-y: auto;
-    }
-
-    @media (max-width: 640px) {
-      .sidebar {
-        width: 100%;
-        right: -100%;
-      }
-
-      .top-bar {
-        align-items: flex-start;
-      }
-
-      .controls {
-        justify-content: flex-start;
-      }
-    }
-
-    .sidebar.open { right: 0; }
-
-    .sidebar-header {
-      position: sticky;
-      top: 0;
-      background: #ffffff;
-      padding-bottom: 8px;
-      margin-bottom: 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #e5e7eb;
-      z-index: 1;
-    }
-
-    .sidebar-header h2 {
-      font-size: 1rem;
-      margin: 0;
-    }
-
-    .sidebar-close {
-      border: none;
-      background: transparent;
-      font-size: 1.1rem;
-      cursor: pointer;
-    }
-
-    .sidebar-section-title {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-top: 8px;
-      margin-bottom: 4px;
-    }
-
-    .sidebar small {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .sidebar-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.78rem;
-      margin-bottom: 4px;
-    }
-
-    .sidebar-table th,
-    .sidebar-table td {
-      border: 1px solid #e5e7eb;
-      padding: 4px 6px;
-    }
-
-    .sidebar-table th {
-      background: #f9fafb;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      color: var(--text-muted);
-    }
-
-    .sidebar-table input[type="text"],
-    .sidebar-table input[type="number"],
-    .sidebar-table select {
-      width: 100%;
-      font-size: 0.78rem;
-      padding: 3px 4px;
-    }
-
-    .sidebar-button-row {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 4px;
-    }
-
-    .sidebar-button-row button {
-      padding: 5px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #f1f5f9;
-      font-size: 0.78rem;
-      cursor: pointer;
-    }
-
-    .sidebar-button-row button:hover {
-      background: #e2e8f0;
-    }
-
-    .btn-icon {
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      font-size: 0.9rem;
-      line-height: 1;
-      padding: 0 4px;
-      color: #9ca3af;
-    }
-
-    .btn-icon:hover { color: #ef4444; }
-
-    .sidebar-pill {
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    /* Row-level red/green highlighting for tables */
-    .table-row-warning td {
-      background: #fdecea !important;
-    }
-
-    .table-row-ok td {
-      background: #e6f4ea !important;
+    :root{
+      --bg:#f3f4f6; --card:#fff; --border:#e5e7eb;
+      --text:#111827; --muted:#6b7280;
+      --red:#dc2626; --red2:#b91c1c;
+      --inbg:#f9fafb; --inborder:#d1d5db;
+      --ok:#16a34a; --warn:#dc2626;
+      --radius:14px; --shadow:0 8px 20px rgba(15,23,42,.06);
+      --max:1200px;
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+    .breadcrumb{ max-width:var(--max); margin:10px auto 0; padding:6px 16px;
+      font-size:.85rem; color:var(--muted); }
+    .breadcrumb a{ color:var(--muted); text-decoration:none; }
+    .breadcrumb a:hover{ text-decoration:underline; }
+    .breadcrumb span{ margin:0 6px; }
+
+    .page{ max-width:var(--max); margin:10px auto 40px; padding:0 16px; }
+
+    .header{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:16px 18px; }
+    .header-top{ display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+    .brand h1{ margin:0; font-size:1.25rem; line-height:1.1; font-weight:800; }
+    .brand h1 .accent{ color:var(--red); }
+    .brand .sub{ margin-top:2px; font-size:.88rem; color:var(--muted); }
+
+    .header-actions{ display:flex; gap:10px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
+    .pill{ display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border); background:#fff;
+      padding:8px 10px; border-radius:999px; font-size:.85rem; color:var(--muted);
+      max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    .btn{ border:1px solid var(--border); background:#fff; padding:8px 12px; border-radius:999px;
+      font-size:.9rem; cursor:pointer; transition:.15s ease; color:var(--text); }
+    .btn:hover{ background:#f9fafb; border-color:#d1d5db; }
+    .btn.primary{ background:var(--red); border-color:var(--red); color:#fff; }
+    .btn.primary:hover{ background:var(--red2); border-color:var(--red2); }
+
+    .tabs{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+    .tab{ border:1px solid var(--border); background:#fff; padding:8px 12px; border-radius:999px;
+      font-size:.9rem; cursor:pointer; color:var(--text); }
+    .tab.active{ border-color:rgba(220,38,38,.55); box-shadow:0 0 0 3px rgba(220,38,38,.12); font-weight:700; }
+
+    .status{ margin-top:14px; border:1px solid #bbf7d0; background:#ecfdf5; color:#065f46;
+      padding:10px 12px; border-radius:10px; font-size:.95rem; }
+    .status.warn{ border-color:#fecaca; background:#fef2f2; color:#7f1d1d; }
+
+    .card{ margin-top:14px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); overflow:hidden; }
+    .card-h{ padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start;
+      justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .card-h h2{ margin:0; font-size:1.05rem; font-weight:800; }
+    .card-h .sub{ margin-top:2px; color:var(--muted); font-size:.88rem; }
+    .card-b{ padding:14px 16px; }
+
+    .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:12px; align-items:end; }
+    .field{ grid-column:span 3; min-width:220px; }
+    .field.w2{ grid-column:span 2; min-width:180px; }
+    .field.w4{ grid-column:span 4; min-width:260px; }
+
+    label{ display:flex; flex-direction:column; gap:6px; font-size:.85rem; color:var(--muted); }
+    select,input[type="date"],input[type="number"],input[type="text"]{
+      border:1px solid var(--inborder); background:var(--inbg); border-radius:10px;
+      padding:9px 10px; font-size:.92rem; color:var(--text); outline:none;
+    }
+    input[type="number"]{ text-align:right; }
+
+    table{ width:100%; border-collapse:collapse; font-size:.9rem; }
+    thead th{ background:#f8fafc; border-bottom:1px solid var(--border); color:var(--muted);
+      font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; padding:10px 10px; text-align:left; }
+    tbody td{ border-bottom:1px solid var(--border); padding:10px 10px; vertical-align:middle; }
+    td.num{ text-align:right; white-space:nowrap; }
+    td small{ color:var(--muted); }
+
+    .row-ok td{ background:#ecfdf5; }
+    .row-warn td{ background:#fef2f2; }
+
+    .kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:12px; }
+    .kpi{ border:1px solid var(--border); border-radius:14px; background:#fff; box-shadow:var(--shadow); padding:12px; }
+    .kpi h3{ margin:0 0 6px; font-size:.9rem; color:var(--muted); font-weight:700; }
+    .kpi .v{ font-size:1.1rem; font-weight:800; margin:0; }
+    .kpi.ok{ border-left:4px solid var(--ok); background:#ecfdf5; }
+    .kpi.warn{ border-left:4px solid var(--warn); background:#fef2f2; }
+
+    .right-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .note{ margin-top:10px; font-size:.86rem; color:var(--muted); }
+
+    @media (max-width: 900px){
+      .field,.field.w2,.field.w4{ grid-column:span 12; }
     }
   </style>
 </head>
+
 <body>
-<div class="page">
+  <div class="breadcrumb">
+    <a href="dashboard.html">Dashboard</a>
+    <span>&gt;</span>
+    <a href="setup.html">Setup</a>
+    <span>&gt;</span>
+    <span>Scheduling</span>
+  </div>
 
-<!-- Sticky header: branding + controls + KPI summary -->
-<div class="sticky-header">
-  <header class="top-bar">
+  <div class="page">
+    <div class="header">
+      <div class="header-top">
+        <div class="brand">
+          <h1>Warehouse <span class="accent">Intelligence</span> – Scheduling</h1>
+          <div class="sub">Plan vs Actual (by Site, Date, Shift) · Uses MHE assets from Setup</div>
+        </div>
 
-    <div class="brand-wrap" style="display:flex; flex-direction:column; gap:2px;">
-
-      <!-- Text logo -->
-      <div class="logo-wrap" style="background: transparent; box-shadow: none; padding: 0;">
-        <div style="margin:0; font-size:1.1rem; font-weight:600;">
-          Warehouse <span style="color:#e63946;">Intelligence</span>
+        <div class="header-actions">
+          <button class="btn" type="button" id="btnBack">← Back to dashboard</button>
+          <div class="pill" id="signedInPill">Signed in: …</div>
+          <button class="btn" type="button" id="btnSignOut">Sign out</button>
         </div>
       </div>
 
-      <!-- Page title + subtitle -->
-      <div class="title-wrap" style="margin-top:-4px;">
-        <h1 style="margin:0; font-size:1.25rem;">Warehouse Scheduling – Plan vs Actual</h1>
-        <div class="subtitle" style="font-size:0.85rem; margin-top:2px;">
-          Multi-day · Multi-shift · Configurable tasks &amp; MHE · HTML/JS prototype
+      <div class="tabs">
+        <button class="tab active" id="tabPlan" type="button">Plan vs Actual</button>
+        <button class="tab" id="tabConfig" type="button">Configuration</button>
+      </div>
+
+      <div class="status" id="statusBox">Ready.</div>
+    </div>
+
+    <div class="card" id="contextCard">
+      <div class="card-h">
+        <div>
+          <h2>Context</h2>
+          <div class="sub">Select the company and site. MHE will automatically load from MHE Setup (available only).</div>
+        </div>
+        <div class="right-actions">
+          <button class="btn" type="button" id="btnReload">Reload</button>
+          <button class="btn primary" type="button" id="btnSave">Save (site/date/shift)</button>
         </div>
       </div>
 
-    </div>
+      <div class="card-b">
+        <div class="grid">
+          <div class="field w4">
+            <label>Company
+              <select id="companySelect">
+                <option value="">Loading…</option>
+              </select>
+            </label>
+          </div>
 
-    <div class="controls">
-      <!-- Back to dashboard button -->
-      <button type="button"
-              class="back-button"
-              onclick="window.location.href='dashboard.html';">
-        <span>←</span>
-        <span>Back to dashboard</span>
-      </button>
+          <div class="field w4">
+            <label>Site
+              <select id="siteSelect" disabled>
+                <option value="">Select a company first</option>
+              </select>
+            </label>
+          </div>
 
-      <label>
-        Date
-        <input type="date" id="shift-date">
-      </label>
-      <label>
-        Shift
-        <select id="shift-name">
-          <option value="AM">AM</option>
-          <option value="PM">PM</option>
-          <option value="Nights">Nights</option>
-        </select>
-      </label>
-      <label>
-        View
-        <select id="view-mode">
-          <option value="Shift">Shift</option>
-          <option value="Day">Day (all shifts)</option>
-          <option value="Week">Week (all days)</option>
-        </select>
-      </label>
+          <div class="field w2">
+            <label>Date
+              <input type="date" id="shiftDate">
+            </label>
+          </div>
 
-      <button type="button" id="btn-toggle-sidebar" class="sidebar-toggle">
-        Task &amp; MHE setup
-      </button>
-    </div>
+          <div class="field w2">
+            <label>Shift
+              <select id="shiftCode">
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+                <option value="Nights">Nights</option>
+              </select>
+            </label>
+          </div>
+        </div>
 
-  </header>
-</div>
-
-
-
-    <!-- KPI layout -->
-    <section class="kpi-row">
-      <div class="kpi-card" id="kpi-direct-card">
-        <h2>Direct hours</h2>
-        <p>
-          Plan: <span id="kpi-direct-plan">0.00</span>h<br>
-          Actual: <span id="kpi-direct-actual">0.00</span>h
-        </p>
-        <small>Productive task time – plan vs actual.</small>
+        <div class="note" id="mheNote">MHE: not loaded yet.</div>
       </div>
-      <div class="kpi-card" id="kpi-indirect-card">
-        <h2>Indirect hours</h2>
-        <p>
-          Plan: <span id="kpi-indirect-plan">0.00</span>h<br>
-          Actual: <span id="kpi-indirect-actual">0.00</span>h
-        </p>
-        <small>
-          Indirect: <span id="kpi-indirect-pct">0.0</span>% of plan – Limit
-          <input type="number" id="indirect-limit"
-                 class="indirect-limit-input"
-                 min="0" max="100" step="0.5" value="5">%
-        </small>
+    </div>
+
+    <div class="kpis" id="kpiRow">
+      <div class="kpi" id="kpiDirect">
+        <h3>Direct hours</h3>
+        <p class="v">Plan: <span id="kpiDirectPlan">0.00</span>h · Actual: <span id="kpiDirectActual">0.00</span>h</p>
       </div>
-      <div class="kpi-card" id="kpi-labour-card">
-        <h2>Labour cost</h2>
-        <p>
-          £<span id="kpi-cost-plan">0.00</span> /
-          £<span id="kpi-cost-actual">0.00</span>
-        </p>
-        <small id="kpi-cost-note">
-          From MHE hourly rates × planned / actual hours.
-        </small>
+      <div class="kpi" id="kpiIndirect">
+        <h3>Indirect hours</h3>
+        <p class="v">Plan: <span id="kpiIndirectPlan">0.00</span>h · Actual: <span id="kpiIndirectActual">0.00</span>h</p>
       </div>
-      <div class="kpi-card" id="kpi-total-card">
-        <h2>Total hours – plan / expected / actual</h2>
-        <p>
-          Plan: <span id="kpi-total-plan">0.00</span>h<br>
-          Expected (capacity): <span id="kpi-total-available">0.00</span>h<br>
-          Actual: <span id="kpi-total-actual">0.00</span>h
-        </p>
-        <small>
-          Variance (expected − plan): <span id="kpi-total-variance">0.00</span>h
-        </small>
+      <div class="kpi" id="kpiCost">
+        <h3>Cost</h3>
+        <p class="v">Plan: £<span id="kpiCostPlan">0.00</span> · Actual: £<span id="kpiCostActual">0.00</span></p>
       </div>
-    </section>
-  </div>
+      <div class="kpi" id="kpiTotal">
+        <h3>Total hours</h3>
+        <p class="v">Plan: <span id="kpiTotalPlan">0.00</span>h · Actual: <span id="kpiTotalActual">0.00</span>h</p>
+      </div>
+    </div>
 
-  <!-- Upload / export section -->
-  <section class="panel">
-    <div class="panel-header">
-      <h2>Upload &amp; export – Plan &amp; Actual</h2>
-      <small>
-        Preferred CSV columns: Date, Shift, Task, PlanVolume, ActualVolume.
-        Older format (Task, PlanVolume, ActualVolume) also accepted for the current day/shift.
-      </small>
+    <div class="card" id="mheCard">
+      <div class="card-h">
+        <div>
+          <h2>Summary by MHE (available only)</h2>
+          <div class="sub">Derived from MHE assets on the selected site where status = active.</div>
+        </div>
+      </div>
+      <div class="card-b">
+        <table id="mheSummaryTable">
+          <thead>
+            <tr>
+              <th>MHE Type</th>
+              <th class="num">Count</th>
+              <th class="num">£/hr</th>
+              <th class="num">Planned hours</th>
+              <th class="num">Actual hours</th>
+              <th class="num">Planned cost</th>
+              <th class="num">Actual cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="7"><small>Select a site to load MHE.</small></td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="inline-controls">
-      <label>
-        Import CSV
-        <input type="file" id="csv-upload" accept=".csv,text/csv">
-      </label>
-      <button type="button" id="btn-download-template" class="btn btn-ghost">
-        Download CSV template (current day/shift)
-      </button>
-      <button type="button" id="btn-download-full-data" class="btn btn-ghost">
-        Download full dataset CSV
-      </button>
-      <button type="button" id="btn-clear-volumes" class="btn btn-ghost">
-        Clear all volumes (all days/shifts)
-      </button>
-    </div>
-    <div id="upload-message" class="message"></div>
-    <div class="footer-note">
-      Task names must match the “Task” column below (case-insensitive). Date/Shift columns route rows to the correct context.
-    </div>
-  </section>
 
-  <!-- Summary by MHE -->
-  <section class="panel">
-    <div class="panel-header">
-      <h2>Summary by MHE</h2>
-      <small id="summary-caption">For the selected date and shift.</small>
-    </div>
-    <table id="summary-by-mhe">
-      <thead>
-      <tr>
-        <th>MHE Type</th>
-        <th>£/hr</th>
-        <th>Planned hours required</th>
-        <th>Planned labour cost</th>
-        <th>Hours available (input)</th>
-        <th>Plan variance</th>
-        <th>Actual hours used</th>
-        <th>Actual labour cost</th>
-        <th>Actual variance</th>
-      </tr>
-      </thead>
-      <tbody>
-      <!-- rows built dynamically from MHE types -->
-      </tbody>
-    </table>
-    <div class="footer-note">
-      In Shift view, these hours are editable per day/shift. In Day/Week view they are aggregated and read-only.
-    </div>
-  </section>
+    <div class="card" id="taskCard">
+      <div class="card-h">
+        <div>
+          <h2>Task details – Plan vs Actual</h2>
+          <div class="sub">Edits save to <code>scheduling_entries</code> for the selected site/date/shift.</div>
+        </div>
+      </div>
+      <div class="card-b">
+        <table id="taskTable">
+          <thead>
+            <tr>
+              <th style="width:240px;">Task</th>
+              <th style="width:180px;">Area / Zone</th>
+              <th style="width:180px;">MHE Type</th>
+              <th class="num" style="width:120px;">Min / unit</th>
+              <th class="num" style="width:120px;">Plan units</th>
+              <th class="num" style="width:120px;">Actual units</th>
+              <th class="num" style="width:120px;">Plan hours</th>
+              <th class="num" style="width:120px;">Actual hours</th>
+              <th style="width:140px;">Category</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
 
-  <!-- Task table: plan vs actual -->
-  <section class="panel" id="tasks-panel">
-    <div class="panel-header">
-      <h2>Task details – Plan vs Actual</h2>
-      <small id="tasks-caption">For the selected date and shift.</small>
+        <div class="note">
+          MHE dropdown is restricted to MHE types that exist on the selected site (active assets only).
+        </div>
+      </div>
     </div>
-    <table id="tasks-table">
-      <thead>
-      <tr>
-        <th>Task</th>
-        <th>Area / Zone</th>
-        <th>MHE type</th>
-        <th>Unit</th>
-        <th>Minutes per unit</th>
-        <th>Plan volume</th>
-        <th>Plan hours</th>
-        <th>Actual volume</th>
-        <th>Actual hours</th>
-        <th>Productivity (units/hr)</th>
-      </tr>
-      </thead>
-      <tbody>
-      <!-- JS injects rows -->
-      </tbody>
-    </table>
-    <div class="read-only-note" id="tasks-readonly-note" style="display:none;">
-      Day/Week view shows aggregated volumes across shifts/days. Switch back to Shift view to edit volumes.
-    </div>
-    <div class="footer-note">
-      Volumes are in the configured unit per task (Pallets or Units). Productivity is calculated per that unit.
-    </div>
-  </section>
 
-  <!-- Range summary by day -->
-  <section class="panel">
-    <div class="panel-header">
-      <h2>Range summary – by day</h2>
-      <small>Aggregated daily totals (all shifts) between the selected dates.</small>
-    </div>
-    <div class="inline-controls">
-      <label>
-        From
-        <input type="date" id="range-from">
-      </label>
-      <label>
-        To
-        <input type="date" id="range-to">
-      </label>
-      <button type="button" id="btn-refresh-range" class="btn btn-ghost">
-        Refresh range summary
-      </button>
-      <button type="button" id="btn-download-range-csv" class="btn btn-ghost">
-        Download range summary CSV
-      </button>
-      <button type="button" id="btn-print-range" class="btn btn-primary">
-        Print / PDF
-      </button>
-    </div>
-    <table id="range-summary-table">
-      <thead>
-      <tr>
-        <th>Date</th>
-        <th>Planned hours</th>
-        <th>Hours available</th>
-        <th>Actual hours</th>
-        <th>Plan variance</th>
-        <th>Actual variance</th>
-      </tr>
-      </thead>
-      <tbody>
-      <!-- JS will inject rows -->
-      </tbody>
-    </table>
-    <div class="footer-note">
-      Use your browser's print dialog and choose “Save as PDF” to archive or share this summary.
-    </div>
-  </section>
-</div>
-
-<!-- Slide-out sidebar for Task & MHE configuration -->
-<div id="config-sidebar" class="sidebar">
-  <div class="sidebar-header">
-    <h2>Task &amp; MHE setup</h2>
-    <button type="button" id="sidebar-close" class="sidebar-close" title="Close">&times;</button>
-  </div>
-
-  <!-- MHE assets grid -->
-  <div>
-    <div class="sidebar-section-title">MHE assets</div>
-    <small>
-      Maintain a simple register of MHE pieces. The <strong>Type</strong> text is reused in the task dropdowns, MHE summary and cost.
-    </small>
-    <div style="margin:4px 0 4px; font-size:0.8rem;">
-      Total MHE: <span id="mhe-total-count" class="sidebar-pill">0</span>
-    </div>
-    <table id="mhe-config-table" class="sidebar-table">
-      <thead>
-      <tr>
-        <th>Label</th>
-        <th>Type</th>
-        <th>Count</th>
-        <th>£/hr</th>
-        <th></th>
-      </tr>
-      </thead>
-      <tbody>
-      <!-- JS injects rows -->
-      </tbody>
-    </table>
-    <div class="sidebar-button-row">
-      <button type="button" id="btn-add-mhe-row">Add MHE</button>
+    <div class="card" id="configCard" style="display:none;">
+      <div class="card-h">
+        <div>
+          <h2>Configuration</h2>
+          <div class="sub">Placeholder tab (kept for layout parity with Setup pages).</div>
+        </div>
+      </div>
+      <div class="card-b">
+        <div class="note">
+          If you want tasks to be site/company-specific, we can move the task list into a DB table next.
+        </div>
+      </div>
     </div>
   </div>
-
-  <!-- Task config grid -->
-  <div>
-    <div class="sidebar-section-title">Tasks &amp; productivity</div>
-    <small>
-      Each row defines a task: area, direct/indirect category, linked MHE type, unit and minutes per unit.
-    </small>
-    <table id="task-config-table" class="sidebar-table">
-      <thead>
-      <tr>
-        <th>Task</th>
-        <th>Area</th>
-        <th>Category</th>
-        <th>MHE</th>
-        <th>Unit</th>
-        <th>Min / unit</th>
-        <th></th>
-      </tr>
-      </thead>
-      <tbody>
-      <!-- JS injects rows -->
-      </tbody>
-    </table>
-    <div class="sidebar-button-row">
-      <button type="button" id="btn-add-task-row">Add task</button>
-    </div>
-    <small>
-      Direct/indirect drives the split on the main page. Changes are saved in this browser.
-    </small>
-  </div>
-</div>
 
 <script>
-  const PRODUCTIVITY_STORAGE_KEY = "wiSchedulingProductivity_v7";
-  const SCHEDULE_STORAGE_KEY     = "wiSchedulingData_v1";
-  const MHE_ASSETS_STORAGE_KEY   = "wiSchedulingMheAssets_v3";
-  const INDIRECT_LIMIT_KEY       = "wiSchedulingIndirectLimit_v1";
+/* =========================
+   SUPABASE CONFIG
+   ========================= */
+const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
 
-  let scheduleData = {};
-  let currentContext = { date: "", shift: "AM" };
-  let viewMode = "Shift";
-  let lastRangeSummary = [];
-  let allowedIndirectPercent = 5; // default
+/* CDN exposes `supabase` global, not `supabasejs` */
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Base task list – each has a category: Direct / Indirect
-  let tasksMasterData = [
-    { id: "trailer_unload", name: "Trailer unload (rear tip)", area: "Inbound – BAYM", mhe: "PPT",   uom: "Pallets", minutesPerUnit: 2.0, category: "Direct" },
-    { id: "container_20",   name: "Container unload (20ft)",   area: "Inbound",       mhe: "PPT",   uom: "Pallets", minutesPerUnit: 2.5, category: "Direct" },
-    { id: "container_40",   name: "Container unload (40ft)",   area: "Inbound",       mhe: "PPT",   uom: "Pallets", minutesPerUnit: 3.0, category: "Direct" },
-    { id: "putaway_vna",    name: "Putaway – VNA",             area: "High bay",      mhe: "VNA",   uom: "Pallets", minutesPerUnit: 3.0, category: "Direct" },
-    { id: "putaway_reach",  name: "Putaway – Reach",           area: "Bulk / floor",  mhe: "Reach", uom: "Pallets", minutesPerUnit: 2.7, category: "Direct" },
-    { id: "replenishment",  name: "Replenishment move",        area: "Replen",        mhe: "CB",    uom: "Pallets", minutesPerUnit: 2.2, category: "Direct" },
-    { id: "picking_manual", name: "Case picking",              area: "Pick face",     mhe: "Manual",uom: "Units",   minutesPerUnit: 0.1, category: "Direct" },
-    { id: "picking_ppt",    name: "Pallet picking (full)",     area: "Pick face",     mhe: "PPT",   uom: "Pallets", minutesPerUnit: 2.4, category: "Direct" },
-    { id: "admin_inbound",  name: "Admin – inbound",           area: "Office",        mhe: "Admin", uom: "Units",   minutesPerUnit: 0.6, category: "Indirect" }
-  ];
+const LINKS = { dashboard: "dashboard.html", setup: "setup.html" };
 
-  let mheAssets = [];
+let currentUser = null;
 
-  document.addEventListener("DOMContentLoaded", () => {
-    initDate();
-    initRangeDates();
-    loadProductivityFromStorage();
-    loadScheduleFromStorage();
-    loadMheAssetsFromStorage();
-    loadIndirectLimitFromStorage();
+let companies = [];
+let sites = [];
+let selectedCompanyId = "";
+let selectedSiteId = "";
 
-    buildTasksTable();
-    buildMheConfigTable();
-    buildSummaryByMheTable();
-    buildTaskConfigTable();
+/* MHE */
+let siteMheAssets = [];     // active only
+let siteMheTypes = [];      // [{ id, name, hourly_rate }]
+let mheTypeById = {};       // id -> {id,name,rate}
+let mheRatesByName = {};    // name -> rate
 
-    bindUpload();
-    bindDownloadTemplate();
-    bindDownloadFullData();
-    bindClearVolumes();
-    bindContextChange();
-    bindViewModeChange();
-    bindRangeSummaryControls();
-    initSidebar();
-    initIndirectLimitControl();
+/* Scheduling */
+let loadedEntries = [];
+let entryByTaskId = {};
 
-    currentContext = getCurrentContext();
-    refreshView();
-    buildRangeSummary();
+/* Task Master */
+let tasksMasterData = [
+  { id: "trailer_unload", name: "Trailer unload (rear tip)", area: "Inbound – BAYM", minutesPerUnit: 2.0, category: "Direct",  mheTypeId:"" },
+  { id: "container_20",   name: "Container unload (20ft)",   area: "Inbound",       minutesPerUnit: 2.5, category: "Direct",  mheTypeId:"" },
+  { id: "container_40",   name: "Container unload (40ft)",   area: "Inbound",       minutesPerUnit: 3.0, category: "Direct",  mheTypeId:"" },
+  { id: "putaway_vna",    name: "Putaway – VNA",             area: "High bay",      minutesPerUnit: 3.0, category: "Direct",  mheTypeId:"" },
+  { id: "putaway_reach",  name: "Putaway – Reach",           area: "Bulk / floor",  minutesPerUnit: 2.7, category: "Direct",  mheTypeId:"" },
+  { id: "replenishment",  name: "Replenishment move",        area: "Replen",        minutesPerUnit: 2.2, category: "Direct",  mheTypeId:"" },
+  { id: "picking_manual", name: "Case picking",              area: "Pick face",     minutesPerUnit: 0.1, category: "Direct",  mheTypeId:"" },
+  { id: "picking_ppt",    name: "Pallet picking (full)",     area: "Pick face",     minutesPerUnit: 2.4, category: "Direct",  mheTypeId:"" },
+  { id: "admin_inbound",  name: "Admin – inbound",           area: "Office",        minutesPerUnit: 0.6, category: "Indirect",mheTypeId:"" }
+];
+
+const el = (id) => document.getElementById(id);
+function setStatus(msg, isWarn=false){
+  const box = el("statusBox");
+  box.textContent = msg;
+  box.classList.toggle("warn", !!isWarn);
+}
+
+/* =========================
+   INIT
+   ========================= */
+document.addEventListener("DOMContentLoaded", async () => {
+  try{
+    el("btnBack").addEventListener("click", () => location.href = LINKS.dashboard);
+    el("btnSignOut").addEventListener("click", signOut);
+    el("btnReload").addEventListener("click", () => reloadAll(true));
+    el("btnSave").addEventListener("click", saveContextToDb);
+
+    el("tabPlan").addEventListener("click", () => setTab("plan"));
+    el("tabConfig").addEventListener("click", () => setTab("config"));
+
+    initDateDefault();
+
+    el("companySelect").addEventListener("change", async () => {
+      selectedCompanyId = el("companySelect").value;
+      await onCompanyChanged();
+    });
+
+    el("siteSelect").addEventListener("change", async () => {
+      selectedSiteId = el("siteSelect").value;
+      await onSiteChanged();
+    });
+
+    el("shiftDate").addEventListener("change", () => reloadEntriesForContext());
+    el("shiftCode").addEventListener("change", () => reloadEntriesForContext());
+
+    buildTaskTable();
+
+    await requireAuth();
+    await loadCompaniesAndSites();
+    setStatus("Ready.");
+  } catch(e){
+    console.error(e);
+    setStatus("Startup error: " + (e?.message || e), true);
+  }
+});
+
+function setTab(which){
+  el("tabPlan").classList.toggle("active", which==="plan");
+  el("tabConfig").classList.toggle("active", which==="config");
+
+  el("contextCard").style.display = (which==="plan") ? "" : "none";
+  el("kpiRow").style.display     = (which==="plan") ? "" : "none";
+  el("mheCard").style.display    = (which==="plan") ? "" : "none";
+  el("taskCard").style.display   = (which==="plan") ? "" : "none";
+  el("configCard").style.display = (which==="config") ? "" : "none";
+}
+
+function initDateDefault(){
+  const d = new Date();
+  el("shiftDate").value = d.toISOString().split("T")[0];
+}
+
+/* =========================
+   AUTH
+   ========================= */
+async function requireAuth(){
+  const { data: { user }, error } = await client.auth.getUser();
+  if (error){
+    console.warn(error);
+  }
+  if (!user){
+    location.href = "index.html";
+    return;
+  }
+  currentUser = user;
+  el("signedInPill").textContent = "Signed in: " + (user.email || user.id);
+}
+
+async function signOut(){
+  await client.auth.signOut();
+  location.href = "index.html";
+}
+
+/* =========================
+   COMPANIES + SITES
+   ========================= */
+async function loadCompaniesAndSites(){
+  setStatus("Loading companies and sites…");
+
+  const cRes = await client.from("companies").select("*").order("name", { ascending:true });
+  if (cRes.error){
+    setStatus("Error loading companies: " + cRes.error.message, true);
+    return;
+  }
+  companies = cRes.data || [];
+  const sel = el("companySelect");
+  sel.innerHTML = `<option value="">Select company…</option>`;
+  companies.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name || c.company_name || ("Company " + c.id);
+    sel.appendChild(opt);
   });
 
-  function initDate() {
-    const input = document.getElementById("shift-date");
-    const today = new Date();
-    const isoToday = today.toISOString().split("T")[0];
-    input.value = isoToday;
+  const sRes = await client.from("sites").select("*").order("name", { ascending:true });
+  if (sRes.error){
+    setStatus("Error loading sites: " + sRes.error.message, true);
+    return;
   }
+  sites = sRes.data || [];
 
-  function initRangeDates() {
-    const from = document.getElementById("range-from");
-    const to   = document.getElementById("range-to");
-    const today = new Date();
-    const isoToday = today.toISOString().split("T")[0];
-    from.value = isoToday;
-    to.value   = isoToday;
-  }
+  el("siteSelect").innerHTML = `<option value="">Select a company first</option>`;
+  el("siteSelect").disabled = true;
 
-  function getCurrentContext() {
-    const dateEl  = document.getElementById("shift-date");
-    const shiftEl = document.getElementById("shift-name");
-    return {
-      date: (dateEl.value || "").trim(),
-      shift: (shiftEl.value || "AM").trim()
-    };
-  }
+  setStatus("Ready.");
+}
 
-  function getMheTypes() {
-    const set = new Set();
+async function onCompanyChanged(){
+  selectedSiteId = "";
+  siteMheAssets = [];
+  siteMheTypes = [];
+  mheTypeById = {};
+  mheRatesByName = {};
 
-    // Only types from the MHE assets grid
-    mheAssets.forEach(a => {
-      if (a.type && a.type.trim()) set.add(a.type.trim());
-    });
+  const filtered = sites.filter(s => (s.company_id === selectedCompanyId) || (s.companyId === selectedCompanyId));
 
-    // Fallback if user has no MHE rows at all:
-    if (set.size === 0) {
-      ["PPT", "CB", "VNA"].forEach(t => set.add(t));
-    }
+  const sel = el("siteSelect");
+  sel.disabled = !selectedCompanyId;
+  sel.innerHTML = selectedCompanyId ? `<option value="">Select site…</option>` : `<option value="">Select a company first</option>`;
 
-    return Array.from(set);
-  }
+  filtered.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = s.name || s.site_name || ("Site " + s.id);
+    sel.appendChild(opt);
+  });
 
-  function bindContextChange() {
-    document.getElementById("shift-date").addEventListener("change", () => {
-      currentContext = getCurrentContext();
-      refreshView();
-    });
-    document.getElementById("shift-name").addEventListener("change", () => {
-      currentContext = getCurrentContext();
-      refreshView();
-    });
-  }
+  el("mheNote").textContent = "MHE: not loaded yet.";
+  renderMheSummaryEmpty();
+  updateMheTypeDropdowns([]);
+  clearTaskVolumes();
+  recalcAll();
+}
 
-  function bindViewModeChange() {
-    const sel = document.getElementById("view-mode");
-    sel.addEventListener("change", () => {
-      viewMode = sel.value || "Shift";
-      refreshView();
-    });
-  }
-
-  function refreshView() {
-    const tasksReadonlyNote = document.getElementById("tasks-readonly-note");
-    const tasksCaption      = document.getElementById("tasks-caption");
-    const summaryCaption    = document.getElementById("summary-caption");
-
-    const isShift = (viewMode === "Shift");
-    const isDay   = (viewMode === "Day");
-    const isWeek  = (viewMode === "Week");
-
-    setTaskInputsDisabled(!isShift);
-    setAvailableInputsDisabled(!isShift);
-
-    if (isShift) {
-      tasksReadonlyNote.style.display = "none";
-      tasksCaption.textContent   = "For the selected date and shift.";
-      summaryCaption.textContent = "For the selected date and shift.";
-      loadContextIntoDom(currentContext);
-    } else if (isDay) {
-      tasksReadonlyNote.style.display = "block";
-      tasksCaption.textContent   = "Aggregated across all shifts for the selected date.";
-      summaryCaption.textContent = "Aggregated across all shifts for the selected date.";
-      loadAggregatedIntoDom("Day");
-    } else if (isWeek) {
-      tasksReadonlyNote.style.display = "block";
-      tasksCaption.textContent   = "Aggregated across all days in the selected week (Mon–Sun).";
-      summaryCaption.textContent = "Aggregated across all days in the selected week (Mon–Sun).";
-      loadAggregatedIntoDom("Week");
-    }
-
+async function onSiteChanged(){
+  if (!selectedSiteId){
+    renderMheSummaryEmpty();
+    updateMheTypeDropdowns([]);
+    el("mheNote").textContent = "MHE: not loaded yet.";
+    clearTaskVolumes();
     recalcAll();
+    return;
+  }
+  await loadMheForSite(selectedSiteId);
+  updateMheTypeDropdowns(siteMheTypes);
+  await reloadEntriesForContext();
+}
+
+/* =========================
+   MHE (active assets + join mhe_types)
+   =========================
+   Your schema:
+   mhe_assets: mhe_type_id (FK), status (enum, default active)
+   so "available only" = status = 'active' (unless you define other statuses)
+*/
+async function loadMheForSite(siteId){
+  setStatus("Loading MHE for site…");
+
+  // Join mhe_types to get readable name + hourly rate (column name may vary)
+  // If your rate column is not hourly_rate, adjust below (see getTypeRate()).
+  const res = await client
+    .from("mhe_assets")
+    .select(`
+      id,
+      site_id,
+      mhe_type_id,
+      status,
+      mhe_types:mhe_type_id (
+        id,
+        name,
+        hourly_rate,
+        cost_per_hour,
+        rate_per_hour
+      )
+    `)
+    .eq("site_id", siteId)
+    .eq("status", "active");
+
+  if (res.error){
+    console.error(res.error);
+    setStatus("Error loading MHE assets: " + res.error.message, true);
+    siteMheAssets = [];
+    siteMheTypes = [];
+    mheTypeById = {};
+    mheRatesByName = {};
+    renderMheSummaryEmpty();
+    return;
   }
 
-  function buildTasksTable() {
-    const tbody = document.querySelector("#tasks-table tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
+  siteMheAssets = res.data || [];
 
-    tasksMasterData.forEach(task => {
-      const row = document.createElement("tr");
-      row.dataset.mhe = task.mhe || "";
-      row.dataset.taskId = task.id;
-      row.dataset.category = task.category || "Direct";
-
-      const mp = typeof task.minutesPerUnit === "number" && !isNaN(task.minutesPerUnit)
-        ? task.minutesPerUnit : 0;
-
-      const tdTask = document.createElement("td");
-      tdTask.textContent = task.name;
-      row.appendChild(tdTask);
-
-      const tdArea = document.createElement("td");
-      tdArea.textContent = task.area || "";
-      row.appendChild(tdArea);
-
-      const tdMhe = document.createElement("td");
-      tdMhe.textContent = task.mhe || "";
-      row.appendChild(tdMhe);
-
-      const tdUom = document.createElement("td");
-      tdUom.textContent = task.uom || "Units";
-      row.appendChild(tdUom);
-
-      const tdMinutes = document.createElement("td");
-      tdMinutes.classList.add("numeric", "minutes-cell");
-      tdMinutes.textContent = mp.toFixed(2);
-      row.appendChild(tdMinutes);
-
-      const tdPlanVol = document.createElement("td");
-      tdPlanVol.classList.add("numeric");
-      const inputPlanVolume = document.createElement("input");
-      inputPlanVolume.type = "number";
-      inputPlanVolume.min = "0";
-      inputPlanVolume.step = "1";
-      inputPlanVolume.value = "";
-      inputPlanVolume.classList.add("plan-volume");
-      inputPlanVolume.addEventListener("input", () => {
-        recalcRow(row);
-        recalcSummary();
+  // Build type map and list
+  const typeMap = new Map(); // id -> {id,name,rate}
+  siteMheAssets.forEach(a => {
+    const t = a.mhe_types;
+    if (!t || !t.id) return;
+    if (!typeMap.has(t.id)){
+      typeMap.set(t.id, {
+        id: t.id,
+        name: t.name || "Unknown",
+        rate: getTypeRate(t)
       });
-      tdPlanVol.appendChild(inputPlanVolume);
-      row.appendChild(tdPlanVol);
-
-      const tdPlanHours = document.createElement("td");
-      tdPlanHours.classList.add("numeric", "plan-hours");
-      tdPlanHours.textContent = "0.00";
-      row.appendChild(tdPlanHours);
-
-      const tdActualVol = document.createElement("td");
-      tdActualVol.classList.add("numeric");
-      const inputActualVolume = document.createElement("input");
-      inputActualVolume.type = "number";
-      inputActualVolume.min = "0";
-      inputActualVolume.step = "1";
-      inputActualVolume.value = "";
-      inputActualVolume.classList.add("actual-volume");
-      inputActualVolume.addEventListener("input", () => {
-        recalcRow(row);
-        recalcSummary();
-      });
-      tdActualVol.appendChild(inputActualVolume);
-      row.appendChild(tdActualVol);
-
-      const tdActualHours = document.createElement("td");
-      tdActualHours.classList.add("numeric", "actual-hours");
-      tdActualHours.textContent = "0.00";
-      row.appendChild(tdActualHours);
-
-      const tdProd = document.createElement("td");
-      tdProd.classList.add("numeric", "productivity");
-      tdProd.textContent = "-";
-      row.appendChild(tdProd);
-
-      tbody.appendChild(row);
-    });
-  }
-
-  function setTaskInputsDisabled(disabled) {
-    document.querySelectorAll(".plan-volume, .actual-volume").forEach(input => {
-      input.disabled = disabled;
-    });
-  }
-
-  function setAvailableInputsDisabled(disabled) {
-    document.querySelectorAll(".summary-available-hours").forEach(input => {
-      input.disabled = disabled;
-    });
-  }
-
-  function loadContextIntoDom(ctx) {
-    const dateKey  = ctx.date;
-    const shiftKey = ctx.shift;
-    const ctxData  = (scheduleData[dateKey] || {})[shiftKey] || {};
-
-    document.querySelectorAll("#tasks-table tbody tr").forEach(row => {
-      const taskId = row.dataset.taskId;
-      const entry  = ctxData[taskId] || {};
-
-      const planInput   = row.querySelector(".plan-volume");
-      const actualInput = row.querySelector(".actual-volume");
-
-      if (planInput)   planInput.value   = entry.planVolume   != null ? entry.planVolume   : "";
-      if (actualInput) actualInput.value = entry.actualVolume != null ? entry.actualVolume : "";
-    });
-
-    setAvailableHoursForContext(ctx);
-    recalcAll();
-  }
-
-  function setAvailableHoursForContext(ctx) {
-    const dateKey  = ctx.date;
-    const shiftKey = ctx.shift;
-    const ctxData  = (scheduleData[dateKey] || {})[shiftKey] || {};
-    const availData = ctxData.__availableByMhe || {};
-
-    document.querySelectorAll("#summary-by-mhe tbody tr").forEach(row => {
-      const mhe   = row.dataset.mhe;
-      const input = row.querySelector(".summary-available-hours");
-      if (!input) return;
-      if (availData[mhe] != null) input.value = availData[mhe];
-      else input.value = "";
-    });
-  }
-
-  function getWeekDates(dateStr) {
-    const d = new Date(dateStr + "T00:00:00");
-    const day = d.getDay();
-    const diffToMon = (day + 6) % 7;
-    d.setDate(d.getDate() - diffToMon);
-
-    const dates = [];
-    for (let i = 0; i < 7; i++) {
-      const dd = new Date(d.getTime());
-      dd.setDate(d.getDate() + i);
-      dates.push(dd.toISOString().split("T")[0]);
     }
-    return dates;
-  }
+  });
 
-  function loadAggregatedIntoDom(mode) {
-    const dateKey = currentContext.date;
-    if (!dateKey) {
-      document.querySelectorAll(".plan-volume, .actual-volume").forEach(i => i.value = "");
-      document.querySelectorAll(".summary-available-hours").forEach(i => i.value = "");
+  siteMheTypes = Array.from(typeMap.values()).sort((a,b) => (a.name||"").localeCompare(b.name||""));
+  mheTypeById = {};
+  mheRatesByName = {};
+  siteMheTypes.forEach(t => {
+    mheTypeById[t.id] = t;
+    mheRatesByName[t.name] = t.rate || 0;
+  });
+
+  el("mheNote").textContent =
+    `MHE loaded: ${siteMheAssets.length} active asset(s), ${siteMheTypes.length} type(s).`;
+
+  renderMheSummary();
+  setStatus("Ready.");
+}
+
+function getTypeRate(typeRow){
+  // Try common columns safely:
+  const tryCols = ["hourly_rate", "cost_per_hour", "rate_per_hour"];
+  for (const c of tryCols){
+    const v = typeRow?.[c];
+    if (v != null && !isNaN(parseFloat(v))) return parseFloat(v);
+  }
+  return 0;
+}
+
+/* =========================
+   TASK TABLE
+   ========================= */
+function buildTaskTable(){
+  const tbody = el("taskTable").querySelector("tbody");
+  tbody.innerHTML = "";
+
+  tasksMasterData.forEach(t => {
+    const tr = document.createElement("tr");
+    tr.dataset.taskId = t.id;
+
+    const tdTask = document.createElement("td");
+    const inpTask = document.createElement("input");
+    inpTask.type = "text";
+    inpTask.value = t.name;
+    inpTask.addEventListener("input", () => t.name = inpTask.value);
+    tdTask.appendChild(inpTask);
+
+    const tdArea = document.createElement("td");
+    const inpArea = document.createElement("input");
+    inpArea.type = "text";
+    inpArea.value = t.area || "";
+    inpArea.addEventListener("input", () => t.area = inpArea.value);
+    tdArea.appendChild(inpArea);
+
+    const tdMhe = document.createElement("td");
+    const selMhe = document.createElement("select");
+    selMhe.className = "mheTypeSelect";
+    selMhe.addEventListener("change", () => {
+      t.mheTypeId = selMhe.value;
+      recalcRow(tr);
       recalcAll();
+    });
+    tdMhe.appendChild(selMhe);
+
+    const tdMin = document.createElement("td"); tdMin.className = "num";
+    const inpMin = document.createElement("input");
+    inpMin.type = "number";
+    inpMin.step = "0.1";
+    inpMin.min = "0";
+    inpMin.value = (t.minutesPerUnit ?? 0).toString();
+    inpMin.addEventListener("input", () => {
+      const v = parseFloat(inpMin.value);
+      t.minutesPerUnit = (!isNaN(v) && v >= 0) ? v : 0;
+      recalcRow(tr); recalcAll();
+    });
+    tdMin.appendChild(inpMin);
+
+    const tdPlanU = document.createElement("td"); tdPlanU.className = "num";
+    const inpPlan = document.createElement("input");
+    inpPlan.type = "number"; inpPlan.step = "1"; inpPlan.min = "0";
+    inpPlan.value = ""; inpPlan.className = "planUnits";
+    inpPlan.addEventListener("input", () => { recalcRow(tr); recalcAll(); });
+    tdPlanU.appendChild(inpPlan);
+
+    const tdActU = document.createElement("td"); tdActU.className = "num";
+    const inpAct = document.createElement("input");
+    inpAct.type = "number"; inpAct.step = "1"; inpAct.min = "0";
+    inpAct.value = ""; inpAct.className = "actualUnits";
+    inpAct.addEventListener("input", () => { recalcRow(tr); recalcAll(); });
+    tdActU.appendChild(inpAct);
+
+    const tdPlanH = document.createElement("td"); tdPlanH.className = "num planHours"; tdPlanH.textContent = "0.00";
+    const tdActH  = document.createElement("td"); tdActH.className  = "num actualHours"; tdActH.textContent  = "0.00";
+
+    const tdCat = document.createElement("td");
+    const selCat = document.createElement("select");
+    ["Direct","Indirect"].forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c; opt.textContent = c;
+      if ((t.category || "Direct") === c) opt.selected = true;
+      selCat.appendChild(opt);
+    });
+    selCat.addEventListener("change", () => { t.category = selCat.value; recalcAll(); });
+    tdCat.appendChild(selCat);
+
+    tr.append(tdTask, tdArea, tdMhe, tdMin, tdPlanU, tdActU, tdPlanH, tdActH, tdCat);
+    tbody.appendChild(tr);
+  });
+
+  updateMheTypeDropdowns([]);
+}
+
+function updateMheTypeDropdowns(types){
+  document.querySelectorAll(".mheTypeSelect").forEach((sel, idx) => {
+    const task = tasksMasterData[idx];
+    sel.innerHTML = "";
+
+    if (!types || types.length === 0){
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Select site first";
+      sel.appendChild(opt);
+      sel.disabled = true;
+      task.mheTypeId = "";
       return;
     }
 
-    const contexts = [];
+    sel.disabled = false;
 
-    if (mode === "Day") {
-      const shiftsObj = scheduleData[dateKey] || {};
-      Object.keys(shiftsObj).forEach(shiftKey => {
-        contexts.push({ date: dateKey, shift: shiftKey });
-      });
-    } else if (mode === "Week") {
-      const weekDates = getWeekDates(dateKey);
-      weekDates.forEach(d => {
-        const shiftsObj = scheduleData[d] || {};
-        Object.keys(shiftsObj).forEach(shiftKey => {
-          contexts.push({ date: d, shift: shiftKey });
-        });
-      });
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "Select MHE type…";
+    sel.appendChild(opt0);
+
+    types.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = t.name;
+      sel.appendChild(opt);
+    });
+
+    if (task.mheTypeId && types.some(x => x.id === task.mheTypeId)){
+      sel.value = task.mheTypeId;
+    } else {
+      sel.value = types[0].id;
+      task.mheTypeId = sel.value;
     }
+  });
 
-    const aggrVolumes = {};
-    tasksMasterData.forEach(t => {
-      aggrVolumes[t.id] = { plan: 0, actual: 0 };
-    });
+  recalcAll();
+}
 
-    const aggrAvailableByMhe = {};
+/* =========================
+   scheduling_entries load/save
+   ========================= */
+function getContext(){
+  return {
+    site_id: selectedSiteId,
+    scheduled_date: el("shiftDate").value,
+    shift_code: el("shiftCode").value
+  };
+}
 
-    contexts.forEach(c => {
-      const ctxStore = (scheduleData[c.date] || {})[c.shift] || {};
-      tasksMasterData.forEach(t => {
-        const entry = ctxStore[t.id] || {};
-        if (entry.planVolume   != null) aggrVolumes[t.id].plan   += entry.planVolume;
-        if (entry.actualVolume != null) aggrVolumes[t.id].actual += entry.actualVolume;
-      });
+async function reloadAll(){
+  if (selectedSiteId){
+    await loadMheForSite(selectedSiteId);
+    updateMheTypeDropdowns(siteMheTypes);
+    await reloadEntriesForContext();
+  }
+}
 
-      const avail = ctxStore.__availableByMhe || {};
-      Object.keys(avail).forEach(mhe => {
-        if (!aggrAvailableByMhe[mhe]) aggrAvailableByMhe[mhe] = 0;
-        aggrAvailableByMhe[mhe] += avail[mhe];
-      });
-    });
-
-    document.querySelectorAll("#tasks-table tbody tr").forEach(row => {
-      const taskId  = row.dataset.taskId;
-      const volumes = aggrVolumes[taskId] || { plan: 0, actual: 0 };
-
-      const planInput   = row.querySelector(".plan-volume");
-      const actualInput = row.querySelector(".actual-volume");
-
-      if (planInput)   planInput.value   = volumes.plan   || "";
-      if (actualInput) actualInput.value = volumes.actual || "";
-
-      recalcRow(row, false);
-    });
-
-    document.querySelectorAll("#summary-by-mhe tbody tr").forEach(row => {
-      const mhe   = row.dataset.mhe;
-      const input = row.querySelector(".summary-available-hours");
-      const val   = aggrAvailableByMhe[mhe] || 0;
-      if (input) input.value = val ? val : "";
-    });
-
-    recalcSummary();
+async function reloadEntriesForContext(){
+  const ctx = getContext();
+  if (!ctx.site_id || !ctx.scheduled_date || !ctx.shift_code){
+    clearTaskVolumes();
+    recalcAll();
+    return;
   }
 
-  function storeRowVolumes(row) {
-    const planVolInput   = row.querySelector(".plan-volume");
-    const actualVolInput = row.querySelector(".actual-volume");
+  setStatus("Loading scheduling entries…");
 
-    const planVolume   = planVolInput   ? parseFloat(planVolInput.value)   : NaN;
-    const actualVolume = actualVolInput ? parseFloat(actualVolInput.value) : NaN;
+  const res = await client
+    .from("scheduling_entries")
+    .select("*")
+    .eq("site_id", ctx.site_id)
+    .eq("scheduled_date", ctx.scheduled_date)
+    .eq("shift_code", ctx.shift_code);
 
-    const taskId = row.dataset.taskId;
-    const ctx    = getCurrentContext();
-    if (!ctx.date || !ctx.shift || !taskId) return;
-
-    if (!scheduleData[ctx.date]) scheduleData[ctx.date] = {};
-    if (!scheduleData[ctx.date][ctx.shift]) scheduleData[ctx.date][ctx.shift] = {};
-    const ctxStore = scheduleData[ctx.date][ctx.shift];
-
-    const entry = ctxStore[taskId] || {};
-    if (!isNaN(planVolume))   entry.planVolume   = planVolume;
-    if (!isNaN(actualVolume)) entry.actualVolume = actualVolume;
-    ctxStore[taskId] = entry;
-
-    saveScheduleToStorage();
+  if (res.error){
+    console.error(res.error);
+    setStatus("Error loading scheduling entries: " + res.error.message, true);
+    return;
   }
 
-  function storeAvailableHoursForCurrentContext() {
-    const ctx = getCurrentContext();
-    if (!ctx.date || !ctx.shift) return;
+  loadedEntries = res.data || [];
+  entryByTaskId = {};
 
-    if (!scheduleData[ctx.date]) scheduleData[ctx.date] = {};
-    if (!scheduleData[ctx.date][ctx.shift]) scheduleData[ctx.date][ctx.shift] = {};
-    const ctxStore = scheduleData[ctx.date][ctx.shift];
+  // Match DB rows to task by task_name (case-insensitive)
+  const nameToTask = {};
+  tasksMasterData.forEach(t => nameToTask[(t.name || "").trim().toLowerCase()] = t);
 
-    const byMhe = {};
-    document.querySelectorAll("#summary-by-mhe tbody tr").forEach(row => {
-      const mhe   = row.dataset.mhe;
-      const input = row.querySelector(".summary-available-hours");
-      const val   = input ? parseFloat(input.value) : NaN;
-      if (!isNaN(val)) byMhe[mhe] = val;
-    });
-    ctxStore.__availableByMhe = byMhe;
+  loadedEntries.forEach(r => {
+    const key  = (r.task_name || "").trim().toLowerCase();
+    const task = nameToTask[key];
+    if (!task) return;
 
-    saveScheduleToStorage();
-  }
+    entryByTaskId[task.id] = r;
 
-  /* ========= CSV UPLOAD / DOWNLOAD ========= */
-
-  function bindUpload() {
-    const uploadInput = document.getElementById("csv-upload");
-    uploadInput.addEventListener("change", handleCsvUpload);
-  }
-
-  function handleCsvUpload(event) {
-    const file = event.target.files[0];
-    const msgEl = document.getElementById("upload-message");
-    msgEl.textContent = "";
-    msgEl.className = "message";
-
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const text    = e.target.result;
-        const records = parseCsv(text);
-        const result  = applyCsvToTasks(records);
-        msgEl.textContent = `Imported ${result.matched} row(s). ${result.unmatched} row(s) did not match any task name.`;
-        msgEl.classList.add(result.unmatched > 0 ? "error" : "success");
-      } catch (err) {
-        msgEl.textContent = "Error reading CSV: " + err.message;
-        msgEl.classList.add("error");
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  function parseCsv(text) {
-    const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-    if (lines.length === 0) return [];
-
-    const header      = lines[0].split(",").map(h => h.trim());
-    const lowerHeader = header.map(h => h.toLowerCase());
-
-    const idxTask = lowerHeader.indexOf("task");
-    if (idxTask === -1) throw new Error("No 'Task' column found in header.");
-
-    const idxDate   = lowerHeader.indexOf("date");
-    const idxShift  = lowerHeader.indexOf("shift");
-    const idxPlan   = findColumnIndex(lowerHeader, ["planvolume","plan","planned"]);
-    const idxActual = findColumnIndex(lowerHeader, ["actualvolume","actual","actuals"]);
-
-    const records = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(",");
-      if (parts.length === 0) continue;
-
-      const taskNameRaw = (parts[idxTask] || "").trim();
-      if (!taskNameRaw) continue;
-
-      const dateStr  = idxDate  >= 0 ? (parts[idxDate]  || "").trim() : "";
-      const shiftStr = idxShift >= 0 ? (parts[idxShift] || "").trim() : "";
-
-      const planStr   = idxPlan   >= 0 ? (parts[idxPlan]   || "").trim() : "";
-      const actualStr = idxActual >= 0 ? (parts[idxActual] || "").trim() : "";
-
-      const planVolume   = planStr   === "" ? null : parseFloat(planStr);
-      const actualVolume = actualStr === "" ? null : parseFloat(actualStr);
-
-      records.push({
-        taskName: taskNameRaw,
-        date:   dateStr || null,
-        shift:  shiftStr || null,
-        planVolume:   isNaN(planVolume)   ? null : planVolume,
-        actualVolume: isNaN(actualVolume) ? null : actualVolume
-      });
+    // mhe_id in scheduling_entries is TEXT (you showed) – we store mhe type NAME for readability
+    // If you want to store mhe_type_id instead, we can change schema or store uuid as text.
+    if (r.mhe_id){
+      // Try to map name -> type_id
+      const found = siteMheTypes.find(x => (x.name || "").toLowerCase() === String(r.mhe_id).toLowerCase());
+      if (found) task.mheTypeId = found.id;
     }
+  });
 
-    return records;
+  // Push values into UI
+  document.querySelectorAll("#taskTable tbody tr").forEach((tr, i) => {
+    const task = tasksMasterData[i];
+    const rowEntry = entryByTaskId[task.id];
+
+    // dropdown
+    const selMhe = tr.querySelector(".mheTypeSelect");
+    if (selMhe && task.mheTypeId) selMhe.value = task.mheTypeId;
+
+    const inpPlan = tr.querySelector(".planUnits");
+    const inpAct  = tr.querySelector(".actualUnits");
+    if (inpPlan) inpPlan.value = (rowEntry && rowEntry.units_planned != null) ? rowEntry.units_planned : "";
+    if (inpAct)  inpAct.value  = (rowEntry && rowEntry.units_actual  != null) ? rowEntry.units_actual  : "";
+
+    recalcRow(tr);
+  });
+
+  renderMheSummary();
+  recalcAll();
+  setStatus(`Loaded ${loadedEntries.length} row(s) for this site/date/shift.`);
+}
+
+async function saveContextToDb(){
+  const ctx = getContext();
+  if (!ctx.site_id || !ctx.scheduled_date || !ctx.shift_code){
+    setStatus("Select company, site, date and shift before saving.", true);
+    return;
   }
 
-  function findColumnIndex(headers, candidates) {
-    for (let i = 0; i < headers.length; i++) {
-      for (const c of candidates) {
-        if (headers[i].replace(/\s+/g, "") === c) return i;
-      }
+  setStatus("Saving scheduling entries…");
+
+  const rows = [];
+
+  document.querySelectorAll("#taskTable tbody tr").forEach((tr, i) => {
+    const t = tasksMasterData[i];
+
+    const planU = parseFloat((tr.querySelector(".planUnits")?.value || "").trim());
+    const actU  = parseFloat((tr.querySelector(".actualUnits")?.value || "").trim());
+
+    const mp = (t.minutesPerUnit || 0);
+    const planHours = (!isNaN(planU) ? (planU * mp) / 60 : null);
+    const actHours  = (!isNaN(actU)  ? (actU  * mp) / 60 : null);
+
+    const mheType = mheTypeById[t.mheTypeId]?.name || null; // scheduling_entries.mhe_id is text in your schema
+    const rate = mheRatesByName[mheType] || 0;
+
+    const costPlan = (rate && planHours != null) ? planHours * rate : null;
+    const costAct  = (rate && actHours  != null) ? actHours  * rate : null;
+
+    const hasAny = (!isNaN(planU) && planU > 0) || (!isNaN(actU) && actU > 0);
+    if (!hasAny) return;
+
+    rows.push({
+      site_id: ctx.site_id,
+      scheduled_date: ctx.scheduled_date,
+      shift_code: ctx.shift_code,
+
+      mhe_id: mheType,
+      task_name: t.name || null,
+
+      units_planned: (!isNaN(planU) ? planU : null),
+      units_actual:  (!isNaN(actU)  ? actU  : null),
+
+      hours_direct_plan:    (t.category === "Direct"   ? planHours : null),
+      hours_direct_actual:  (t.category === "Direct"   ? actHours  : null),
+      hours_indirect_plan:  (t.category === "Indirect" ? planHours : null),
+      hours_indirect_actual:(t.category === "Indirect" ? actHours  : null),
+
+      cost_plan: costPlan,
+      cost_actual: costAct,
+
+      updated_at: new Date().toISOString(),
+      updated_by: currentUser?.id || null
+    });
+  });
+
+  // Delete + insert (safe without unique constraint)
+  const del = await client
+    .from("scheduling_entries")
+    .delete()
+    .eq("site_id", ctx.site_id)
+    .eq("scheduled_date", ctx.scheduled_date)
+    .eq("shift_code", ctx.shift_code);
+
+  if (del.error){
+    setStatus("Error deleting existing rows: " + del.error.message, true);
+    return;
+  }
+
+  if (rows.length === 0){
+    setStatus("Saved: nothing entered (existing rows cleared).");
+    await reloadEntriesForContext();
+    return;
+  }
+
+  const ins = await client.from("scheduling_entries").insert(rows);
+  if (ins.error){
+    setStatus("Error inserting rows: " + ins.error.message, true);
+    return;
+  }
+
+  setStatus(`Saved ${rows.length} row(s).`);
+  await reloadEntriesForContext();
+}
+
+/* =========================
+   MHE Summary
+   ========================= */
+function renderMheSummaryEmpty(){
+  const tbody = el("mheSummaryTable").querySelector("tbody");
+  tbody.innerHTML = `<tr><td colspan="7"><small>Select a site to load MHE.</small></td></tr>`;
+}
+
+function renderMheSummary(){
+  const tbody = el("mheSummaryTable").querySelector("tbody");
+  tbody.innerHTML = "";
+
+  if (!selectedSiteId || siteMheAssets.length === 0 || siteMheTypes.length === 0){
+    renderMheSummaryEmpty();
+    return;
+  }
+
+  // Count active assets by type name
+  const counts = {};
+  siteMheAssets.forEach(a => {
+    const t = a.mhe_types?.name || "Unknown";
+    counts[t] = (counts[t] || 0) + 1;
+  });
+
+  // Hours by type name
+  const sums = {};
+  Object.keys(counts).forEach(name => sums[name] = { planH:0, actH:0 });
+
+  document.querySelectorAll("#taskTable tbody tr").forEach((tr, i) => {
+    const task = tasksMasterData[i];
+    const typeName = mheTypeById[task.mheTypeId]?.name;
+    if (!typeName || !sums[typeName]) return;
+
+    const ph = parseFloat(tr.querySelector(".planHours")?.textContent || "0") || 0;
+    const ah = parseFloat(tr.querySelector(".actualHours")?.textContent || "0") || 0;
+    sums[typeName].planH += ph;
+    sums[typeName].actH  += ah;
+  });
+
+  // Render rows by type list (consistent order)
+  siteMheTypes.forEach(t => {
+    const name = t.name || "Unknown";
+    const rate = t.rate || 0;
+    const planH = sums[name]?.planH || 0;
+    const actH  = sums[name]?.actH  || 0;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(name)}</td>
+      <td class="num">${counts[name] || 0}</td>
+      <td class="num">${rate ? rate.toFixed(2) : "-"}</td>
+      <td class="num">${planH.toFixed(2)}</td>
+      <td class="num">${actH.toFixed(2)}</td>
+      <td class="num">${(rate ? (planH*rate).toFixed(2) : "0.00")}</td>
+      <td class="num">${(rate ? (actH*rate).toFixed(2) : "0.00")}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, (m) => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+
+/* =========================
+   Calcs + KPI
+   ========================= */
+function recalcRow(tr){
+  const idx = Array.from(tr.parentElement.children).indexOf(tr);
+  const t = tasksMasterData[idx];
+
+  const planU = parseFloat(tr.querySelector(".planUnits")?.value || "0") || 0;
+  const actU  = parseFloat(tr.querySelector(".actualUnits")?.value || "0") || 0;
+
+  const mp = t.minutesPerUnit || 0;
+  const planH = mp > 0 ? (planU * mp)/60 : 0;
+  const actH  = mp > 0 ? (actU  * mp)/60 : 0;
+
+  tr.querySelector(".planHours").textContent = planH.toFixed(2);
+  tr.querySelector(".actualHours").textContent = actH.toFixed(2);
+
+  tr.classList.remove("row-ok","row-warn");
+  if (planH > 0 || actH > 0){
+    if (actH > planH + 0.01) tr.classList.add("row-warn");
+    else if (actH > 0) tr.classList.add("row-ok");
+  }
+
+  renderMheSummary();
+}
+
+function recalcAll(){
+  let directPlan=0, directAct=0, indirectPlan=0, indirectAct=0;
+  let costPlan=0, costAct=0, totalPlan=0, totalAct=0;
+
+  document.querySelectorAll("#taskTable tbody tr").forEach((tr, i) => {
+    const t = tasksMasterData[i];
+    const ph = parseFloat(tr.querySelector(".planHours")?.textContent || "0") || 0;
+    const ah = parseFloat(tr.querySelector(".actualHours")?.textContent || "0") || 0;
+
+    const typeName = mheTypeById[t.mheTypeId]?.name;
+    const rate = mheRatesByName[typeName] || 0;
+
+    costPlan += ph * rate;
+    costAct  += ah * rate;
+
+    if ((t.category || "Direct") === "Indirect"){
+      indirectPlan += ph; indirectAct += ah;
+    } else {
+      directPlan += ph; directAct += ah;
     }
-    return -1;
-  }
-
-  function applyCsvToTasks(records) {
-    let matched = 0;
-    let unmatched = 0;
-    const current = getCurrentContext();
-
-    const nameToTask = {};
-    tasksMasterData.forEach(t => {
-      nameToTask[t.name.trim().toLowerCase()] = t;
-    });
-
-    records.forEach(rec => {
-      const key  = rec.taskName.trim().toLowerCase();
-      const task = nameToTask[key];
-      if (!task) {
-        unmatched++;
-        return;
-      }
-
-      const dateKey  = rec.date  || current.date;
-      const shiftKey = rec.shift || current.shift;
-      if (!dateKey || !shiftKey) {
-        unmatched++;
-        return;
-      }
-
-      if (!scheduleData[dateKey]) scheduleData[dateKey] = {};
-      if (!scheduleData[dateKey][shiftKey]) scheduleData[dateKey][shiftKey] = {};
-      const ctxStore = scheduleData[dateKey][shiftKey];
-
-      const entry = ctxStore[task.id] || {};
-      if (rec.planVolume   !== null) entry.planVolume   = rec.planVolume;
-      if (rec.actualVolume !== null) entry.actualVolume = rec.actualVolume;
-      ctxStore[task.id] = entry;
-
-      if (dateKey === current.date && shiftKey === current.shift && viewMode === "Shift") {
-        const row = document.querySelector(`#tasks-table tbody tr[data-task-id="${task.id}"]`);
-        if (row) {
-          const planInput   = row.querySelector(".plan-volume");
-          const actualInput = row.querySelector(".actual-volume");
-          if (planInput && rec.planVolume !== null)     planInput.value   = rec.planVolume;
-          if (actualInput && rec.actualVolume !== null) actualInput.value = rec.actualVolume;
-          recalcRow(row, false);
-        }
-      }
-      matched++;
-    });
-
-    saveScheduleToStorage();
-    refreshView();
-    buildRangeSummary();
-    return { matched, unmatched };
-  }
-
-  function bindClearVolumes() {
-    const btn = document.getElementById("btn-clear-volumes");
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".plan-volume, .actual-volume").forEach(input => {
-        input.value = "";
-      });
-      document.querySelectorAll(".summary-available-hours").forEach(input => {
-        input.value = "";
-      });
-
-      scheduleData = {};
-      saveScheduleToStorage();
-      recalcAll();
-      buildRangeSummary();
-
-      const msgEl = document.getElementById("upload-message");
-      msgEl.textContent = "All plan and actual volumes cleared for all days/shifts.";
-      msgEl.className = "message success";
-    });
-  }
-
-  function bindDownloadTemplate() {
-    const btn = document.getElementById("btn-download-template");
-    btn.addEventListener("click", () => {
-      const csv  = buildTemplateCsv();
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href = url;
-      a.download = "scheduling-template.csv";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      const msgEl = document.getElementById("upload-message");
-      msgEl.textContent = "Template downloaded: scheduling-template.csv";
-      msgEl.className = "message success";
-    });
-  }
-
-  function buildTemplateCsv() {
-    const ctx = getCurrentContext();
-    let lines = [];
-    lines.push("Date,Shift,Task,PlanVolume,ActualVolume");
-    tasksMasterData.forEach(t => {
-      const taskField = escapeCsvField(t.name);
-      lines.push(`${ctx.date},${ctx.shift},${taskField},,`);
-    });
-    return lines.join("\n");
-  }
-
-  function bindDownloadFullData() {
-    const btn = document.getElementById("btn-download-full-data");
-    btn.addEventListener("click", () => {
-      const csv  = buildFullDataCsv();
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href = url;
-      a.download = "scheduling-full-dataset.csv";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      const msgEl = document.getElementById("upload-message");
-      msgEl.textContent = "Full dataset downloaded: scheduling-full-dataset.csv";
-      msgEl.className = "message success";
-    });
-  }
-
-  function buildFullDataCsv() {
-    let lines = [];
-    lines.push("Date,Shift,Task,Unit,Category,PlanVolume,ActualVolume,MinutesPerUnit,PlanHours,ActualHours");
-
-    const minutesMap = {};
-    const uomMap     = {};
-    const catMap     = {};
-    tasksMasterData.forEach(t => {
-      minutesMap[t.id] = typeof t.minutesPerUnit === "number" ? t.minutesPerUnit : 0;
-      uomMap[t.id]     = t.uom || "Units";
-      catMap[t.id]     = t.category || "Direct";
-    });
-
-    const dates = Object.keys(scheduleData).sort();
-    dates.forEach(dateKey => {
-      const shiftsObj = scheduleData[dateKey] || {};
-      Object.keys(shiftsObj).forEach(shiftKey => {
-        const ctxStore = shiftsObj[shiftKey] || {};
-        tasksMasterData.forEach(t => {
-          const entry = ctxStore[t.id];
-          if (!entry || (entry.planVolume == null && entry.actualVolume == null)) return;
-
-          const mp  = minutesMap[t.id] || 0;
-          const uom = uomMap[t.id] || "Units";
-          const cat = catMap[t.id] || "Direct";
-
-          const pv = entry.planVolume;
-          const av = entry.actualVolume;
-          const planHours   = pv != null ? (pv * mp) / 60 : null;
-          const actualHours = av != null ? (av * mp) / 60 : null;
-
-          const row = [
-            dateKey,
-            shiftKey,
-            escapeCsvField(t.name),
-            uom,
-            cat,
-            pv != null ? pv : "",
-            av != null ? av : "",
-            mp,
-            planHours   != null ? planHours.toFixed(2)   : "",
-            actualHours != null ? actualHours.toFixed(2) : ""
-          ];
-          lines.push(row.join(","));
-        });
-      });
-    });
-
-    return lines.join("\n");
-  }
-
-  function escapeCsvField(value) {
-    if (value == null) return "";
-    const s = String(value);
-    if (s.includes('"') || s.includes(",") || s.includes("\n")) {
-      return '"' + s.replace(/"/g, '""') + '"';
-    }
-    return s;
-  }
-
-  /* ========= RANGE SUMMARY ========= */
-
-  function bindRangeSummaryControls() {
-    document.getElementById("btn-refresh-range").addEventListener("click", buildRangeSummary);
-    document.getElementById("range-from").addEventListener("change", buildRangeSummary);
-    document.getElementById("range-to").addEventListener("change", buildRangeSummary);
-
-    document.getElementById("btn-download-range-csv").addEventListener("click", () => {
-      const csv = buildRangeSummaryCsv();
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href = url;
-      a.download = "scheduling-range-summary.csv";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById("btn-print-range").addEventListener("click", () => {
-      window.print();
-    });
-  }
-
-  function getDateRange(from, to) {
-    const start = new Date(from + "T00:00:00");
-    const end   = new Date(to   + "T00:00:00");
-    const dates = [];
-    let d = new Date(start.getTime());
-    while (d <= end) {
-      dates.push(d.toISOString().split("T")[0]);
-      d.setDate(d.getDate() + 1);
-    }
-    return dates;
-  }
-
-  function computeDailyTotals(dateKey) {
-    const dayStore = scheduleData[dateKey];
-    if (!dayStore) return null;
-
-    let planHoursTotal = 0;
-    let actualHoursTotal = 0;
-    let availableHoursTotal = 0;
-
-    const minutesMap = {};
-    tasksMasterData.forEach(t => { minutesMap[t.id] = typeof t.minutesPerUnit === "number" ? t.minutesPerUnit : 0; });
-
-    Object.keys(dayStore).forEach(shiftKey => {
-      const ctxStore = dayStore[shiftKey] || {};
-
-      tasksMasterData.forEach(t => {
-        const entry = ctxStore[t.id] || {};
-        const mp = minutesMap[t.id] || 0;
-
-        if (entry.planVolume != null) {
-          planHoursTotal += (entry.planVolume * mp) / 60;
-        }
-        if (entry.actualVolume != null) {
-          actualHoursTotal += (entry.actualVolume * mp) / 60;
-        }
-      });
-
-      const avail = ctxStore.__availableByMhe || {};
-      Object.keys(avail).forEach(mhe => {
-        const val = avail[mhe];
-        if (typeof val === "number") {
-          availableHoursTotal += val;
-        }
-      });
-    });
-
-    if (planHoursTotal === 0 && actualHoursTotal === 0 && availableHoursTotal === 0) {
-      return null;
-    }
-
-    return {
-      date: dateKey,
-      planHours: planHoursTotal,
-      actualHours: actualHoursTotal,
-      availableHours: availableHoursTotal,
-      planVariance: availableHoursTotal - planHoursTotal,
-      actualVariance: availableHoursTotal - actualHoursTotal
-    };
-  }
-
-  function buildRangeSummary() {
-    const fromEl = document.getElementById("range-from");
-    const toEl   = document.getElementById("range-to");
-    const tbody  = document.querySelector("#range-summary-table tbody");
-    tbody.innerHTML = "";
-    lastRangeSummary = [];
-
-    const from = fromEl.value;
-    const to   = toEl.value;
-    if (!from || !to) return;
-    if (from > to) return;
-
-    const dates = getDateRange(from, to);
-
-    dates.forEach(dateKey => {
-      const totals = computeDailyTotals(dateKey);
-      if (!totals) return;
-
-      lastRangeSummary.push(totals);
-
-      const tr = document.createElement("tr");
-
-      const tdDate   = document.createElement("td");
-      const tdPlan   = document.createElement("td");
-      const tdAvail  = document.createElement("td");
-      const tdActual = document.createElement("td");
-      const tdPlanVar   = document.createElement("td");
-      const tdActualVar = document.createElement("td");
-
-      tdDate.textContent = dateKey;
-      tdPlan.textContent   = totals.planHours.toFixed(2);
-      tdAvail.textContent  = totals.availableHours.toFixed(2);
-      tdActual.textContent = totals.actualHours.toFixed(2);
-      tdPlanVar.textContent   = totals.planVariance.toFixed(2);
-      tdActualVar.textContent = totals.actualVariance.toFixed(2);
-
-      [tdPlan, tdAvail, tdActual, tdPlanVar, tdActualVar].forEach(td => td.classList.add("numeric"));
-
-      tr.appendChild(tdDate);
-      tr.appendChild(tdPlan);
-      tr.appendChild(tdAvail);
-      tr.appendChild(tdActual);
-      tr.appendChild(tdPlanVar);
-      tr.appendChild(tdActualVar);
-
-      tbody.appendChild(tr);
-    });
-  }
-
-  function buildRangeSummaryCsv() {
-    let lines = [];
-    lines.push("Date,PlannedHours,AvailableHours,ActualHours,PlanVariance,ActualVariance");
-    lastRangeSummary.forEach(r => {
-      const row = [
-        r.date,
-        r.planHours.toFixed(2),
-        r.availableHours.toFixed(2),
-        r.actualHours.toFixed(2),
-        r.planVariance.toFixed(2),
-        r.actualVariance.toFixed(2)
-      ];
-      lines.push(row.join(","));
-    });
-    return lines.join("\n");
-  }
-
-  /* ========= CALCULATIONS ========= */
-
-  function recalcAll() {
-    document.querySelectorAll("#tasks-table tbody tr").forEach(row => {
-      recalcRow(row, viewMode === "Shift");
-    });
-    recalcSummary();
-  }
-
-  function recalcRow(row, persist = (viewMode === "Shift")) {
-    const minutesCell = row.querySelector(".minutes-cell");
-    const mp = minutesCell ? (parseFloat(minutesCell.textContent) || 0) : 0;
-
-    const planVolInput   = row.querySelector(".plan-volume");
-    const actualVolInput = row.querySelector(".actual-volume");
-
-    const planVolume   = planVolInput   ? (parseFloat(planVolInput.value)   || 0) : 0;
-    const actualVolume = actualVolInput ? (parseFloat(actualVolInput.value) || 0) : 0;
-
-    const planHours   = mp > 0 ? (planVolume   * mp) / 60 : 0;
-    const actualHours = mp > 0 ? (actualVolume * mp) / 60 : 0;
-
-    const planHoursCell   = row.querySelector(".plan-hours");
-    const actualHoursCell = row.querySelector(".actual-hours");
-    const prodCell        = row.querySelector(".productivity");
-
-    if (planHoursCell)   planHoursCell.textContent   = planHours.toFixed(2);
-    if (actualHoursCell) actualHoursCell.textContent = actualHours.toFixed(2);
-
-    // Productivity (units/hr) = Actual volume / Actual hours
-    if (prodCell) {
-      if (actualHours > 0 && actualVolume > 0) {
-        const productivity = actualVolume / actualHours;
-        if (isFinite(productivity)) prodCell.textContent = productivity.toFixed(1);
-        else prodCell.textContent = "-";
-      } else {
-        prodCell.textContent = "-";
-      }
-    }
-
-    // Row-level red/green for tasks: actual hours vs plan hours
-    row.classList.remove("table-row-warning", "table-row-ok");
-    if (planHours > 0 || actualHours > 0) {
-      if (actualHours > planHours + 0.01) {
-        row.classList.add("table-row-warning");
-      } else if (actualHours > 0 && actualHours <= planHours + 0.01) {
-        row.classList.add("table-row-ok");
-      }
-    }
-
-    if (persist && viewMode === "Shift") {
-      storeRowVolumes(row);
-    }
-  }
-
-  function getCostPerHourForMhe(mheType) {
-    let cost = 0;
-    mheAssets.forEach(a => {
-      if (a.type && a.type.trim() === mheType && a.costPerHour != null && !isNaN(a.costPerHour)) {
-        cost = a.costPerHour;
-      }
-    });
-    return cost;
-  }
-
-  function recalcSummary() {
-    const sums = {}; // per MHE
-    let totalPlanDirect   = 0;
-    let totalPlanIndirect = 0;
-    let totalActualDirect   = 0;
-    let totalActualIndirect = 0;
-
-    // First pass – by task row
-    document.querySelectorAll("#tasks-table tbody tr").forEach(row => {
-      const mhe       = (row.dataset.mhe || "").trim();
-      const category  = (row.dataset.category || "Direct");
-      const planHoursCell   = row.querySelector(".plan-hours");
-      const actualHoursCell = row.querySelector(".actual-hours");
-
-      const planHours   = planHoursCell   ? (parseFloat(planHoursCell.textContent)   || 0) : 0;
-      const actualHours = actualHoursCell ? (parseFloat(actualHoursCell.textContent) || 0) : 0;
-
-      if (mhe) {
-        if (!sums[mhe]) sums[mhe] = { plan: 0, actual: 0 };
-        sums[mhe].plan   += planHours;
-        sums[mhe].actual += actualHours;
-      }
-
-      if (category === "Indirect") {
-        totalPlanIndirect   += planHours;
-        totalActualIndirect += actualHours;
-      } else {
-        totalPlanDirect   += planHours;
-        totalActualDirect += actualHours;
-      }
-    });
-
-    const totalPlan   = totalPlanDirect   + totalPlanIndirect;
-    const totalActual = totalActualDirect + totalActualIndirect;
-
-    // Second pass – by MHE summary table
-    let totalAvailable   = 0;
-    let totalPlannedCost = 0;
-    let totalActualCost  = 0;
-
-    document.querySelectorAll("#summary-by-mhe tbody tr").forEach(row => {
-      const mhe   = (row.dataset.mhe || "").trim();
-      const data  = sums[mhe] || { plan: 0, actual: 0 };
-
-      row.classList.remove("table-row-warning", "table-row-ok");
-
-      const planCell     = row.querySelector(".summary-plan-hours");
-      const actualCell   = row.querySelector(".summary-actual-hours");
-      const availInput   = row.querySelector(".summary-available-hours");
-      const planVarCell  = row.querySelector(".summary-plan-variance");
-      const actualVarCell= row.querySelector(".summary-actual-variance");
-      const rateCell     = row.querySelector(".summary-cost-rate");
-      const planCostCell = row.querySelector(".summary-plan-cost");
-      const actCostCell  = row.querySelector(".summary-actual-cost");
-
-      const available = availInput ? (parseFloat(availInput.value) || 0) : 0;
-      const costRate  = getCostPerHourForMhe(mhe);
-
-      if (planCell)   planCell.textContent   = data.plan.toFixed(2);
-      if (actualCell) actualCell.textContent = data.actual.toFixed(2);
-      if (rateCell)   rateCell.textContent   = costRate > 0 ? costRate.toFixed(2) : "-";
-
-      const planVariance   = available - data.plan;
-      const actualVariance = available - data.actual;
-
-      formatVarianceCell(planVarCell,   planVariance);
-      formatVarianceCell(actualVarCell, actualVariance);
-
-      const planCost   = costRate > 0 ? data.plan   * costRate : 0;
-      const actualCost = costRate > 0 ? data.actual * costRate : 0;
-
-      if (planCostCell) planCostCell.textContent = planCost.toFixed(2);
-      if (actCostCell)  actCostCell.textContent  = actualCost.toFixed(2);
-
-      totalAvailable   += available;
-      totalPlannedCost += planCost;
-      totalActualCost  += actualCost;
-
-      // Row-level red/green: if any variance negative => red row, if positive capacity and no negatives => green row
-      const hasNegative = (planVariance < -0.01) || (actualVariance < -0.01);
-      const hasPositive = (planVariance > 0.01)  || (actualVariance > 0.01);
-
-      if (hasNegative) {
-        row.classList.add("table-row-warning");
-      } else if (hasPositive) {
-        row.classList.add("table-row-ok");
-      }
-    });
-
-    /* === KPI: Direct / Indirect hours === */
-    const kpiDirectPlanEl   = document.getElementById("kpi-direct-plan");
-    const kpiDirectActualEl = document.getElementById("kpi-direct-actual");
-    const kpiIndirectPlanEl   = document.getElementById("kpi-indirect-plan");
-    const kpiIndirectActualEl = document.getElementById("kpi-indirect-actual");
-    const kpiIndirectPctEl  = document.getElementById("kpi-indirect-pct");
-    const directCard   = document.getElementById("kpi-direct-card");
-    const indirectCard = document.getElementById("kpi-indirect-card");
-
-    if (kpiDirectPlanEl)   kpiDirectPlanEl.textContent   = totalPlanDirect.toFixed(2);
-    if (kpiDirectActualEl) kpiDirectActualEl.textContent = totalActualDirect.toFixed(2);
-    if (kpiIndirectPlanEl)   kpiIndirectPlanEl.textContent   = totalPlanIndirect.toFixed(2);
-    if (kpiIndirectActualEl) kpiIndirectActualEl.textContent = totalActualIndirect.toFixed(2);
-
-    const planIndirectPct = totalPlan > 0 ? (totalPlanIndirect / totalPlan) * 100 : 0;
-    if (kpiIndirectPctEl)  kpiIndirectPctEl.textContent  = planIndirectPct.toFixed(1);
-
-    if (directCard) {
-      directCard.classList.remove("warning", "ok");
-      if (totalPlanDirect > 0 && totalActualDirect > 0) {
-        if (totalActualDirect > totalPlanDirect + 0.01) {
-          directCard.classList.add("warning");
-        } else {
-          directCard.classList.add("ok");
-        }
-      }
-    }
-
-    if (indirectCard) {
-      indirectCard.classList.remove("warning", "ok", "indirect-alert");
-      if (totalPlan > 0 && totalPlanIndirect > 0) {
-        if (planIndirectPct > allowedIndirectPercent + 0.01) {
-          indirectCard.classList.add("warning", "indirect-alert");
-        } else {
-          indirectCard.classList.add("ok");
-        }
-      }
-    }
-
-    /* === KPI: Labour cost === */
-    const kpiCostPlanEl   = document.getElementById("kpi-cost-plan");
-    const kpiCostActualEl = document.getElementById("kpi-cost-actual");
-    const kpiCostNote     = document.getElementById("kpi-cost-note");
-    const kpiCostCard     = document.getElementById("kpi-labour-card");
-
-    if (kpiCostPlanEl)   kpiCostPlanEl.textContent   = totalPlannedCost.toFixed(2);
-    if (kpiCostActualEl) kpiCostActualEl.textContent = totalActualCost.toFixed(2);
-
-    if (kpiCostCard) {
-      kpiCostCard.classList.remove("warning", "ok");
-      if (totalPlannedCost === 0 && totalActualCost === 0) {
-        kpiCostNote.textContent = "Enter hourly rates and volumes to see labour cost.";
-      } else if (totalActualCost > totalPlannedCost + 0.01) {
-        kpiCostCard.classList.add("warning");
-        kpiCostNote.textContent = "Actual labour cost above expected.";
-      } else if (totalActualCost < totalPlannedCost - 0.01) {
-        kpiCostCard.classList.add("ok");
-        kpiCostNote.textContent = "Actual labour cost below expected.";
-      } else {
-        kpiCostNote.textContent = "Actual and expected labour cost are roughly aligned.";
-      }
-    }
-
-    /* === KPI: Total hours & variance === */
-    const kpiTotalPlanEl      = document.getElementById("kpi-total-plan");
-    const kpiTotalActualEl    = document.getElementById("kpi-total-actual");
-    const kpiTotalAvailEl     = document.getElementById("kpi-total-available");
-    const kpiTotalVarianceEl  = document.getElementById("kpi-total-variance");
-    const totalCard           = document.getElementById("kpi-total-card");
-
-    if (kpiTotalPlanEl)     kpiTotalPlanEl.textContent     = totalPlan.toFixed(2);
-    if (kpiTotalActualEl)   kpiTotalActualEl.textContent   = totalActual.toFixed(2);
-    if (kpiTotalAvailEl)    kpiTotalAvailEl.textContent    = totalAvailable.toFixed(2);
-    const overallVariance = totalAvailable - totalPlan;
-    if (kpiTotalVarianceEl) kpiTotalVarianceEl.textContent = overallVariance.toFixed(2);
-
-    if (totalCard) {
-      totalCard.classList.remove("warning", "ok");
-      if (totalPlan === 0 && totalAvailable === 0) {
-        // leave neutral
-      } else if (overallVariance < -0.01) {
-        totalCard.classList.add("warning");
-      } else if (overallVariance > 0.01) {
-        totalCard.classList.add("ok");
-      }
-    }
-  }
-
-  function formatVarianceCell(cell, value) {
-    if (!cell) return;
-    cell.textContent = value.toFixed(2);
-    cell.classList.remove("pos", "neg", "neutral", "variance");
-    cell.classList.add("variance");
-    if (value > 0.01) cell.classList.add("pos");
-    else if (value < -0.01) cell.classList.add("neg");
-    else cell.classList.add("neutral");
-  }
-
-  /* ========= STORAGE ========= */
-
-  function saveProductivityToStorage() {
-    try {
-      const simple = tasksMasterData.map(t => ({
-        id: t.id,
-        minutesPerUnit: t.minutesPerUnit,
-        uom: t.uom,
-        name: t.name,
-        area: t.area,
-        mhe: t.mhe,
-        category: t.category || "Direct"
-      }));
-      localStorage.setItem(PRODUCTIVITY_STORAGE_KEY, JSON.stringify(simple));
-    } catch (e) {}
-  }
-
-  function loadProductivityFromStorage() {
-    try {
-      const raw = localStorage.getItem(PRODUCTIVITY_STORAGE_KEY);
-      if (!raw) return;
-      const saved = JSON.parse(raw);
-      saved.forEach(s => {
-        const t = tasksMasterData.find(x => x.id === s.id);
-        if (t) {
-          if (typeof s.minutesPerUnit === "number") t.minutesPerUnit = s.minutesPerUnit;
-          if (s.uom)      t.uom      = s.uom;
-          if (s.name)     t.name     = s.name;
-          if (s.area)     t.area     = s.area;
-          if (s.mhe)      t.mhe      = s.mhe;
-          if (s.category) t.category = s.category;
-        }
-      });
-    } catch (e) {}
-  }
-
-  function saveScheduleToStorage() {
-    try {
-      localStorage.setItem(SCHEDULE_STORAGE_KEY, JSON.stringify(scheduleData));
-    } catch (e) {}
-  }
-
-  function loadScheduleFromStorage() {
-    try {
-      const raw = localStorage.getItem(SCHEDULE_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object") {
-        scheduleData = parsed;
-      }
-    } catch (e) {}
-  }
-
-  function saveMheAssetsToStorage() {
-    try {
-      localStorage.setItem(MHE_ASSETS_STORAGE_KEY, JSON.stringify(mheAssets));
-    } catch (e) {}
-  }
-
-  function loadMheAssetsFromStorage() {
-    try {
-      const raw = localStorage.getItem(MHE_ASSETS_STORAGE_KEY);
-      if (!raw) {
-        mheAssets = [
-          { id: "m1", label: "PPT fleet",   type: "PPT",   count: 4, costPerHour: 18 },
-          { id: "m2", label: "CB fleet",    type: "CB",    count: 3, costPerHour: 19 },
-          { id: "m3", label: "VNA trucks",  type: "VNA",   count: 2, costPerHour: 21 }
-        ];
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        mheAssets = parsed;
-      }
-    } catch (e) {}
-  }
-
-  function loadIndirectLimitFromStorage() {
-    try {
-      const raw = localStorage.getItem(INDIRECT_LIMIT_KEY);
-      if (!raw) return;
-      const v = parseFloat(raw);
-      if (!isNaN(v) && v >= 0) {
-        allowedIndirectPercent = v;
-      }
-    } catch (e) {}
-  }
-
-  function saveIndirectLimitToStorage() {
-    try {
-      localStorage.setItem(INDIRECT_LIMIT_KEY, String(allowedIndirectPercent));
-    } catch (e) {}
-  }
-
-  function initIndirectLimitControl() {
-    const input = document.getElementById("indirect-limit");
-    if (!input) return;
-    input.value = allowedIndirectPercent.toString();
-    input.addEventListener("change", () => {
-      const v = parseFloat(input.value);
-      if (!isNaN(v) && v >= 0) {
-        allowedIndirectPercent = v;
-      } else {
-        allowedIndirectPercent = 0;
-        input.value = "0";
-      }
-      saveIndirectLimitToStorage();
-      recalcSummary();
-    });
-  }
-
-  /* ========= SUMMARY BY MHE TABLE ========= */
-
-  function buildSummaryByMheTable() {
-    const tbody = document.querySelector("#summary-by-mhe tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-
-    const types = getMheTypes();
-    types.forEach(type => {
-      const tr = document.createElement("tr");
-      tr.dataset.mhe = type;
-
-      const tdLabel = document.createElement("td");
-      const span = document.createElement("span");
-      span.className = "pill";
-      span.textContent = type;
-      tdLabel.appendChild(span);
-
-      const tdRate = document.createElement("td");
-      tdRate.className = "numeric summary-cost-rate";
-      tdRate.textContent = "-";
-
-      const tdPlan = document.createElement("td");
-      tdPlan.className = "numeric summary-plan-hours";
-      tdPlan.textContent = "0.00";
-
-      const tdPlanCost = document.createElement("td");
-      tdPlanCost.className = "numeric summary-plan-cost";
-      tdPlanCost.textContent = "0.00";
-
-      const tdAvail = document.createElement("td");
-      tdAvail.className = "numeric";
-      const inpAvail = document.createElement("input");
-      inpAvail.type = "number";
-      inpAvail.className = "summary-available-hours";
-      inpAvail.step = "0.25";
-      inpAvail.min  = "0";
-      inpAvail.placeholder = "0.00";
-      inpAvail.addEventListener("input", () => {
-        if (viewMode === "Shift") {
-          storeAvailableHoursForCurrentContext();
-          recalcSummary();
-        }
-      });
-      tdAvail.appendChild(inpAvail);
-
-      const tdPlanVar = document.createElement("td");
-      tdPlanVar.className = "numeric variance summary-plan-variance neutral";
-      tdPlanVar.textContent = "0.00";
-
-      const tdActual = document.createElement("td");
-      tdActual.className = "numeric summary-actual-hours";
-      tdActual.textContent = "0.00";
-
-      const tdActualCost = document.createElement("td");
-      tdActualCost.className = "numeric summary-actual-cost";
-      tdActualCost.textContent = "0.00";
-
-      const tdActualVar = document.createElement("td");
-      tdActualVar.className = "numeric variance summary-actual-variance neutral";
-      tdActualVar.textContent = "0.00";
-
-      tr.appendChild(tdLabel);
-      tr.appendChild(tdRate);
-      tr.appendChild(tdPlan);
-      tr.appendChild(tdPlanCost);
-      tr.appendChild(tdAvail);
-      tr.appendChild(tdPlanVar);
-      tr.appendChild(tdActual);
-      tr.appendChild(tdActualCost);
-      tr.appendChild(tdActualVar);
-
-      tbody.appendChild(tr);
-    });
-
-    updateMheTotalCount();
-    setAvailableHoursForContext(currentContext);
-    recalcSummary();
-  }
-
-  /* ========= SIDEBAR (MHE + TASK CONFIG) ========= */
-
-  function initSidebar() {
-    const sidebar = document.getElementById("config-sidebar");
-    const toggleBtn = document.getElementById("btn-toggle-sidebar");
-    const closeBtn  = document.getElementById("sidebar-close");
-
-    toggleBtn.addEventListener("click", () => {
-      sidebar.classList.add("open");
-      buildMheConfigTable();
-      buildSummaryByMheTable();
-      buildTaskConfigTable();
-    });
-    closeBtn.addEventListener("click", () => {
-      sidebar.classList.remove("open");
-    });
-
-    document.getElementById("btn-add-mhe-row").addEventListener("click", () => {
-      const id = "mhe_" + Date.now().toString(36);
-      mheAssets.push({ id, label: "New MHE", type: "", count: 1, costPerHour: 0 });
-      saveMheAssetsToStorage();
-      buildMheConfigTable();
-      buildSummaryByMheTable();
-      buildTaskConfigTable();
-    });
-
-    document.getElementById("btn-add-task-row").addEventListener("click", () => {
-      const id = "task_" + Date.now().toString(36);
-      const types = getMheTypes();
-      tasksMasterData.push({
-        id,
-        name: "New task",
-        area: "",
-        mhe: types[0] || "",
-        uom: "Pallets",
-        minutesPerUnit: 2.0,
-        category: "Direct"
-      });
-      saveProductivityToStorage();
-      buildTasksTable();
-      refreshView();
-      buildRangeSummary();
-      buildTaskConfigTable();
-    });
-  }
-
-  function buildMheConfigTable() {
-    const tbody = document.querySelector("#mhe-config-table tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-
-    mheAssets.forEach(asset => {
-      const tr = document.createElement("tr");
-
-      const tdLabel = document.createElement("td");
-      const inpLabel = document.createElement("input");
-      inpLabel.type = "text";
-      inpLabel.value = asset.label || "";
-      inpLabel.addEventListener("input", () => {
-        asset.label = inpLabel.value;
-        saveMheAssetsToStorage();
-      });
-      tdLabel.appendChild(inpLabel);
-
-      const tdType = document.createElement("td");
-      const inpType = document.createElement("input");
-      inpType.type = "text";
-      inpType.value = asset.type || "";
-      inpType.addEventListener("input", () => {
-        asset.type = inpType.value;
-        saveMheAssetsToStorage();
-        buildSummaryByMheTable();
-        buildTaskConfigTable();
-      });
-      tdType.appendChild(inpType);
-
-      const tdCount = document.createElement("td");
-      const inpCount = document.createElement("input");
-      inpCount.type = "number";
-      inpCount.step = "1";
-      inpCount.min  = "0";
-      inpCount.value = asset.count != null ? asset.count : "";
-      inpCount.addEventListener("input", () => {
-        const val = parseInt(inpCount.value, 10);
-        asset.count = isNaN(val) ? 0 : val;
-        saveMheAssetsToStorage();
-        updateMheTotalCount();
-      });
-      tdCount.appendChild(inpCount);
-
-      const tdCost = document.createElement("td");
-      const inpCost = document.createElement("input");
-      inpCost.type = "number";
-      inpCost.step = "0.01";
-      inpCost.min  = "0";
-      inpCost.value = asset.costPerHour != null ? asset.costPerHour : "";
-      inpCost.addEventListener("input", () => {
-        const v = parseFloat(inpCost.value);
-        asset.costPerHour = !isNaN(v) && v >= 0 ? v : 0;
-        saveMheAssetsToStorage();
-        recalcSummary();
-      });
-      tdCost.appendChild(inpCost);
-
-      const tdDel = document.createElement("td");
-      const btnDel = document.createElement("button");
-      btnDel.type = "button";
-      btnDel.className = "btn-icon";
-      btnDel.innerHTML = "&times;";
-      btnDel.addEventListener("click", () => {
-        mheAssets = mheAssets.filter(a => a.id !== asset.id);
-        saveMheAssetsToStorage();
-        buildMheConfigTable();
-        buildSummaryByMheTable();
-        buildTaskConfigTable();
-      });
-      tdDel.appendChild(btnDel);
-
-      tr.appendChild(tdLabel);
-      tr.appendChild(tdType);
-      tr.appendChild(tdCount);
-      tr.appendChild(tdCost);
-      tr.appendChild(tdDel);
-
-      tbody.appendChild(tr);
-    });
-
-    updateMheTotalCount();
-  }
-
-  function updateMheTotalCount() {
-    let total = 0;
-    mheAssets.forEach(a => {
-      const c = a.count != null ? parseInt(a.count, 10) : 0;
-      if (!isNaN(c)) total += c;
-    });
-    const span = document.getElementById("mhe-total-count");
-    if (span) span.textContent = total;
-  }
-
-  function buildTaskConfigTable() {
-    const tbody = document.querySelector("#task-config-table tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-
-    const types = getMheTypes();
-
-    tasksMasterData.forEach(task => {
-      const tr = document.createElement("tr");
-
-      const tdName = document.createElement("td");
-      const inpName = document.createElement("input");
-      inpName.type = "text";
-      inpName.value = task.name || "";
-      inpName.addEventListener("input", () => {
-        task.name = inpName.value;
-        saveProductivityToStorage();
-        buildTasksTable();
-        refreshView();
-        buildRangeSummary();
-      });
-      tdName.appendChild(inpName);
-
-      const tdArea = document.createElement("td");
-      const inpArea = document.createElement("input");
-      inpArea.type = "text";
-      inpArea.value = task.area || "";
-      inpArea.addEventListener("input", () => {
-        task.area = inpArea.value;
-        saveProductivityToStorage();
-        buildTasksTable();
-        refreshView();
-      });
-      tdArea.appendChild(inpArea);
-
-      const tdCat = document.createElement("td");
-      const selCat = document.createElement("select");
-      ["Direct","Indirect"].forEach(cat => {
-        const opt = document.createElement("option");
-        opt.value = cat;
-        opt.textContent = cat;
-        if ((task.category || "Direct") === cat) opt.selected = true;
-        selCat.appendChild(opt);
-      });
-      selCat.addEventListener("change", () => {
-        task.category = selCat.value;
-        saveProductivityToStorage();
-        buildTasksTable();
-        refreshView();
-        buildRangeSummary();
-      });
-      tdCat.appendChild(selCat);
-
-      const tdMhe = document.createElement("td");
-      const selMhe = document.createElement("select");
-
-      // Options only from MHE setup
-      types.forEach(mt => {
-        const opt = document.createElement("option");
-        opt.value = mt;
-        opt.textContent = mt;
-        selMhe.appendChild(opt);
-      });
-
-      if (task.mhe && types.includes(task.mhe)) {
-        selMhe.value = task.mhe;
-      } else if (types.length > 0 && !task.mhe) {
-        selMhe.value = types[0];
-        task.mhe = types[0];
-      }
-
-      selMhe.addEventListener("change", () => {
-        task.mhe = selMhe.value;
-        saveProductivityToStorage();
-        buildTasksTable();
-        refreshView();
-        buildRangeSummary();
-      });
-      tdMhe.appendChild(selMhe);
-
-      const tdUom = document.createElement("td");
-      const selUom = document.createElement("select");
-      ["Pallets", "Units"].forEach(u => {
-        const opt = document.createElement("option");
-        opt.value = u;
-        opt.textContent = u;
-        if (task.uom === u) opt.selected = true;
-        selUom.appendChild(opt);
-      });
-      selUom.addEventListener("change", () => {
-        task.uom = selUom.value;
-        saveProductivityToStorage();
-        buildTasksTable();
-        refreshView();
-      });
-      tdUom.appendChild(selUom);
-
-      const tdMin = document.createElement("td");
-      const inpMin = document.createElement("input");
-      inpMin.type = "number";
-      inpMin.step = "0.1";
-      inpMin.min  = "0";
-      const mp = typeof task.minutesPerUnit === "number" && !isNaN(task.minutesPerUnit)
-        ? task.minutesPerUnit : 0;
-      inpMin.value = mp.toFixed(2);
-      inpMin.addEventListener("input", () => {
-        const v = parseFloat(inpMin.value);
-        if (!isNaN(v) && v >= 0) {
-          task.minutesPerUnit = v;
-          saveProductivityToStorage();
-          buildTasksTable();
-          refreshView();
-          buildRangeSummary();
-        }
-      });
-      tdMin.appendChild(inpMin);
-
-      const tdDel = document.createElement("td");
-      const btnDel = document.createElement("button");
-      btnDel.type = "button";
-      btnDel.className = "btn-icon";
-      btnDel.innerHTML = "&times;";
-      btnDel.addEventListener("click", () => {
-        removeTask(task.id);
-      });
-      tdDel.appendChild(btnDel);
-
-      tr.appendChild(tdName);
-      tr.appendChild(tdArea);
-      tr.appendChild(tdCat);
-      tr.appendChild(tdMhe);
-      tr.appendChild(tdUom);
-      tr.appendChild(tdMin);
-      tr.appendChild(tdDel);
-
-      tbody.appendChild(tr);
-    });
-  }
-
-  function removeTask(taskId) {
-    tasksMasterData = tasksMasterData.filter(t => t.id !== taskId);
-
-    Object.keys(scheduleData).forEach(dateKey => {
-      const shiftsObj = scheduleData[dateKey] || {};
-      Object.keys(shiftsObj).forEach(shiftKey => {
-        const ctxStore = shiftsObj[shiftKey];
-        if (ctxStore && ctxStore[taskId]) delete ctxStore[taskId];
-      });
-    });
-
-    saveProductivityToStorage();
-    saveScheduleToStorage();
-
-    buildTasksTable();
-    refreshView();
-    buildRangeSummary();
-    buildTaskConfigTable();
-  }
+    totalPlan += ph; totalAct += ah;
+  });
+
+  el("kpiDirectPlan").textContent = directPlan.toFixed(2);
+  el("kpiDirectActual").textContent = directAct.toFixed(2);
+  el("kpiIndirectPlan").textContent = indirectPlan.toFixed(2);
+  el("kpiIndirectActual").textContent = indirectAct.toFixed(2);
+  el("kpiCostPlan").textContent = costPlan.toFixed(2);
+  el("kpiCostActual").textContent = costAct.toFixed(2);
+  el("kpiTotalPlan").textContent = totalPlan.toFixed(2);
+  el("kpiTotalActual").textContent = totalAct.toFixed(2);
+
+  el("kpiDirect").classList.toggle("warn", directAct > directPlan + 0.01 && directPlan > 0);
+  el("kpiDirect").classList.toggle("ok",   directAct <= directPlan + 0.01 && directAct > 0);
+
+  el("kpiIndirect").classList.toggle("warn", indirectAct > indirectPlan + 0.01 && indirectPlan > 0);
+  el("kpiIndirect").classList.toggle("ok",   indirectAct <= indirectPlan + 0.01 && indirectAct > 0);
+
+  el("kpiCost").classList.toggle("warn", costAct > costPlan + 0.01 && costPlan > 0);
+  el("kpiCost").classList.toggle("ok",   costAct <= costPlan + 0.01 && costAct > 0);
+
+  el("kpiTotal").classList.toggle("warn", totalAct > totalPlan + 0.01 && totalPlan > 0);
+  el("kpiTotal").classList.toggle("ok",   totalAct <= totalPlan + 0.01 && totalAct > 0);
+}
+
+function clearTaskVolumes(){
+  document.querySelectorAll("#taskTable tbody tr").forEach(tr => {
+    const p = tr.querySelector(".planUnits");
+    const a = tr.querySelector(".actualUnits");
+    if (p) p.value = "";
+    if (a) a.value = "";
+    tr.querySelector(".planHours").textContent = "0.00";
+    tr.querySelector(".actualHours").textContent = "0.00";
+    tr.classList.remove("row-ok","row-warn");
+  });
+  renderMheSummary();
+}
 </script>
 </body>
 </html>
