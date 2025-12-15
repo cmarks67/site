@@ -81,6 +81,7 @@
 
       <div id="statusBox" class="card warnbox" style="margin-top:12px;">
         <div class="muted small" id="statusText">Loading status…</div>
+        <div class="muted small" id="msalCdnText" style="margin-top:8px;"></div>
         <div class="muted small" id="errorText" style="margin-top:8px;color:#991b1b;"></div>
       </div>
 
@@ -110,8 +111,8 @@
           </div>
           <div class="right">
             <span id="pillOneDrive" class="pill off">Not connected</span>
-            <button id="btn-onedrive-connect" class="btn btnPrimary">Connect</button>
-            <button id="btn-onedrive-test" class="btn small">Test</button>
+            <button id="btn-onedrive-connect" class="btn btnPrimary" disabled>Connect</button>
+            <button id="btn-onedrive-test" class="btn small" disabled>Test</button>
             <button id="btn-onedrive-disconnect" class="btn small">Disconnect</button>
           </div>
         </div>
@@ -155,7 +156,7 @@
 /* =========================
    Diagnostics
 ========================= */
-console.log("storage-connect.html script loaded");
+console.log("storage-connect.html loaded");
 document.addEventListener("click", (e) => {
   if (e.target && e.target.id) console.log("Clicked:", e.target.id);
 });
@@ -169,7 +170,7 @@ const K_OD_TOKENS = "wi_onedrive_tokens_v1";
 const K_LOCAL     = "wi_local_folder_handle_v1";
 
 /* =========================
-   App IDs (YOUR VALUES)
+   App IDs (your values)
 ========================= */
 const DROPBOX_APP_KEY = "k8fsr7ttwve6k8m";
 const AZURE_CLIENT_ID = "8188141f-0dfe-40d9-a71a-d6a624922123";
@@ -177,6 +178,7 @@ const AZURE_CLIENT_ID = "8188141f-0dfe-40d9-a71a-d6a624922123";
 /* =========================
    URLs
 ========================= */
+// Keep redirect EXACTLY this page (works for both www and non-www)
 const REDIRECT_URI = location.origin + location.pathname;
 
 /* =========================
@@ -184,6 +186,7 @@ const REDIRECT_URI = location.origin + location.pathname;
 ========================= */
 function setActive(provider){ localStorage.setItem(K_ACTIVE, provider); }
 function setErr(msg){ document.getElementById("errorText").textContent = msg || ""; }
+function setMsalCdn(msg){ document.getElementById("msalCdnText").textContent = msg || ""; }
 function setPill(el, ok, onText, offText){
   if (!el) return;
   if (ok){
@@ -194,8 +197,11 @@ function setPill(el, ok, onText, offText){
     el.textContent = offText || "Not connected";
   }
 }
-function msalAvailable(){ return typeof window.msal !== "undefined" && typeof window.msal.PublicClientApplication !== "undefined"; }
+function msalAvailable(){ return typeof window.msal !== "undefined"; }
 
+/* =========================
+   Status UI
+========================= */
 function refreshUI(){
   const db = !!localStorage.getItem(K_DB_TOKENS);
   const od = !!localStorage.getItem(K_OD_TOKENS);
@@ -242,6 +248,8 @@ function handleDropboxReturn(){
     }));
     setActive("dropbox");
   }
+
+  // Remove token from URL
   history.replaceState({}, document.title, location.pathname);
 }
 
@@ -288,15 +296,15 @@ async function testDropbox(){
 }
 
 /* =========================
-   MSAL loader (fixes your 404 issue)
-   IMPORTANT: your error was /browser/3.0.0/... which 404s.
-   This tries newer versions first.
+   MSAL loader (multi-fallback)
+   - We DO NOT trust a single CDN.
+   - If all fail, OneDrive stays disabled but Dropbox works.
 ========================= */
-function loadScript(src){
+async function loadScript(src){
   return new Promise((resolve, reject) => {
     const s = document.createElement("script");
     s.src = src;
-    s.defer = true;
+    s.async = true;
     s.onload = () => resolve(src);
     s.onerror = () => reject(new Error("Failed to load: " + src));
     document.head.appendChild(s);
@@ -304,79 +312,83 @@ function loadScript(src){
 }
 
 async function ensureMsal(){
-  // Already loaded?
-  if (msalAvailable()) return { ok:true, from:"already" };
+  // If already loaded
+  if (msalAvailable()) return "already-loaded";
 
-  // Try Microsoft CDN versions (these are the only ones we should trust)
   const candidates = [
-    "https://alcdn.msauth.net/browser/3.20.0/js/msal-browser.min.js",
-    "https://alcdn.msauth.net/browser/3.19.0/js/msal-browser.min.js",
-    "https://alcdn.msauth.net/browser/3.18.0/js/msal-browser.min.js",
-    "https://alcdn.msauth.net/browser/3.17.0/js/msal-browser.min.js"
+    // Microsoft-hosted (v2.x) – most reliable long-term
+    "https://alcdn.msauth.net/browser/2.39.0/js/msal-browser.min.js",
+    "https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js",
+
+    // jsDelivr fallbacks (older versions)
+    "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.39.0/dist/msal-browser.min.js",
+    "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.0/dist/msal-browser.min.js",
   ];
 
   let lastErr = null;
   for (const url of candidates){
     try{
+      setMsalCdn("Loading MSAL from: " + url);
       await loadScript(url);
-      if (msalAvailable()) return { ok:true, from:url };
+      if (msalAvailable()){
+        setMsalCdn("MSAL loaded from: " + url);
+        return url;
+      }
+      lastErr = new Error("Loaded but window.msal missing: " + url);
     }catch(e){
       lastErr = e;
+      console.warn(e);
     }
   }
-  return { ok:false, error:lastErr ? lastErr.message : "MSAL failed to load." };
+
+  setMsalCdn("MSAL failed to load from all CDNs.");
+  throw lastErr || new Error("MSAL failed to load");
 }
 
 /* =========================
    OneDrive (MSAL + Graph)
-   MSAL v3 REQUIRES initialize()
 ========================= */
 let msalApp = null;
-let msalInitPromise = null;
 
 async function initOneDrive(){
-  const res = await ensureMsal();
+  try{
+    await ensureMsal();
 
-  if (!res.ok){
-    // Do not break the rest of the page
+    // MSAL v2 does NOT require initialize(); MSAL v3 DOES.
+    // Calling initialize() conditionally keeps this page working across both.
+    msalApp = new msal.PublicClientApplication({
+      auth: {
+        clientId: AZURE_CLIENT_ID,
+        authority: "https://login.microsoftonline.com/common",
+        redirectUri: REDIRECT_URI
+      },
+      cache: {
+        cacheLocation: "localStorage",
+        storeAuthStateInCookie: false
+      }
+    });
+
+    if (typeof msalApp.initialize === "function"){
+      await msalApp.initialize();
+    }
+
+    document.getElementById("btn-onedrive-connect").disabled = false;
+    document.getElementById("btn-onedrive-test").disabled = false;
+
+  } catch(e){
+    // Do not break the page
+    console.warn("OneDrive disabled:", e);
     document.getElementById("btn-onedrive-connect").disabled = true;
     document.getElementById("btn-onedrive-test").disabled = true;
-    setErr("OneDrive disabled: MSAL failed to load. " + res.error);
+    setErr("OneDrive disabled: " + (e?.message || String(e)));
+  } finally {
     refreshUI();
-    return;
   }
-
-  console.log("MSAL loaded from:", res.from);
-
-  msalApp = new msal.PublicClientApplication({
-    auth: {
-      clientId: AZURE_CLIENT_ID,
-      authority: "https://login.microsoftonline.com/common",
-      redirectUri: REDIRECT_URI
-    },
-    cache: {
-      cacheLocation: "localStorage",
-      storeAuthStateInCookie: false
-    }
-  });
-
-  // REQUIRED in MSAL v3
-  msalInitPromise = msalApp.initialize();
-
-  document.getElementById("btn-onedrive-connect").disabled = false;
-  document.getElementById("btn-onedrive-test").disabled = false;
-
-  refreshUI();
 }
 
 async function connectOneDrive(){
   setErr("");
-  if (!msalApp || !msalInitPromise){
-    alert("OneDrive unavailable because MSAL did not load.");
-    return;
-  }
-
-  await msalInitPromise;
+  if (!msalApp) { alert("OneDrive unavailable because MSAL did not load."); return; }
 
   const login = await msalApp.loginPopup({
     scopes: ["User.Read", "Files.ReadWrite"]
@@ -394,8 +406,6 @@ async function connectOneDrive(){
 }
 
 async function getGraphToken(){
-  await msalInitPromise;
-
   const accounts = msalApp.getAllAccounts();
   const account = accounts && accounts[0];
   if (!account) throw new Error("No signed-in account found.");
@@ -410,28 +420,21 @@ async function getGraphToken(){
 
 async function testOneDrive(){
   setErr("");
-  if (!msalApp || !msalInitPromise){
-    alert("OneDrive unavailable because MSAL did not load.");
+  if (!msalApp) { alert("OneDrive unavailable because MSAL did not load."); return; }
+
+  const token = await getGraphToken();
+  const r = await fetch("https://graph.microsoft.com/v1.0/me", {
+    headers: { "Authorization": "Bearer " + token }
+  });
+
+  const txt = await r.text();
+  if (!r.ok){
+    alert("OneDrive test failed:\n" + r.status + "\n" + txt);
     return;
   }
 
-  try{
-    const token = await getGraphToken();
-    const r = await fetch("https://graph.microsoft.com/v1.0/me", {
-      headers: { "Authorization": "Bearer " + token }
-    });
-
-    const txt = await r.text();
-    if (!r.ok){
-      alert("OneDrive test failed:\n" + r.status + "\n" + txt);
-      return;
-    }
-
-    const me = JSON.parse(txt);
-    alert("OneDrive OK:\n" + (me.displayName || me.userPrincipalName || "Connected"));
-  }catch(e){
-    alert("OneDrive test error:\n" + (e?.message || String(e)));
-  }
+  const me = JSON.parse(txt);
+  alert("OneDrive OK:\n" + (me.displayName || me.userPrincipalName || "Connected"));
 }
 
 async function disconnectOneDrive(){
@@ -439,20 +442,19 @@ async function disconnectOneDrive(){
   if (localStorage.getItem(K_ACTIVE) === "onedrive") localStorage.setItem(K_ACTIVE, "(none)");
   refreshUI();
 
-  // optional: clear session
-  try{
-    if (msalApp && msalInitPromise){
-      await msalInitPromise;
+  // Optional: clear MSAL session
+  try {
+    if (msalApp){
       const acc = msalApp.getAllAccounts()[0];
       if (acc) await msalApp.logoutPopup({ account: acc });
     }
-  }catch(e){}
+  } catch(e){}
 }
 
 /* =========================
    Local folder placeholders
 ========================= */
-function connectLocal(){ alert("Local folder picker not implemented yet."); }
+function connectLocal(){ alert("Local folder picker not implemented yet (File System Access API)."); }
 function testLocal(){ alert("Local folder test not implemented yet."); }
 function disconnectLocal(){
   localStorage.removeItem(K_LOCAL);
@@ -478,17 +480,18 @@ document.getElementById("btn-local-disconnect").addEventListener("click", discon
 /* =========================
    Init
 ========================= */
-(async function(){
-  try{
-    handleDropboxReturn();
-    refreshUI();
-    await initOneDrive();
-  }catch(e){
-    console.error(e);
-    setErr(e?.message || String(e));
-    refreshUI();
-  }
-})();
+try{
+  handleDropboxReturn();
+  refreshUI();
+
+  // Start MSAL load/init, but never block Dropbox
+  initOneDrive();
+
+} catch(e){
+  console.error(e);
+  setErr(e?.message || String(e));
+  refreshUI();
+}
 </script>
 
 </body>
