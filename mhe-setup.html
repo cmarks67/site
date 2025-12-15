@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Warehouse Intelligence – Setup (MHE)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f3f4f6; --card:#fff; --border:#e5e7eb;
+      --text:#111827; --muted:#6b7280;
+      --red:#dc2626; --red2:#b91c1c;
+      --inbg:#f9fafb; --inborder:#d1d5db;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{background:#fff;border-bottom:1px solid var(--border)}
+    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px}
+    .top{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .brand h1{margin:0;font-size:1.1rem;font-weight:800}
+    .brand span{color:var(--red)}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .pill{font-size:.85rem;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--muted)}
+    .btn{border:1px solid var(--border);background:#fff;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer;text-decoration:none;color:inherit;display:inline-block}
+    .btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+    .btn.primary:hover{background:var(--red2);border-color:var(--red2)}
+    .btn.danger{background:#fff;border-color:#fecaca;color:#b91c1c}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+    .card .head{padding:14px 14px 8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .card .body{padding:14px}
+    h2{margin:0;font-size:1.05rem}
+    h3{margin:0 0 6px 0;font-size:1rem}
+    .small{font-size:.85rem;color:var(--muted)}
+    label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 6px}
+    input, select{width:100%;padding:10px 10px;border-radius:10px;border:1px solid var(--inborder);background:var(--inbg)}
+    input:focus, select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+    .two{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:980px){.two{grid-template-columns:1fr 1fr}}
+    table{width:100%;border-collapse:collapse}
+    th, td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:left;font-size:.95rem;vertical-align:top}
+    th{font-size:.8rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .notice{padding:10px 12px;border:1px solid #fde68a;background:#fffbeb;border-radius:12px;color:#92400e}
+    .ok{padding:10px 12px;border:1px solid #bbf7d0;background:#f0fdf4;border-radius:12px;color:#166534}
+    .err{padding:10px 12px;border:1px solid #fecaca;background:#fef2f2;border-radius:12px;color:#991b1b}
+    .hide{display:none}
+
+    /* Breadcrumb navigation */
+    .breadcrumb {
+      max-width: 1200px;
+      margin: 10px auto 0 auto;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .breadcrumb a { color: var(--muted); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { margin: 0 4px; }
+
+    /* Tabs */
+    .tabs { display:flex; gap:10px; flex-wrap:wrap; margin: 12px 0 0; }
+    .tabbtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:999px;
+      padding:9px 12px;
+      font-weight:800;
+      cursor:pointer;
+      color:var(--muted);
+    }
+    .tabbtn.active{
+      border-color: var(--red);
+      color: var(--text);
+      box-shadow: 0 0 0 3px rgba(220,38,38,.12);
+    }
+    .tabpanel{ margin-top:12px; }
+    .tabpanel.hide{ display:none; }
+
+    /* Due highlighting + pills */
+    .due-soon td{ background:#fef2f2; } /* light red */
+    .overdue td{
+      background:#7f1d1d;
+      color:#fff;
+      border-bottom-color: rgba(255,255,255,.15);
+    }
+    .overdue td .btn{ border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.08); color:#fff; }
+    .overdue td .btn:hover{ background: rgba(255,255,255,.14); }
+
+    .due-pill{
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:.8rem;
+      color:var(--muted);
+      white-space:nowrap;
+      margin-top:4px;
+    }
+    .due-pill.soon{
+      border-color:#fecaca;
+      color:#991b1b;
+      background:#fff7f7;
+      font-weight:800;
+    }
+    .due-pill.over{
+      border-color:#fecaca;
+      background: rgba(255,255,255,.10);
+      color:#fff;
+      font-weight:900;
+    }
+    .reason-pill{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:.8rem;
+      font-weight:800;
+      color:var(--text);
+      white-space:nowrap;
+    }
+    .overdue td .reason-pill{
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.25);
+      color:#fff;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+<header>
+  <nav class="breadcrumb">
+    <a href="dashboard.html">Dashboard</a>
+    <span>›</span>
+    <span>Setup</span>
+    <span>›</span>
+    <span>MHE setup</span>
+  </nav>
+
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <h1>Warehouse <span>Intelligence</span> – Setup</h1>
+        <div class="small">MHE Types &amp; MHE Assets</div>
+      </div>
+      <div class="row">
+        <a class="btn" href="dashboard.html">← Back to dashboard</a>
+        <div id="authPill" class="pill">Checking session…</div>
+        <button id="btnSignOut" class="btn">Sign out</button>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="MHE setup tabs">
+      <button class="tabbtn active" data-tab="tabTable" role="tab" aria-selected="true">Assets table</button>
+      <button class="tabbtn" data-tab="tabAdd" role="tab" aria-selected="false">Add / edit asset</button>
+      <button class="tabbtn" data-tab="tabTypes" role="tab" aria-selected="false">Add new asset type</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div id="msg" class="notice hide"></div>
+
+    <!-- TAB 1 -->
+    <section id="tabTable" class="tabpanel card">
+      <div class="head">
+        <div>
+          <h2>MHE Assets – Table</h2>
+          <div class="small">Overdue assets are shown first (dark red). “Next due (reason)” shows which compliance date is driving the priority.</div>
+        </div>
+        <div class="row">
+          <button id="btnReloadAssetsTable" class="btn">Reload</button>
+        </div>
+      </div>
+      <div class="body">
+        <label>Site</label>
+        <select id="assetSite"></select>
+
+        <div style="margin-top:12px; overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Site</th>
+                <th>Type</th>
+                <th>Asset tag</th>
+                <th>Serial</th>
+                <th>Manufacturer / Model</th>
+                <th>Next due (reason)</th>
+                <th>Next inspection</th>
+                <th>Next LOLER</th>
+                <th>Next service</th>
+                <th>Next PUWER</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="assetsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2 -->
+    <section id="tabAdd" class="tabpanel card hide">
+      <div class="head">
+        <div>
+          <h2>Add / Edit Asset</h2>
+          <div class="small">Add or update a truck. Site is selected on the Assets Table tab.</div>
+        </div>
+        <div class="row">
+          <button id="btnReloadAssetsForm" class="btn">Reload</button>
+        </div>
+      </div>
+
+      <div class="body">
+        <label>MHE type</label>
+        <select id="assetType"></select>
+
+        <div class="two">
+          <div>
+            <label>Asset tag</label>
+            <input id="assetTag" placeholder="e.g., FLT-001" />
+          </div>
+          <div>
+            <label>Serial number</label>
+            <input id="assetSerial" placeholder="e.g., JH-123456" />
+          </div>
+        </div>
+
+        <div class="two">
+          <div>
+            <label>Manufacturer</label>
+            <input id="assetMfr" placeholder="e.g., Toyota" />
+          </div>
+          <div>
+            <label>Model</label>
+            <input id="assetModel" placeholder="e.g., 8FBEK16T" />
+          </div>
+        </div>
+
+        <div class="two">
+          <div>
+            <label>Purchase date</label>
+            <input id="assetPurchase" type="date" />
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="assetStatus">
+              <option value="active">active</option>
+              <option value="out_of_service">out_of_service</option>
+              <option value="sold">sold</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="two" style="margin-top:4px;">
+          <div>
+            <label>Next inspection due</label>
+            <input id="assetNextInspection" type="date" />
+          </div>
+          <div>
+            <label>Next LOLER due</label>
+            <input id="assetNextLoler" type="date" />
+          </div>
+        </div>
+
+        <div class="two">
+          <div>
+            <label>Next service due</label>
+            <input id="assetNextService" type="date" />
+          </div>
+          <div>
+            <label>Next PUWER due</label>
+            <input id="assetNextPuwer" type="date" />
+          </div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end;align-items:center">
+          <span id="editBadge" class="pill hide">Editing asset…</span>
+          <button id="btnCancelEdit" class="btn hide">Cancel</button>
+          <button id="btnSaveAsset" class="btn primary">Add asset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3 -->
+    <section id="tabTypes" class="tabpanel card hide">
+      <div class="head">
+        <div>
+          <h2>MHE Types</h2>
+          <div class="small">Add / rename / delete equipment types.</div>
+        </div>
+        <button id="btnReloadTypes" class="btn">Reload</button>
+      </div>
+      <div class="body">
+        <label>New type name</label>
+        <input id="newTypeName" placeholder="e.g., Counterbalance, Reach Truck, PPT..." />
+
+        <div class="two">
+          <div>
+            <label><input id="newTypeRequiresLoler" type="checkbox" /> Requires LOLER</label>
+          </div>
+          <div>
+            <label><input id="newTypeRequiresPuwer" type="checkbox" checked /> Requires PUWER</label>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end">
+          <button id="btnAddType" class="btn primary">Add type</button>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+
+        <div style="overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>LOLER</th>
+                <th>PUWER</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="typesTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const el = (id) => document.getElementById(id);
+  const msgBox = el("msg");
+  const safe = (v) => (v === null || v === undefined) ? "" : String(v);
+
+  function showMsg(text, type="notice"){
+    msgBox.className = type === "ok" ? "ok" : type === "err" ? "err" : "notice";
+    msgBox.textContent = text;
+    msgBox.classList.remove("hide");
+    setTimeout(() => msgBox.classList.add("hide"), 4500);
+  }
+
+  // Tabs
+  function setActiveTab(tabId){
+    document.querySelectorAll(".tabbtn").forEach(b => {
+      const active = b.dataset.tab === tabId;
+      b.classList.toggle("active", active);
+      b.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    document.querySelectorAll(".tabpanel").forEach(p => {
+      p.classList.toggle("hide", p.id !== tabId);
+    });
+  }
+  document.addEventListener("click", (e) => {
+    const tab = e.target.closest(".tabbtn");
+    if (tab) setActiveTab(tab.dataset.tab);
+  });
+
+  // Date helpers
+  function startOfToday(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+  function parseYMD(ymd){ if(!ymd) return null; const d=new Date(ymd+"T00:00:00"); return isNaN(d)?null:d; }
+  function daysUntil(ymd){
+    const d=parseYMD(ymd); if(!d) return null;
+    return Math.floor((d.getTime()-startOfToday().getTime())/(1000*60*60*24));
+  }
+  function ymdOrDash(v){ return v ? safe(v) : "—"; }
+  function duePill(ymd){
+    if (!ymd) return `<span class="due-pill">—</span>`;
+    const d = daysUntil(ymd);
+    if (d === null) return `<span class="due-pill">—</span>`;
+    if (d < 0) return `<span class="due-pill over">OVERDUE</span>`;
+    if (d < 30) return `<span class="due-pill soon">${d}d</span>`;
+    return `<span class="due-pill">${d}d</span>`;
+  }
+
+  // Next due reason (earliest of the 4)
+  function nextDueReason(asset){
+    const options = [
+      { label: "Inspection", ymd: asset.next_inspection_due },
+      { label: "LOLER",      ymd: asset.next_loler_due },
+      { label: "Service",    ymd: asset.next_service_due },
+      { label: "PUWER",      ymd: asset.next_puwer_due }
+    ].map(x => ({...x, date: parseYMD(x.ymd)})).filter(x => x.date);
+
+    if (!options.length) return { label: "No dates", ymd: null, date: null, days: null };
+
+    options.sort((a,b)=>a.date.getTime()-b.date.getTime());
+    const top = options[0];
+    return { label: top.label, ymd: top.ymd, date: top.date, days: daysUntil(top.ymd) };
+  }
+
+  let companies = [];
+  let sites = [];
+  let types = [];
+  let editingAssetId = null;
+
+  async function requireSession(){
+    try{
+      // If Supabase library failed to load, this will be undefined
+      if (!supabase?.auth) throw new Error("Supabase client not initialised (supabase.auth missing).");
+
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+
+      const user = data?.session?.user;
+      if (!user){
+        el("authPill").textContent = "Not signed in";
+        window.location.href = "signin.html";
+        return false;
+      }
+
+      el("authPill").textContent = `Signed in: ${user.email}`;
+      return true;
+    }catch(e){
+      el("authPill").textContent = "Session error (see console)";
+      console.error("Auth/session error:", e);
+      showMsg(e.message || String(e), "err");
+      return false;
+    }
+  }
+
+  // Sign out
+  el("btnSignOut").addEventListener("click", async () => {
+    try{
+      await supabase.auth.signOut();
+    } finally {
+      window.location.href = "signin.html";
+    }
+  });
+
+  async function loadCompaniesSites(){
+    const { data: c, error: ec } = await supabase.from("companies").select("id, name").order("name", { ascending:true });
+    if (ec) throw ec;
+    companies = c || [];
+
+    const { data: s, error: es } = await supabase.from("sites").select("id, company_id, name, code, created_at").order("created_at", { ascending:false });
+    if (es) throw es;
+    sites = s || [];
+
+    const opts = sites.map(site => {
+      const comp = companies.find(x => x.id === site.company_id);
+      const label = `${safe(comp?.name)} – ${safe(site.name)}${site.code ? " ("+safe(site.code)+")" : ""}`;
+      return `<option value="${site.id}">${label}</option>`;
+    }).join("");
+
+    el("assetSite").innerHTML = opts || `<option value="">No sites yet</option>`;
+  }
+
+  async function loadTypes(){
+    const { data, error } = await supabase
+      .from("mhe_types")
+      .select("id, type_name, requires_loler, requires_puwer, created_at")
+      .order("type_name", { ascending:true });
+    if (error) throw error;
+
+    types = data || [];
+
+    el("assetType").innerHTML = types.length
+      ? types.map(t => `<option value="${t.id}">${safe(t.type_name)}</option>`).join("")
+      : `<option value="">No types yet.</option>`;
+
+    el("typesTbody").innerHTML = types.length ? types.map(t => `
+      <tr>
+        <td><input data-typeedit="name" data-id="${t.id}" value="${safe(t.type_name)}" /></td>
+        <td>${t.requires_loler ? "Yes" : "No"}</td>
+        <td>${t.requires_puwer ? "Yes" : "No"}</td>
+        <td class="actions">
+          <button class="btn" data-act="saveType" data-id="${t.id}">Save</button>
+          <button class="btn danger" data-act="deleteType" data-id="${t.id}">Delete</button>
+        </td>
+      </tr>
+    `).join("") : `<tr><td colspan="4" class="small">No MHE types yet.</td></tr>`;
+  }
+
+  async function loadAssets(){
+    const siteId = el("assetSite").value;
+    if (!siteId){
+      el("assetsTbody").innerHTML = `<tr><td colspan="12" class="small">Create/select a site first.</td></tr>`;
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("mhe_assets")
+      .select("id, site_id, mhe_type_id, asset_tag, serial_number, manufacturer, model, purchase_date, status, created_at, next_inspection_due, next_loler_due, next_service_due, next_puwer_due")
+      .eq("site_id", siteId);
+    if (error) throw error;
+
+    const site = sites.find(s => s.id === siteId);
+    const company = companies.find(c => c.id === site?.company_id);
+
+    const rows = (data || []).map(a => {
+      const t = types.find(x => x.id === a.mhe_type_id);
+      const due = nextDueReason(a);
+
+      let rowClass = "";
+      let sortBucket = 2; // 0 overdue, 1 has dates, 2 no dates
+      let sortKey = Number.POSITIVE_INFINITY;
+
+      if (due.date){
+        sortBucket = 1;
+        sortKey = due.date.getTime();
+      }
+      if (due.days !== null && due.days < 0){
+        sortBucket = 0;
+        rowClass = "overdue";
+      } else if (due.days !== null && due.days < 30){
+        rowClass = "due-soon";
+      }
+
+      return {
+        ...a,
+        _companyLabel: `${safe(company?.name)} – ${safe(site?.name)}`,
+        _typeLabel: safe(t?.type_name),
+        _dueLabel: due.label,
+        _dueDate: due.ymd,
+        _sortBucket: sortBucket,
+        _sortKey: sortKey,
+        _rowClass: rowClass
+      };
+    });
+
+    rows.sort((a,b) => (a._sortBucket - b._sortBucket) || (a._sortKey - b._sortKey));
+
+    el("assetsTbody").innerHTML = rows.length ? rows.map(a => `
+      <tr class="${a._rowClass}">
+        <td>${a._companyLabel}</td>
+        <td>${a._typeLabel}</td>
+        <td>${safe(a.asset_tag)}</td>
+        <td>${safe(a.serial_number)}</td>
+        <td>${safe(a.manufacturer)}${a.model ? " / " + safe(a.model) : ""}</td>
+
+        <td>
+          <span class="reason-pill">${safe(a._dueLabel)}</span>
+          <div>${a._dueDate ? safe(a._dueDate) : "—"}</div>
+          <div>${duePill(a._dueDate)}</div>
+        </td>
+
+        <td>${ymdOrDash(a.next_inspection_due)} <div>${duePill(a.next_inspection_due)}</div></td>
+        <td>${ymdOrDash(a.next_loler_due)} <div>${duePill(a.next_loler_due)}</div></td>
+        <td>${ymdOrDash(a.next_service_due)} <div>${duePill(a.next_service_due)}</div></td>
+        <td>${ymdOrDash(a.next_puwer_due)} <div>${duePill(a.next_puwer_due)}</div></td>
+
+        <td>${safe(a.status)}</td>
+        <td class="actions">
+          <button class="btn" data-act="editAsset" data-id="${a.id}">Edit</button>
+          <button class="btn danger" data-act="deleteAsset" data-id="${a.id}">Delete</button>
+        </td>
+      </tr>
+    `).join("") : `<tr><td colspan="12" class="small">No assets for this site yet.</td></tr>`;
+  }
+
+  // Actions
+  el("btnReloadAssetsTable").addEventListener("click", async () => {
+    try{ await loadCompaniesSites(); await loadAssets(); showMsg("Reloaded.", "ok"); }
+    catch(e){ showMsg(e.message || String(e), "err"); }
+  });
+  el("btnReloadAssetsForm").addEventListener("click", async () => {
+    try{ await loadTypes(); showMsg("Reloaded.", "ok"); }
+    catch(e){ showMsg(e.message || String(e), "err"); }
+  });
+  el("btnReloadTypes").addEventListener("click", async () => {
+    try{ await loadTypes(); showMsg("Reloaded.", "ok"); }
+    catch(e){ showMsg(e.message || String(e), "err"); }
+  });
+
+  el("assetSite").addEventListener("change", async () => {
+    if (editingAssetId) clearAssetForm();
+    await loadAssets();
+  });
+
+  el("btnAddType").addEventListener("click", async () => {
+    try{
+      const type_name = el("newTypeName").value.trim();
+      if (!type_name) return showMsg("Type name is required.", "err");
+
+      const requires_loler = el("newTypeRequiresLoler").checked;
+      const requires_puwer = el("newTypeRequiresPuwer").checked;
+
+      const { error } = await supabase.from("mhe_types").insert([{ type_name, requires_loler, requires_puwer }]);
+      if (error) throw error;
+
+      showMsg("MHE type added.", "ok");
+      el("newTypeName").value = "";
+      el("newTypeRequiresLoler").checked = false;
+      el("newTypeRequiresPuwer").checked = true;
+
+      await loadTypes();
+      await loadAssets();
+    }catch(e){
+      showMsg(e.message || String(e), "err");
+    }
+  });
+
+  function clearAssetForm(){
+    editingAssetId = null;
+    el("editBadge").classList.add("hide");
+    el("btnCancelEdit").classList.add("hide");
+    el("btnSaveAsset").textContent = "Add asset";
+
+    el("assetTag").value = "";
+    el("assetSerial").value = "";
+    el("assetMfr").value = "";
+    el("assetModel").value = "";
+    el("assetPurchase").value = "";
+    el("assetStatus").value = "active";
+
+    el("assetNextInspection").value = "";
+    el("assetNextLoler").value = "";
+    el("assetNextService").value = "";
+    el("assetNextPuwer").value = "";
+  }
+  el("btnCancelEdit").addEventListener("click", clearAssetForm);
+
+  el("btnSaveAsset").addEventListener("click", async () => {
+    try{
+      const ok = await requireSession();
+      if (!ok) return;
+
+      const site_id = el("assetSite").value;
+      const mhe_type_id = el("assetType").value || null;
+      if (!site_id) return showMsg("Select a site (Assets table tab).", "err");
+      if (!mhe_type_id) return showMsg("Select an MHE type.", "err");
+
+      const payload = {
+        site_id,
+        mhe_type_id,
+        asset_tag: el("assetTag").value.trim() || null,
+        serial_number: el("assetSerial").value.trim() || null,
+        manufacturer: el("assetMfr").value.trim() || null,
+        model: el("assetModel").value.trim() || null,
+        purchase_date: el("assetPurchase").value || null,
+        status: el("assetStatus").value,
+        next_inspection_due: el("assetNextInspection").value || null,
+        next_loler_due: el("assetNextLoler").value || null,
+        next_service_due: el("assetNextService").value || null,
+        next_puwer_due: el("assetNextPuwer").value || null
+      };
+
+      if (!payload.asset_tag && !payload.serial_number){
+        return showMsg("Provide at least an Asset Tag or Serial Number.", "err");
+      }
+
+      if (!editingAssetId){
+        const { error } = await supabase.from("mhe_assets").insert([payload]);
+        if (error) throw error;
+        showMsg("Asset added.", "ok");
+      } else {
+        const { error } = await supabase.from("mhe_assets").update(payload).eq("id", editingAssetId);
+        if (error) throw error;
+        showMsg("Asset updated.", "ok");
+        clearAssetForm();
+      }
+
+      await loadAssets();
+      setActiveTab("tabTable");
+    }catch(e){
+      showMsg(e.message || String(e), "err");
+    }
+  });
+
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+
+    const act = btn.dataset.act;
+    const id = btn.dataset.id;
+
+    try{
+      const ok = await requireSession();
+      if (!ok) return;
+
+      if (act === "saveType"){
+        const input = document.querySelector(`input[data-typeedit="name"][data-id="${id}"]`);
+        const type_name = input ? input.value.trim() : "";
+        if (!type_name) return showMsg("Type name cannot be blank.", "err");
+
+        const { error } = await supabase.from("mhe_types").update({ type_name }).eq("id", id);
+        if (error) throw error;
+
+        showMsg("Type updated.", "ok");
+        await loadTypes();
+        await loadAssets();
+      }
+
+      if (act === "deleteType"){
+        if (!confirm("Delete this MHE type?")) return;
+        const { error } = await supabase.from("mhe_types").delete().eq("id", id);
+        if (error) throw error;
+
+        showMsg("Type deleted.", "ok");
+        await loadTypes();
+        await loadAssets();
+      }
+
+      if (act === "editAsset"){
+        const { data, error } = await supabase.from("mhe_assets").select("*").eq("id", id).single();
+        if (error) throw error;
+
+        editingAssetId = data.id;
+
+        el("assetSite").value = data.site_id;
+        await loadAssets();
+
+        el("assetType").value = data.mhe_type_id || "";
+        el("assetTag").value = data.asset_tag || "";
+        el("assetSerial").value = data.serial_number || "";
+        el("assetMfr").value = data.manufacturer || "";
+        el("assetModel").value = data.model || "";
+        el("assetPurchase").value = data.purchase_date || "";
+        el("assetStatus").value = data.status || "active";
+
+        el("assetNextInspection").value = data.next_inspection_due || "";
+        el("assetNextLoler").value = data.next_loler_due || "";
+        el("assetNextService").value = data.next_service_due || "";
+        el("assetNextPuwer").value = data.next_puwer_due || "";
+
+        el("editBadge").classList.remove("hide");
+        el("btnCancelEdit").classList.remove("hide");
+        el("btnSaveAsset").textContent = "Save changes";
+
+        setActiveTab("tabAdd");
+        showMsg("Editing asset. Make changes and click Save.", "notice");
+      }
+
+      if (act === "deleteAsset"){
+        if (!confirm("Delete this asset?")) return;
+        const { error } = await supabase.from("mhe_assets").delete().eq("id", id);
+        if (error) throw error;
+
+        if (editingAssetId === id) clearAssetForm();
+        showMsg("Asset deleted.", "ok");
+        await loadAssets();
+      }
+    }catch(err){
+      console.error(err);
+      showMsg(err.message || String(err), "err");
+    }
+  });
+
+  // Boot
+  window.addEventListener("DOMContentLoaded", async () => {
+    el("authPill").textContent = "Checking session…";
+    const ok = await requireSession();
+    if (!ok) return;
+
+    try{
+      await loadCompaniesSites();
+      await loadTypes();
+      await loadAssets();
+      showMsg("Ready.", "ok");
+    }catch(e){
+      console.error(e);
+      showMsg(e.message || String(e), "err");
+    }
+  });
+</script>

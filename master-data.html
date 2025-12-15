@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Warehouse Intelligence – Setup (Companies & Sites)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f3f4f6; --card:#fff; --border:#e5e7eb;
+      --text:#111827; --muted:#6b7280;
+      --red:#dc2626; --red2:#b91c1c;
+      --inbg:#f9fafb; --inborder:#d1d5db;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{background:#fff;border-bottom:1px solid var(--border)}
+    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px}
+    .top{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .brand h1{margin:0;font-size:1.1rem;font-weight:800}
+    .brand span{color:var(--red)}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .pill{font-size:.85rem;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--muted)}
+    .btn{border:1px solid var(--border);background:#fff;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer;text-decoration:none;color:inherit;display:inline-block}
+    .btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+    .btn.primary:hover{background:var(--red2);border-color:var(--red2)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+    .card .head{padding:14px 14px 8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .card .body{padding:14px}
+    h2{margin:0;font-size:1.05rem}
+    h3{margin:0 0 6px 0;font-size:1rem}
+    .small{font-size:.85rem;color:var(--muted)}
+    label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 6px}
+    input, select{width:100%;padding:10px 10px;border-radius:10px;border:1px solid var(--inborder);background:var(--inbg)}
+    input:focus, select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+    .two{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:780px){.two{grid-template-columns:1fr 1fr}}
+    table{width:100%;border-collapse:collapse}
+    th, td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:left;font-size:.95rem;vertical-align:top}
+    th{font-size:.8rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .notice{padding:10px 12px;border:1px solid #fde68a;background:#fffbeb;border-radius:12px;color:#92400e}
+    .ok{padding:10px 12px;border:1px solid #bbf7d0;background:#f0fdf4;border-radius:12px;color:#166534}
+    .err{padding:10px 12px;border:1px solid #fecaca;background:#fef2f2;border-radius:12px;color:#991b1b}
+    .hide{display:none}
+
+    /* Breadcrumb navigation */
+    .breadcrumb {
+      max-width: 1200px;
+      margin: 10px auto 0 auto;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .breadcrumb a { color: var(--muted); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { margin: 0 4px; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+<header>
+
+  <nav class="breadcrumb">
+    <a href="dashboard.html">Dashboard</a>
+    <span>›</span>
+    <span>Setup</span>
+    <span>›</span>
+    <span>Companies &amp; Sites</span>
+  </nav>
+
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <h1>Warehouse <span>Intelligence</span> – Setup</h1>
+        <div class="small">Companies &amp; Sites</div>
+      </div>
+      <div class="row">
+        <a class="btn" href="dashboard.html">← Back to dashboard</a>
+        <div id="authPill" class="pill">Checking session…</div>
+        <button id="btnSignOut" class="btn">Sign out</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div id="msg" class="notice hide"></div>
+
+    <section class="card">
+      <div class="head">
+        <div>
+          <h2>Companies &amp; Sites</h2>
+          <div class="small">Create a company, then add sites under it.</div>
+        </div>
+        <button id="btnReload" class="btn">Reload</button>
+      </div>
+
+      <div class="body">
+        <div class="two">
+          <div>
+            <h3>Create Company</h3>
+            <label>Company name</label>
+            <input id="companyName" placeholder="e.g., XPO Logistics" />
+            <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end">
+              <button id="btnCreateCompany" class="btn primary">Create company</button>
+            </div>
+          </div>
+
+          <div>
+            <h3>Create Site</h3>
+            <label>Company</label>
+            <select id="siteCompany"></select>
+
+            <div class="two">
+              <div>
+                <label>Site name</label>
+                <input id="siteName" placeholder="e.g., Daventry DC" />
+              </div>
+              <div>
+                <label>Site code</label>
+                <input id="siteCode" placeholder="e.g., DIRFT" />
+              </div>
+            </div>
+
+            <label>Address</label>
+            <input id="siteAddress" placeholder="Optional" />
+
+            <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end">
+              <button id="btnCreateSite" class="btn primary">Create site</button>
+            </div>
+          </div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+
+        <h3>Sites</h3>
+        <div class="small">You can delete sites here during development.</div>
+
+        <div style="overflow:auto;margin-top:8px">
+          <table>
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Site</th>
+                <th>Code</th>
+                <th>Address</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="sitesTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+  const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const el = (id) => document.getElementById(id);
+  const msgBox = el("msg");
+
+  function showMsg(text, type="notice"){
+    msgBox.className = type === "ok" ? "ok" : type === "err" ? "err" : "notice";
+    msgBox.textContent = text;
+    msgBox.classList.remove("hide");
+    setTimeout(() => msgBox.classList.add("hide"), 4500);
+  }
+  const safe = (v) => (v === null || v === undefined) ? "" : String(v);
+
+  let sessionUser = null;
+  let companies = [];
+  let sites = [];
+
+  async function getAuthUser() {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    const user = data?.session?.user;
+    if (!user) {
+      el("authPill").textContent = "Not signed in";
+      window.location.href = "signin.html";
+      throw new Error("Not signed in");
+    }
+    return user;
+  }
+
+  async function requireSession(){
+    sessionUser = await getAuthUser();
+    el("authPill").textContent = `Signed in: ${sessionUser.email}`;
+    return true;
+  }
+
+  el("btnSignOut").addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.href = "signin.html";
+  });
+
+  async function loadCompanies(){
+    const { data, error } = await supabase
+      .from("companies")
+      .select("id, name, created_at")
+      .order("name", { ascending: true });
+
+    if (error) throw error;
+
+    companies = data || [];
+    el("siteCompany").innerHTML = companies.length
+      ? companies.map(c => `<option value="${c.id}">${safe(c.name)}</option>`).join("")
+      : `<option value="">No companies yet</option>`;
+  }
+
+  async function loadSites(){
+    const { data, error } = await supabase
+      .from("sites")
+      .select("id, company_id, name, code, address, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    sites = data || [];
+    const rows = sites.map(s => {
+      const c = companies.find(x => x.id === s.company_id);
+      return `
+        <tr>
+          <td>${safe(c?.name)}</td>
+          <td><strong>${safe(s.name)}</strong></td>
+          <td>${safe(s.code)}</td>
+          <td>${safe(s.address)}</td>
+          <td class="actions">
+            <button class="btn" data-act="deleteSite" data-id="${s.id}">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    el("sitesTbody").innerHTML = rows || `<tr><td colspan="5" class="small">No sites yet.</td></tr>`;
+  }
+
+  // Bind listeners ONCE (not inside loadSites/loadCompanies)
+
+  el("btnCreateCompany").addEventListener("click", async () => {
+    try {
+      const name = el("companyName").value.trim();
+      if (!name) return showMsg("Company name is required.", "err");
+
+      const authUser = await getAuthUser();
+
+      // Insert only (avoid SELECT immediately after insert due to RLS timing)
+      const { error } = await supabase
+        .from("companies")
+        .insert([{ name, created_by: authUser.id }]);
+
+      if (error) throw error;
+
+      showMsg("Company created successfully.", "ok");
+      el("companyName").value = "";
+
+      await loadCompanies();
+      await loadSites();
+    } catch (e) {
+      showMsg(e.message || String(e), "err");
+    }
+  });
+
+  el("btnCreateSite").addEventListener("click", async () => {
+    try {
+      const authUser = await getAuthUser();
+
+      const company_id = el("siteCompany").value;
+      const name = el("siteName").value.trim();
+      const code = el("siteCode").value.trim() || null;
+      const address = el("siteAddress").value.trim() || null;
+
+      if (!company_id) return showMsg("Select a company for the site.", "err");
+      if (!name) return showMsg("Site name is required.", "err");
+
+      const { error } = await supabase
+        .from("sites")
+        .insert([{ company_id, name, code, address, created_by: authUser.id }]);
+
+      if (error) throw error;
+
+      showMsg("Site created.", "ok");
+      el("siteName").value = "";
+      el("siteCode").value = "";
+      el("siteAddress").value = "";
+
+      await loadSites();
+    } catch (e) {
+      showMsg(e.message || String(e), "err");
+    }
+  });
+
+  el("btnReload").addEventListener("click", async () => {
+    try{
+      await loadCompanies();
+      await loadSites();
+      showMsg("Reloaded.", "ok");
+    }catch(e){
+      showMsg(e.message || String(e), "err");
+    }
+  });
+
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+
+    const act = btn.dataset.act;
+    const id = btn.dataset.id;
+
+    try{
+      if (act === "deleteSite"){
+        if (!confirm("Delete this site? This may also delete related MHE assets/inspections if cascades are enabled.")) return;
+
+        const { error } = await supabase
+          .from("sites")
+          .delete()
+          .eq("id", id);
+
+        if (error) throw error;
+
+        showMsg("Site deleted.", "ok");
+        await loadSites();
+      }
+    }catch(err){
+      showMsg(err.message || String(err), "err");
+    }
+  });
+
+  (async function init(){
+    const ok = await requireSession();
+    if (!ok) return;
+    try{
+      await loadCompanies();
+      await loadSites();
+      showMsg("Ready.", "ok");
+    }catch(e){
+      showMsg(e.message || String(e), "err");
+    }
+  })();
+</script>
+</body>
+</html>

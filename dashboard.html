@@ -1,22 +1,18 @@
 <!doctype html>
 <html lang="en">
 <head>
-
-
-
-<script>
-  (function () {
-    if (location.protocol === "http:") {
-      location.replace("https://" + location.host + location.pathname + location.search + location.hash);
-    }
-  })();
-</script>
-
-
+  <script>
+    (function () {
+      if (location.protocol === "http:") {
+        location.replace("https://" + location.host + location.pathname + location.search + location.hash);
+      }
+    })();
+  </script>
 
   <meta charset="utf-8" />
   <title>Warehouse Intelligence – Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
     :root {
       --wi-red: #dc2626;
@@ -123,7 +119,7 @@
       margin: 12px 0;
     }
 
-    /* Dropdown headers (Tools / Settings) */
+    /* Dropdown headers (Setup / Tools / Settings) */
     .dropdown-header {
       display: flex;
       justify-content: space-between;
@@ -137,7 +133,8 @@
 
     /* Dropdown items */
     .tool-item,
-    .settings-item {
+    .settings-item,
+    .setup-item {
       display: block;
       padding: 6px 10px;
       border-radius: 6px;
@@ -147,7 +144,8 @@
       cursor: pointer;
     }
     .tool-item:hover,
-    .settings-item:hover { background: #f3f4f6; }
+    .settings-item:hover,
+    .setup-item:hover { background: #f3f4f6; }
 
     .settings-item.active {
       background: #fee2e2;
@@ -290,6 +288,36 @@
       border-style: dashed;
     }
 
+    /* Alerts */
+    .pill-red {
+      display:inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #fecaca;
+      background:#fee2e2;
+      color:#991b1b;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+    .pill-dark {
+      display:inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.2);
+      background:#7f1d1d;
+      color:#fff;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+    .row-overdue td{
+      background:#7f1d1d;
+      color:#fff;
+      border-bottom-color: rgba(255,255,255,.12);
+    }
+    .row-soon td{
+      background:#fff7f7;
+    }
+
     @media (max-width: 900px) {
       .layout { flex-direction: column; }
       .sidebar { width: 100%; }
@@ -319,6 +347,19 @@
 
       <div class="sidebar-divider"></div>
 
+      <!-- Setup dropdown (NEW) -->
+      <div class="dropdown-header" id="setup-toggle">
+        <span class="sidebar-section-title" style="margin-bottom:0;">Setup</span>
+        <span class="dropdown-arrow" id="setup-arrow">▾</span>
+      </div>
+      <div id="sidebar-setup-list" class="hidden">
+        <a href="master-data.html" class="setup-item">Company &amp; site setup</a>
+        <a href="mhe-setup.html" class="setup-item">MHE setup</a>
+        <a href="storage-connect.html" class="setup-item">Connections</a>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
       <!-- Tools dropdown -->
       <div class="dropdown-header" id="tools-toggle">
         <span class="sidebar-section-title" style="margin-bottom:0;">Tools</span>
@@ -330,7 +371,7 @@
 
       <div class="sidebar-divider"></div>
 
-      <!-- Settings dropdown (same format as Tools) -->
+      <!-- Settings dropdown -->
       <div class="dropdown-header" id="settings-toggle">
         <span class="sidebar-section-title" style="margin-bottom:0;">Settings</span>
         <span class="dropdown-arrow" id="settings-arrow">▾</span>
@@ -338,11 +379,6 @@
       <div id="sidebar-settings-list">
         <div id="set-users" class="settings-item">Users</div>
         <div id="set-password" class="settings-item">Password reset</div>
-
-        <!-- IMPORTANT: this is now a real link to a published page -->
-        <a id="set-connections-link" class="settings-item" href="storage-connect.html">
-          Connections
-        </a>
       </div>
     </aside>
 
@@ -367,6 +403,43 @@
 
       <!-- OVERVIEW -->
       <section id="section-overview">
+
+        <!-- Equipment alerts (NEW) -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h2 style="margin-bottom:6px;">Equipment alerts</h2>
+              <div class="muted">
+                Overdue and due within 30 days (earliest of Inspection / LOLER / Service / PUWER).
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <button id="btn-alerts-reload" class="btn-primary" style="padding:8px 12px;font-size:.85rem;">Reload</button>
+              <a class="btn-primary" style="padding:8px 12px;font-size:.85rem;" href="mhe-setup.html">Open MHE setup</a>
+            </div>
+          </div>
+
+          <div id="alerts-empty" class="muted" style="margin-top:10px;">Loading…</div>
+
+          <div style="margin-top:10px; overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Site</th>
+                  <th>Asset tag</th>
+                  <th>Type</th>
+                  <th>Next due</th>
+                  <th>Due date</th>
+                  <th>Days</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="alerts-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Scheduling tool card (existing) -->
         <div class="card">
           <h2>Scheduling tool</h2>
           <p class="muted">
@@ -376,7 +449,7 @@
         </div>
       </section>
 
-      <!-- USERS -->
+      <!-- USERS (restored inside dashboard) -->
       <section id="section-users" class="hidden">
         <div class="card">
           <h2>Users</h2>
@@ -403,7 +476,6 @@
             </p>
           </div>
 
-          <!-- Upgrade account card – only visible for single-user accounts -->
           <div id="upgrade-account-card" class="card upgrade-card hidden">
             <h3>Upgrade your account</h3>
             <p class="muted">
@@ -437,7 +509,7 @@
         </div>
       </section>
 
-      <!-- PASSWORD RESET (Settings dropdown item) -->
+      <!-- PASSWORD RESET (restored inside dashboard) -->
       <section id="section-password" class="hidden">
         <div class="card">
           <h2>Password reset</h2>
@@ -492,8 +564,13 @@ let currentProfile = null;
 const headerEmail = document.getElementById("header-user-email");
 const btnSignout = document.getElementById("btn-signout");
 
-/* Sidebar navigation */
+/* Sidebar */
 const navOverview = document.getElementById("nav-overview");
+
+/* Setup dropdown */
+const setupToggle = document.getElementById("setup-toggle");
+const setupArrow = document.getElementById("setup-arrow");
+const setupList = document.getElementById("sidebar-setup-list");
 
 /* Tools dropdown */
 const toolsToggle = document.getElementById("tools-toggle");
@@ -507,7 +584,6 @@ const settingsList = document.getElementById("sidebar-settings-list");
 
 const setUsers = document.getElementById("set-users");
 const setPassword = document.getElementById("set-password");
-const setConnectionsLink = document.getElementById("set-connections-link");
 
 /* Sections */
 const sectionOverview = document.getElementById("section-overview");
@@ -520,7 +596,7 @@ const badgeRole = document.getElementById("badge-role");
 const badgeAccountType = document.getElementById("badge-account-type");
 const accountIdSpan = document.getElementById("account-id");
 
-/* Users section */
+/* Users */
 const usersIntro = document.getElementById("users-intro");
 const usersTableBody = document.getElementById("users-table-body");
 const usersListContainer = document.getElementById("users-list-container");
@@ -528,33 +604,32 @@ const singleUserNote = document.getElementById("single-user-note");
 const addUserCard = document.getElementById("add-user-card");
 const addUserForm = document.getElementById("add-user-form");
 const addUserMsg = document.getElementById("add-user-message");
+const upgradeAccountCard = document.getElementById("upgrade-account-card");
+const btnUpgradeAccount = document.getElementById("btn-upgrade-account");
 
-/* Password reset section */
+/* Password */
 const passwordForm = document.getElementById("password-form");
 const passwordMsg = document.getElementById("password-message");
-
 const adminResetCard = document.getElementById("admin-reset-card");
 const adminResetForm = document.getElementById("admin-reset-form");
 const adminResetEmail = document.getElementById("admin-reset-email");
 const adminResetMsg = document.getElementById("admin-reset-message");
 
-/* Upgrade card elements */
-const upgradeAccountCard = document.getElementById("upgrade-account-card");
-const btnUpgradeAccount = document.getElementById("btn-upgrade-account");
+/* Alerts */
+const alertsReload = document.getElementById("btn-alerts-reload");
+const alertsEmpty = document.getElementById("alerts-empty");
+const alertsTbody = document.getElementById("alerts-tbody");
 
 /* HELPERS */
 function clearActiveSidebar() {
   navOverview.classList.remove("active");
   [setUsers, setPassword].forEach(el => el.classList.remove("active"));
-  // Note: Connections is a link now; we do not force active state.
 }
-
 function hideAllSections() {
   sectionOverview.classList.add("hidden");
   sectionUsers.classList.add("hidden");
   sectionPassword.classList.add("hidden");
 }
-
 function showSection(section) {
   clearActiveSidebar();
   hideAllSections();
@@ -576,12 +651,21 @@ function showSection(section) {
   }
 }
 
-/* NAVIGATION EVENTS */
+/* NAV EVENTS */
 navOverview.addEventListener("click", () => showSection("overview"));
 setUsers.addEventListener("click", () => showSection("users"));
 setPassword.addEventListener("click", () => showSection("password"));
 
 /* DROPDOWNS */
+let setupExpanded = false; // closed by default
+setupList.classList.toggle("hidden", !setupExpanded);
+setupArrow.textContent = setupExpanded ? "▾" : "▸";
+setupToggle.addEventListener("click", () => {
+  setupExpanded = !setupExpanded;
+  setupList.classList.toggle("hidden", !setupExpanded);
+  setupArrow.textContent = setupExpanded ? "▾" : "▸";
+});
+
 let toolsExpanded = true;
 toolsToggle.addEventListener("click", () => {
   toolsExpanded = !toolsExpanded;
@@ -602,7 +686,7 @@ btnSignout.addEventListener("click", async () => {
   window.location.href = "signin.html";
 });
 
-/* HELPERS */
+/* Message helpers */
 function setAddUserMessage(text, type) {
   addUserMsg.textContent = text || "";
   addUserMsg.className = type || "";
@@ -615,6 +699,117 @@ function setAdminResetMessage(text, type) {
   adminResetMsg.textContent = text || "";
   adminResetMsg.className = type || "";
 }
+
+/* Date helpers for alerts */
+function startOfToday(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+function parseYMD(ymd){ if(!ymd) return null; const d=new Date(ymd+"T00:00:00"); return isNaN(d)?null:d; }
+function daysUntil(ymd){
+  const d=parseYMD(ymd); if(!d) return null;
+  return Math.floor((d.getTime()-startOfToday().getTime())/(1000*60*60*24));
+}
+function nextDueReason(asset){
+  const options = [
+    { label: "Inspection", ymd: asset.next_inspection_due },
+    { label: "LOLER",      ymd: asset.next_loler_due },
+    { label: "Service",    ymd: asset.next_service_due },
+    { label: "PUWER",      ymd: asset.next_puwer_due }
+  ].map(x => ({...x, date: parseYMD(x.ymd)})).filter(x => x.date);
+
+  if (!options.length) return { label: "No dates", ymd: null, date: null, days: null };
+
+  options.sort((a,b)=>a.date.getTime()-b.date.getTime());
+  const top = options[0];
+  return { label: top.label, ymd: top.ymd, date: top.date, days: daysUntil(top.ymd) };
+}
+
+async function loadAlerts(){
+  alertsEmpty.textContent = "Loading…";
+  alertsTbody.innerHTML = "";
+
+  const [{ data: companies, error: ec }, { data: sites, error: es }, { data: types, error: et }] = await Promise.all([
+    client.from("companies").select("id, name"),
+    client.from("sites").select("id, company_id, name, code"),
+    client.from("mhe_types").select("id, type_name"),
+  ]);
+  if (ec) throw ec;
+  if (es) throw es;
+  if (et) throw et;
+
+  const { data: assets, error: ea } = await client
+    .from("mhe_assets")
+    .select("id, site_id, mhe_type_id, asset_tag, serial_number, status, next_inspection_due, next_loler_due, next_service_due, next_puwer_due");
+  if (ea) throw ea;
+
+  const safe = (v) => (v === null || v === undefined) ? "" : String(v);
+
+  const rows = (assets || []).map(a => {
+    const due = nextDueReason(a);
+    const site = (sites || []).find(s => s.id === a.site_id);
+    const comp = (companies || []).find(c => c.id === site?.company_id);
+    const type = (types || []).find(t => t.id === a.mhe_type_id);
+
+    const siteLabel = `${safe(comp?.name)} – ${safe(site?.name)}${site?.code ? " ("+safe(site.code)+")" : ""}`;
+    const assetLabel = a.asset_tag || a.serial_number || "—";
+
+    let bucket = 3; // 0 overdue, 1 due soon, 2 ok, 3 no dates
+    let key = Number.POSITIVE_INFINITY;
+
+    if (due.date){ key = due.date.getTime(); bucket = 2; }
+    if (due.days !== null && due.days < 0){ bucket = 0; }
+    else if (due.days !== null && due.days < 30){ bucket = 1; }
+
+    return {
+      _bucket: bucket,
+      _key: key,
+      siteLabel,
+      assetLabel,
+      typeLabel: safe(type?.type_name) || "—",
+      reason: due.label,
+      dueYmd: due.ymd,
+      days: due.days,
+      status: a.status || "—"
+    };
+  })
+  .filter(r => r._bucket === 0 || r._bucket === 1)
+  .sort((a,b) => (a._bucket - b._bucket) || (a._key - b._key));
+
+  if (!rows.length){
+    alertsEmpty.textContent = "No items due within 30 days. Good position.";
+    return;
+  }
+
+  alertsEmpty.textContent = "";
+
+  rows.forEach(r => {
+    const tr = document.createElement("tr");
+    const isOverdue = r._bucket === 0;
+    const isSoon = r._bucket === 1;
+
+    if (isOverdue) tr.className = "row-overdue";
+    if (isSoon) tr.className = "row-soon";
+
+    const daysText = (r.days === null) ? "—" : (r.days < 0 ? `${Math.abs(r.days)} overdue` : `${r.days} days`);
+    const pill = isOverdue
+      ? `<span class="pill-dark">${r.reason}</span>`
+      : `<span class="pill-red">${r.reason}</span>`;
+
+    tr.innerHTML = `
+      <td>${r.siteLabel}</td>
+      <td>${safe(r.assetLabel)}</td>
+      <td>${r.typeLabel}</td>
+      <td>${pill}</td>
+      <td>${r.dueYmd ? safe(r.dueYmd) : "—"}</td>
+      <td>${safe(daysText)}</td>
+      <td>${safe(r.status)}</td>
+    `;
+    alertsTbody.appendChild(tr);
+  });
+}
+
+/* Alerts reload */
+alertsReload.addEventListener("click", async () => {
+  try { await loadAlerts(); } catch(e){ console.error(e); alertsEmpty.textContent = "Unable to load alerts."; }
+});
 
 /* INITIAL LOAD */
 (async () => {
@@ -635,7 +830,6 @@ function setAdminResetMessage(text, type) {
     .single();
 
   if (!profile) {
-    // New user fallback
     profile = {
       id: authUser.id,
       email: authUser.email,
@@ -648,7 +842,6 @@ function setAdminResetMessage(text, type) {
     await client.from("users").upsert(profile);
   }
 
-  // Block deleted users
   if (profile.is_active === false) {
     alert("This user has been deactivated. Please contact your administrator.");
     await client.auth.signOut();
@@ -684,18 +877,18 @@ function setAdminResetMessage(text, type) {
     usersIntro.textContent = "This is a single-user account.";
     singleUserNote.classList.remove("hidden");
     addUserCard.classList.add("hidden");
-    if (upgradeAccountCard) upgradeAccountCard.classList.remove("hidden");
+    upgradeAccountCard.classList.remove("hidden");
   } else if (profile.role !== "admin") {
     usersIntro.textContent =
       "You can view users in your business. Only admins can manage them.";
     singleUserNote.classList.add("hidden");
     addUserCard.classList.add("hidden");
-    if (upgradeAccountCard) upgradeAccountCard.classList.add("hidden");
+    upgradeAccountCard.classList.add("hidden");
   } else {
     usersIntro.textContent = "Manage users under this business account.";
     singleUserNote.classList.add("hidden");
     addUserCard.classList.remove("hidden");
-    if (upgradeAccountCard) upgradeAccountCard.classList.add("hidden");
+    upgradeAccountCard.classList.add("hidden");
   }
 
   // Load active users in business
@@ -720,11 +913,7 @@ function setAdminResetMessage(text, type) {
       if (canManage && !isSelf) {
         actionsHtml = `
           <button class="btn-reset" data-email="${u.email}">Reset</button>
-          ${
-            u.role !== "admin"
-              ? `<button class="btn-promote" data-id="${u.id}">Promote</button>`
-              : ""
-          }
+          ${u.role !== "admin" ? `<button class="btn-promote" data-id="${u.id}">Promote</button>` : ""}
           <button class="btn-delete" data-id="${u.id}">Delete</button>
         `;
       }
@@ -742,7 +931,6 @@ function setAdminResetMessage(text, type) {
 
     // Attach admin-only actions
     if (currentProfile.role === "admin") {
-      // Reset password (email link)
       document.querySelectorAll(".btn-reset").forEach(btn => {
         btn.addEventListener("click", async () => {
           const email = btn.dataset.email;
@@ -761,49 +949,36 @@ function setAdminResetMessage(text, type) {
         });
       });
 
-      // Promote to admin
       document.querySelectorAll(".btn-promote").forEach(btn => {
         btn.addEventListener("click", async () => {
           const userId = btn.dataset.id;
           if (!confirm("Promote this user to admin?")) return;
-          const { error } = await client
-            .from("users")
-            .update({ role: "admin" })
-            .eq("id", userId);
-          if (error) {
-            alert("Error promoting user: " + error.message);
-          } else {
-            window.location.reload();
-          }
+          const { error } = await client.from("users").update({ role: "admin" }).eq("id", userId);
+          if (error) alert("Error promoting user: " + error.message);
+          else window.location.reload();
         });
       });
 
-      // Delete user (soft delete: is_active = false)
       document.querySelectorAll(".btn-delete").forEach(btn => {
         btn.addEventListener("click", async () => {
           const userId = btn.dataset.id;
           if (!confirm("Delete this user? They will be deactivated and unable to access the account.")) return;
-
-          const { error } = await client
-            .from("users")
-            .update({ is_active: false })
-            .eq("id", userId);
-
-          if (error) {
-            alert("Error deleting user: " + error.message);
-          } else {
-            window.location.reload();
-          }
+          const { error } = await client.from("users").update({ is_active: false }).eq("id", userId);
+          if (error) alert("Error deleting user: " + error.message);
+          else window.location.reload();
         });
       });
     }
   }
 
-  // Default landing section
+  // Load alerts into overview
+  try { await loadAlerts(); } catch(e){ console.error(e); alertsEmpty.textContent = "Unable to load alerts."; }
+
+  // Default section
   showSection("overview");
 })();
 
-/* ADD USER – ADMIN + BUSINESS ONLY */
+/* ADD USER */
 addUserForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   setAddUserMessage("", "");
@@ -861,7 +1036,7 @@ addUserForm.addEventListener("submit", async (e) => {
   setTimeout(() => window.location.reload(), 800);
 });
 
-/* PASSWORD – CHANGE OWN PASSWORD */
+/* PASSWORD – CHANGE OWN */
 passwordForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   setPasswordMessage("", "");
@@ -885,7 +1060,7 @@ passwordForm.addEventListener("submit", async (e) => {
   passwordForm.reset();
 });
 
-/* ADMIN PASSWORD RESET (EMAIL LINK) */
+/* ADMIN PASSWORD RESET */
 if (adminResetForm) {
   adminResetForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -917,7 +1092,7 @@ if (adminResetForm) {
   });
 }
 
-/* UPGRADE ACCOUNT – BUTTON HANDLER */
+/* UPGRADE */
 if (btnUpgradeAccount) {
   btnUpgradeAccount.addEventListener("click", () => {
     window.location.href = "pricing.html";
