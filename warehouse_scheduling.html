@@ -104,6 +104,11 @@
     .right-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .note{ margin-top:10px; font-size:.86rem; color:var(--muted); }
 
+    .mini{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+    .panelBox{ border:1px solid var(--border); border-radius:14px; background:#fff; padding:12px; }
+    .panelBox h3{ margin:0 0 6px; font-size:.95rem; font-weight:800; }
+    .panelBox .sub{ margin:0 0 10px; color:var(--muted); font-size:.85rem; }
+
     @media (max-width: 900px){
       .field,.field.w2,.field.w4{ grid-column:span 12; }
     }
@@ -124,7 +129,7 @@
       <div class="header-top">
         <div class="brand">
           <h1>Warehouse <span class="accent">Intelligence</span> – Scheduling</h1>
-          <div class="sub">Plan vs Actual (by Site, Date, Shift) · Uses MHE assets from Setup</div>
+          <div class="sub">Capability plan + Plan vs Actual (by Site, Date, Shift) · Uses MHE assets from Setup</div>
         </div>
 
         <div class="header-actions">
@@ -135,7 +140,8 @@
       </div>
 
       <div class="tabs">
-        <button class="tab active" id="tabPlan" type="button">Plan vs Actual</button>
+        <button class="tab active" id="tabCap" type="button">Capability plan</button>
+        <button class="tab" id="tabPlan" type="button">Plan vs Actual</button>
         <button class="tab" id="tabConfig" type="button">Configuration</button>
       </div>
 
@@ -193,93 +199,177 @@
       </div>
     </div>
 
-    <div class="kpis" id="kpiRow">
-      <div class="kpi" id="kpiDirect">
-        <h3>Direct hours</h3>
-        <p class="v">Plan: <span id="kpiDirectPlan">0.00</span>h · Actual: <span id="kpiDirectActual">0.00</span>h</p>
-      </div>
-      <div class="kpi" id="kpiIndirect">
-        <h3>Indirect hours</h3>
-        <p class="v">Plan: <span id="kpiIndirectPlan">0.00</span>h · Actual: <span id="kpiIndirectActual">0.00</span>h</p>
-      </div>
-      <div class="kpi" id="kpiCost">
-        <h3>Cost</h3>
-        <p class="v">Plan: £<span id="kpiCostPlan">0.00</span> · Actual: £<span id="kpiCostActual">0.00</span></p>
-      </div>
-      <div class="kpi" id="kpiTotal">
-        <h3>Total hours</h3>
-        <p class="v">Plan: <span id="kpiTotalPlan">0.00</span>h · Actual: <span id="kpiTotalActual">0.00</span>h</p>
-      </div>
-    </div>
-
-    <div class="card" id="mheCard">
+    <!-- CAPABILITY PLAN TAB -->
+    <div class="card" id="capCard">
       <div class="card-h">
         <div>
-          <h2>Summary by MHE (available only)</h2>
-          <div class="sub">Derived from MHE assets on the selected site where status = active.</div>
+          <h2>Capability plan</h2>
+          <div class="sub">Planned resource vs resource available (difference). Inputs persist to scheduling_entries (__SUMMARY__).</div>
         </div>
       </div>
       <div class="card-b">
-        <table id="mheSummaryTable">
-          <thead>
-            <tr>
-              <th>MHE Type</th>
-              <th class="num">Count</th>
-              <th class="num">£/hr</th>
-              <th class="num">Planned hours</th>
-              <th class="num">Actual hours</th>
-              <th class="num">Planned cost</th>
-              <th class="num">Actual cost</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td colspan="7"><small>Select a site to load MHE.</small></td></tr>
-          </tbody>
-        </table>
+        <div class="mini">
+          <div class="panelBox">
+            <h3>Headcount</h3>
+            <p class="sub">Free input. Stored on summary row.</p>
+            <div class="grid">
+              <div class="field w4">
+                <label>Headcount (plan)
+                  <input type="number" id="hcPlan" min="0" step="0.5" placeholder="0">
+                </label>
+              </div>
+              <div class="field w4">
+                <label>Headcount (expected)
+                  <input type="number" id="hcExpected" min="0" step="0.5" placeholder="0">
+                </label>
+              </div>
+              <div class="field w4">
+                <label>Headcount (actual)
+                  <input type="number" id="hcActual" min="0" step="0.5" placeholder="0">
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="panelBox">
+            <h3>Expected hours</h3>
+            <p class="sub">Free input (capacity expectation). Stored on summary row.</p>
+            <div class="grid">
+              <div class="field w4">
+                <label>Direct hours (expected)
+                  <input type="number" id="hrsDirectExpected" min="0" step="0.25" placeholder="0.00">
+                </label>
+              </div>
+              <div class="field w4">
+                <label>Indirect hours (expected)
+                  <input type="number" id="hrsIndirectExpected" min="0" step="0.25" placeholder="0.00">
+                </label>
+              </div>
+              <div class="field w4">
+                <label>Total hours (expected) (read-only)
+                  <input type="number" id="hrsTotalExpected" disabled>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="panelBox">
+            <h3>Cost</h3>
+            <p class="sub">Free input (not linked to MHE). Stored on summary row.</p>
+            <div class="grid">
+              <div class="field w4">
+                <label>Cost (plan) £
+                  <input type="number" id="costPlan" min="0" step="0.01" placeholder="0.00">
+                </label>
+              </div>
+              <div class="field w4">
+                <label>Cost (expected) £
+                  <input type="number" id="costExpected" min="0" step="0.01" placeholder="0.00">
+                </label>
+              </div>
+              <div class="field w4">
+                <label>Cost (actual) £
+                  <input type="number" id="costActual" min="0" step="0.01" placeholder="0.00">
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="panelBox">
+            <h3>Resource available (from Setup)</h3>
+            <p class="sub">Derived from active MHE assets for the selected site.</p>
+            <div class="note" id="resourceAvailNote">Select a site to see available MHE.</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card" id="taskCard">
-      <div class="card-h">
-        <div>
-          <h2>Task details – Plan vs Actual</h2>
-          <div class="sub">Edits save to <code>scheduling_entries</code> for the selected site/date/shift.</div>
+    <!-- PLAN VS ACTUAL TAB -->
+    <div id="planWrap" style="display:none;">
+      <div class="kpis" id="kpiRow">
+        <div class="kpi" id="kpiDirect">
+          <h3>Direct hours</h3>
+          <p class="v">Plan: <span id="kpiDirectPlan">0.00</span>h · Actual: <span id="kpiDirectActual">0.00</span>h</p>
+        </div>
+        <div class="kpi" id="kpiIndirect">
+          <h3>Indirect hours</h3>
+          <p class="v">Plan: <span id="kpiIndirectPlan">0.00</span>h · Actual: <span id="kpiIndirectActual">0.00</span>h</p>
+        </div>
+        <div class="kpi" id="kpiCost">
+          <h3>Cost (free input)</h3>
+          <p class="v">Plan: £<span id="kpiCostPlan">0.00</span> · Actual: £<span id="kpiCostActual">0.00</span></p>
+        </div>
+        <div class="kpi" id="kpiTotal">
+          <h3>Total hours</h3>
+          <p class="v">Plan: <span id="kpiTotalPlan">0.00</span>h · Actual: <span id="kpiTotalActual">0.00</span>h</p>
         </div>
       </div>
-      <div class="card-b">
-        <table id="taskTable">
-          <thead>
-            <tr>
-              <th style="width:240px;">Task</th>
-              <th style="width:180px;">Area / Zone</th>
-              <th style="width:180px;">MHE Type</th>
-              <th class="num" style="width:120px;">Min / unit</th>
-              <th class="num" style="width:120px;">Plan units</th>
-              <th class="num" style="width:120px;">Actual units</th>
-              <th class="num" style="width:120px;">Plan hours</th>
-              <th class="num" style="width:120px;">Actual hours</th>
-              <th style="width:140px;">Category</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
 
-        <div class="note">
-          MHE dropdown is restricted to MHE types that exist on the selected site (active assets only).
+      <div class="card" id="mheCard">
+        <div class="card-h">
+          <div>
+            <h2>Available MHE (active only)</h2>
+            <div class="sub">MHE list restricted to types that exist on the selected site (active assets only).</div>
+          </div>
+        </div>
+        <div class="card-b">
+          <table id="mheSummaryTable">
+            <thead>
+              <tr>
+                <th>MHE Type</th>
+                <th class="num">Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="2"><small>Select a site to load MHE.</small></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="taskCard">
+        <div class="card-h">
+          <div>
+            <h2>Task details – Plan vs Actual</h2>
+            <div class="sub">Edits save to scheduling_entries for the selected site/date/shift.</div>
+          </div>
+        </div>
+        <div class="card-b">
+          <table id="taskTable">
+            <thead>
+              <tr>
+                <th style="width:240px;">Task</th>
+                <th style="width:180px;">Area / Zone</th>
+                <th style="width:180px;">MHE Type</th>
+                <th class="num" style="width:120px;">Min / unit</th>
+                <th class="num" style="width:120px;">Plan units</th>
+                <th class="num" style="width:120px;">Actual units</th>
+                <th class="num" style="width:120px;">Plan hours</th>
+                <th class="num" style="width:120px;">Actual hours</th>
+                <th style="width:140px;">Category</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="note">
+            Cost is not derived from MHE. Use Capability plan tab to enter cost plan/expected/actual for this site/date/shift.
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- CONFIG TAB -->
     <div class="card" id="configCard" style="display:none;">
       <div class="card-h">
         <div>
           <h2>Configuration</h2>
-          <div class="sub">Placeholder tab (kept for layout parity with Setup pages).</div>
+          <div class="sub">Kept for parity. Next step: make tasks site/company specific via a DB table.</div>
         </div>
       </div>
       <div class="card-b">
         <div class="note">
-          If you want tasks to be site/company-specific, we can move the task list into a DB table next.
+          Currently, tasks are stored in-page. If you want different task sets per site, we will add a table (e.g. scheduling_tasks) and load it by site_id.
         </div>
       </div>
     </div>
@@ -291,11 +381,10 @@
    ========================= */
 const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
-
-/* CDN exposes `supabase` global, not `supabasejs` */
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const LINKS = { dashboard: "dashboard.html", setup: "setup.html" };
+const SUMMARY_TASK_NAME = "__SUMMARY__";
 
 let currentUser = null;
 
@@ -306,13 +395,13 @@ let selectedSiteId = "";
 
 /* MHE */
 let siteMheAssets = [];     // active only
-let siteMheTypes = [];      // [{ id, name, hourly_rate }]
-let mheTypeById = {};       // id -> {id,name,rate}
-let mheRatesByName = {};    // name -> rate
+let siteMheTypes = [];      // [{ id, name }]
+let mheTypeById = {};       // id -> {id,name}
 
 /* Scheduling */
 let loadedEntries = [];
 let entryByTaskId = {};
+let summaryRow = null;
 
 /* Task Master */
 let tasksMasterData = [
@@ -333,17 +422,17 @@ function setStatus(msg, isWarn=false){
   box.textContent = msg;
   box.classList.toggle("warn", !!isWarn);
 }
+function n(v){ const x = parseFloat(v); return isNaN(x) ? null : x; }
+function nz(v){ const x = parseFloat(v); return isNaN(x) ? 0 : x; }
 
-/* =========================
-   INIT
-   ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
   try{
     el("btnBack").addEventListener("click", () => location.href = LINKS.dashboard);
     el("btnSignOut").addEventListener("click", signOut);
     el("btnReload").addEventListener("click", () => reloadAll(true));
-    el("btnSave").addEventListener("click", saveContextToDb);
+    el("btnSave").addEventListener("click", saveAllToDb);
 
+    el("tabCap").addEventListener("click", () => setTab("cap"));
     el("tabPlan").addEventListener("click", () => setTab("plan"));
     el("tabConfig").addEventListener("click", () => setTab("config"));
 
@@ -362,10 +451,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     el("shiftDate").addEventListener("change", () => reloadEntriesForContext());
     el("shiftCode").addEventListener("change", () => reloadEntriesForContext());
 
+    // Capability calc (total expected)
+    ["hrsDirectExpected","hrsIndirectExpected"].forEach(id=>{
+      el(id).addEventListener("input", syncExpectedTotal);
+    });
+
     buildTaskTable();
 
     await requireAuth();
     await loadCompaniesAndSites();
+
+    setTab("cap");
     setStatus("Ready.");
   } catch(e){
     console.error(e);
@@ -374,13 +470,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function setTab(which){
+  el("tabCap").classList.toggle("active", which==="cap");
   el("tabPlan").classList.toggle("active", which==="plan");
   el("tabConfig").classList.toggle("active", which==="config");
 
-  el("contextCard").style.display = (which==="plan") ? "" : "none";
-  el("kpiRow").style.display     = (which==="plan") ? "" : "none";
-  el("mheCard").style.display    = (which==="plan") ? "" : "none";
-  el("taskCard").style.display   = (which==="plan") ? "" : "none";
+  el("capCard").style.display = (which==="cap") ? "" : "none";
+  el("planWrap").style.display = (which==="plan") ? "" : "none";
   el("configCard").style.display = (which==="config") ? "" : "none";
 }
 
@@ -389,14 +484,16 @@ function initDateDefault(){
   el("shiftDate").value = d.toISOString().split("T")[0];
 }
 
+function syncExpectedTotal(){
+  const tot = nz(el("hrsDirectExpected").value) + nz(el("hrsIndirectExpected").value);
+  el("hrsTotalExpected").value = tot.toFixed(2);
+}
+
 /* =========================
    AUTH
    ========================= */
 async function requireAuth(){
-  const { data: { user }, error } = await client.auth.getUser();
-  if (error){
-    console.warn(error);
-  }
+  const { data: { user } } = await client.auth.getUser();
   if (!user){
     location.href = "index.html";
     return;
@@ -417,10 +514,7 @@ async function loadCompaniesAndSites(){
   setStatus("Loading companies and sites…");
 
   const cRes = await client.from("companies").select("*").order("name", { ascending:true });
-  if (cRes.error){
-    setStatus("Error loading companies: " + cRes.error.message, true);
-    return;
-  }
+  if (cRes.error){ setStatus("Error loading companies: " + cRes.error.message, true); return; }
   companies = cRes.data || [];
   const sel = el("companySelect");
   sel.innerHTML = `<option value="">Select company…</option>`;
@@ -432,10 +526,7 @@ async function loadCompaniesAndSites(){
   });
 
   const sRes = await client.from("sites").select("*").order("name", { ascending:true });
-  if (sRes.error){
-    setStatus("Error loading sites: " + sRes.error.message, true);
-    return;
-  }
+  if (sRes.error){ setStatus("Error loading sites: " + sRes.error.message, true); return; }
   sites = sRes.data || [];
 
   el("siteSelect").innerHTML = `<option value="">Select a company first</option>`;
@@ -449,26 +540,25 @@ async function onCompanyChanged(){
   siteMheAssets = [];
   siteMheTypes = [];
   mheTypeById = {};
-  mheRatesByName = {};
+  el("mheNote").textContent = "MHE: not loaded yet.";
+  el("resourceAvailNote").textContent = "Select a site to see available MHE.";
+  renderMheSummaryEmpty();
+  updateMheTypeDropdowns([]);
+  clearTaskVolumes();
+  clearSummaryInputs();
+  recalcAll();
+  syncExpectedTotal();
 
   const filtered = sites.filter(s => (s.company_id === selectedCompanyId) || (s.companyId === selectedCompanyId));
-
   const sel = el("siteSelect");
   sel.disabled = !selectedCompanyId;
   sel.innerHTML = selectedCompanyId ? `<option value="">Select site…</option>` : `<option value="">Select a company first</option>`;
-
   filtered.forEach(s => {
     const opt = document.createElement("option");
     opt.value = s.id;
     opt.textContent = s.name || s.site_name || ("Site " + s.id);
     sel.appendChild(opt);
   });
-
-  el("mheNote").textContent = "MHE: not loaded yet.";
-  renderMheSummaryEmpty();
-  updateMheTypeDropdowns([]);
-  clearTaskVolumes();
-  recalcAll();
 }
 
 async function onSiteChanged(){
@@ -476,8 +566,11 @@ async function onSiteChanged(){
     renderMheSummaryEmpty();
     updateMheTypeDropdowns([]);
     el("mheNote").textContent = "MHE: not loaded yet.";
+    el("resourceAvailNote").textContent = "Select a site to see available MHE.";
     clearTaskVolumes();
+    clearSummaryInputs();
     recalcAll();
+    syncExpectedTotal();
     return;
   }
   await loadMheForSite(selectedSiteId);
@@ -487,16 +580,10 @@ async function onSiteChanged(){
 
 /* =========================
    MHE (active assets + join mhe_types)
-   =========================
-   Your schema:
-   mhe_assets: mhe_type_id (FK), status (enum, default active)
-   so "available only" = status = 'active' (unless you define other statuses)
-*/
+   ========================= */
 async function loadMheForSite(siteId){
   setStatus("Loading MHE for site…");
 
-  // Join mhe_types to get readable name + hourly rate (column name may vary)
-  // If your rate column is not hourly_rate, adjust below (see getTypeRate()).
   const res = await client
     .from("mhe_assets")
     .select(`
@@ -504,13 +591,7 @@ async function loadMheForSite(siteId){
       site_id,
       mhe_type_id,
       status,
-      mhe_types:mhe_type_id (
-        id,
-        name,
-        hourly_rate,
-        cost_per_hour,
-        rate_per_hour
-      )
+      mhe_types:mhe_type_id ( id, name )
     `)
     .eq("site_id", siteId)
     .eq("status", "active");
@@ -521,50 +602,44 @@ async function loadMheForSite(siteId){
     siteMheAssets = [];
     siteMheTypes = [];
     mheTypeById = {};
-    mheRatesByName = {};
     renderMheSummaryEmpty();
+    el("resourceAvailNote").textContent = "Could not load MHE.";
     return;
   }
 
   siteMheAssets = res.data || [];
 
-  // Build type map and list
-  const typeMap = new Map(); // id -> {id,name,rate}
+  const typeMap = new Map();
   siteMheAssets.forEach(a => {
     const t = a.mhe_types;
     if (!t || !t.id) return;
-    if (!typeMap.has(t.id)){
-      typeMap.set(t.id, {
-        id: t.id,
-        name: t.name || "Unknown",
-        rate: getTypeRate(t)
-      });
-    }
+    if (!typeMap.has(t.id)) typeMap.set(t.id, { id: t.id, name: t.name || "Unknown" });
   });
 
   siteMheTypes = Array.from(typeMap.values()).sort((a,b) => (a.name||"").localeCompare(b.name||""));
   mheTypeById = {};
-  mheRatesByName = {};
-  siteMheTypes.forEach(t => {
-    mheTypeById[t.id] = t;
-    mheRatesByName[t.name] = t.rate || 0;
-  });
+  siteMheTypes.forEach(t => { mheTypeById[t.id] = t; });
 
   el("mheNote").textContent =
     `MHE loaded: ${siteMheAssets.length} active asset(s), ${siteMheTypes.length} type(s).`;
 
   renderMheSummary();
+  renderResourceAvailNote();
   setStatus("Ready.");
 }
 
-function getTypeRate(typeRow){
-  // Try common columns safely:
-  const tryCols = ["hourly_rate", "cost_per_hour", "rate_per_hour"];
-  for (const c of tryCols){
-    const v = typeRow?.[c];
-    if (v != null && !isNaN(parseFloat(v))) return parseFloat(v);
-  }
-  return 0;
+function renderResourceAvailNote(){
+  if (!selectedSiteId){ el("resourceAvailNote").textContent = "Select a site to see available MHE."; return; }
+  if (!siteMheAssets.length){ el("resourceAvailNote").textContent = "No active MHE assets for this site."; return; }
+
+  const counts = {};
+  siteMheAssets.forEach(a => {
+    const nm = a.mhe_types?.name || "Unknown";
+    counts[nm] = (counts[nm] || 0) + 1;
+  });
+
+  const parts = Object.keys(counts).sort().map(k => `${k}: ${counts[k]}`);
+  el("resourceAvailNote").textContent = `Active MHE available: ${parts.join(" · ")}`;
 }
 
 /* =========================
@@ -713,7 +788,9 @@ async function reloadEntriesForContext(){
   const ctx = getContext();
   if (!ctx.site_id || !ctx.scheduled_date || !ctx.shift_code){
     clearTaskVolumes();
+    clearSummaryInputs();
     recalcAll();
+    syncExpectedTotal();
     return;
   }
 
@@ -734,22 +811,25 @@ async function reloadEntriesForContext(){
 
   loadedEntries = res.data || [];
   entryByTaskId = {};
+  summaryRow = loadedEntries.find(r => (r.task_name || "") === SUMMARY_TASK_NAME) || null;
 
-  // Match DB rows to task by task_name (case-insensitive)
+  // Apply summary row into Capability inputs
+  hydrateSummaryInputs(summaryRow);
+
+  // Match task rows by task_name (case-insensitive)
   const nameToTask = {};
   tasksMasterData.forEach(t => nameToTask[(t.name || "").trim().toLowerCase()] = t);
 
   loadedEntries.forEach(r => {
+    if ((r.task_name || "") === SUMMARY_TASK_NAME) return;
     const key  = (r.task_name || "").trim().toLowerCase();
     const task = nameToTask[key];
     if (!task) return;
 
     entryByTaskId[task.id] = r;
 
-    // mhe_id in scheduling_entries is TEXT (you showed) – we store mhe type NAME for readability
-    // If you want to store mhe_type_id instead, we can change schema or store uuid as text.
+    // mhe_id is TEXT - we store MHE type name for reporting
     if (r.mhe_id){
-      // Try to map name -> type_id
       const found = siteMheTypes.find(x => (x.name || "").toLowerCase() === String(r.mhe_id).toLowerCase());
       if (found) task.mheTypeId = found.id;
     }
@@ -760,7 +840,6 @@ async function reloadEntriesForContext(){
     const task = tasksMasterData[i];
     const rowEntry = entryByTaskId[task.id];
 
-    // dropdown
     const selMhe = tr.querySelector(".mheTypeSelect");
     if (selMhe && task.mheTypeId) selMhe.value = task.mheTypeId;
 
@@ -773,11 +852,39 @@ async function reloadEntriesForContext(){
   });
 
   renderMheSummary();
+  renderResourceAvailNote();
   recalcAll();
+  syncExpectedTotal();
+
   setStatus(`Loaded ${loadedEntries.length} row(s) for this site/date/shift.`);
 }
 
-async function saveContextToDb(){
+function hydrateSummaryInputs(r){
+  // If no summary row, clear inputs (but do not force zeros)
+  if (!r){
+    clearSummaryInputs();
+    return;
+  }
+
+  el("hcPlan").value = (r.headcount_plan ?? "");
+  el("hcExpected").value = (r.headcount_expected ?? "");
+  el("hcActual").value = (r.headcount_actual ?? "");
+
+  el("hrsDirectExpected").value = (r.hours_direct_expected ?? "");
+  el("hrsIndirectExpected").value = (r.hours_indirect_expected ?? "");
+  syncExpectedTotal();
+
+  el("costPlan").value = (r.cost_plan ?? "");
+  el("costExpected").value = (r.cost_expected ?? "");
+  el("costActual").value = (r.cost_actual ?? "");
+}
+
+function clearSummaryInputs(){
+  ["hcPlan","hcExpected","hcActual","hrsDirectExpected","hrsIndirectExpected","hrsTotalExpected","costPlan","costExpected","costActual"]
+    .forEach(id => { el(id).value = ""; });
+}
+
+async function saveAllToDb(){
   const ctx = getContext();
   if (!ctx.site_id || !ctx.scheduled_date || !ctx.shift_code){
     setStatus("Select company, site, date and shift before saving.", true);
@@ -786,8 +893,33 @@ async function saveContextToDb(){
 
   setStatus("Saving scheduling entries…");
 
-  const rows = [];
+  // 1) Build summary row
+  const summary = {
+    site_id: ctx.site_id,
+    scheduled_date: ctx.scheduled_date,
+    shift_code: ctx.shift_code,
 
+    task_name: SUMMARY_TASK_NAME,
+    mhe_id: null,
+
+    headcount_plan: n(el("hcPlan").value),
+    headcount_expected: n(el("hcExpected").value),
+    headcount_actual: n(el("hcActual").value),
+
+    hours_direct_expected: n(el("hrsDirectExpected").value),
+    hours_indirect_expected: n(el("hrsIndirectExpected").value),
+
+    cost_plan: n(el("costPlan").value),
+    cost_expected: n(el("costExpected").value),
+    cost_actual: n(el("costActual").value),
+
+    updated_at: new Date().toISOString(),
+    updated_by: currentUser?.id || null,
+    created_by: currentUser?.id || null
+  };
+
+  // 2) Build task rows
+  const rows = [];
   document.querySelectorAll("#taskTable tbody tr").forEach((tr, i) => {
     const t = tasksMasterData[i];
 
@@ -798,21 +930,17 @@ async function saveContextToDb(){
     const planHours = (!isNaN(planU) ? (planU * mp) / 60 : null);
     const actHours  = (!isNaN(actU)  ? (actU  * mp) / 60 : null);
 
-    const mheType = mheTypeById[t.mheTypeId]?.name || null; // scheduling_entries.mhe_id is text in your schema
-    const rate = mheRatesByName[mheType] || 0;
-
-    const costPlan = (rate && planHours != null) ? planHours * rate : null;
-    const costAct  = (rate && actHours  != null) ? actHours  * rate : null;
-
     const hasAny = (!isNaN(planU) && planU > 0) || (!isNaN(actU) && actU > 0);
     if (!hasAny) return;
+
+    const mheTypeName = mheTypeById[t.mheTypeId]?.name || null; // stored as TEXT in scheduling_entries.mhe_id
 
     rows.push({
       site_id: ctx.site_id,
       scheduled_date: ctx.scheduled_date,
       shift_code: ctx.shift_code,
 
-      mhe_id: mheType,
+      mhe_id: mheTypeName,
       task_name: t.name || null,
 
       units_planned: (!isNaN(planU) ? planU : null),
@@ -823,15 +951,13 @@ async function saveContextToDb(){
       hours_indirect_plan:  (t.category === "Indirect" ? planHours : null),
       hours_indirect_actual:(t.category === "Indirect" ? actHours  : null),
 
-      cost_plan: costPlan,
-      cost_actual: costAct,
-
       updated_at: new Date().toISOString(),
-      updated_by: currentUser?.id || null
+      updated_by: currentUser?.id || null,
+      created_by: currentUser?.id || null
     });
   });
 
-  // Delete + insert (safe without unique constraint)
+  // Strategy: delete all rows for context then insert summary + task rows.
   const del = await client
     .from("scheduling_entries")
     .delete()
@@ -844,28 +970,24 @@ async function saveContextToDb(){
     return;
   }
 
-  if (rows.length === 0){
-    setStatus("Saved: nothing entered (existing rows cleared).");
-    await reloadEntriesForContext();
-    return;
-  }
+  const payload = [summary, ...rows];
 
-  const ins = await client.from("scheduling_entries").insert(rows);
+  const ins = await client.from("scheduling_entries").insert(payload);
   if (ins.error){
     setStatus("Error inserting rows: " + ins.error.message, true);
     return;
   }
 
-  setStatus(`Saved ${rows.length} row(s).`);
+  setStatus(`Saved ${payload.length} row(s) (1 summary + ${rows.length} task).`);
   await reloadEntriesForContext();
 }
 
 /* =========================
-   MHE Summary
+   MHE Summary (counts only)
    ========================= */
 function renderMheSummaryEmpty(){
   const tbody = el("mheSummaryTable").querySelector("tbody");
-  tbody.innerHTML = `<tr><td colspan="7"><small>Select a site to load MHE.</small></td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="2"><small>Select a site to load MHE.</small></td></tr>`;
 }
 
 function renderMheSummary(){
@@ -877,45 +999,15 @@ function renderMheSummary(){
     return;
   }
 
-  // Count active assets by type name
   const counts = {};
   siteMheAssets.forEach(a => {
-    const t = a.mhe_types?.name || "Unknown";
-    counts[t] = (counts[t] || 0) + 1;
+    const nm = a.mhe_types?.name || "Unknown";
+    counts[nm] = (counts[nm] || 0) + 1;
   });
 
-  // Hours by type name
-  const sums = {};
-  Object.keys(counts).forEach(name => sums[name] = { planH:0, actH:0 });
-
-  document.querySelectorAll("#taskTable tbody tr").forEach((tr, i) => {
-    const task = tasksMasterData[i];
-    const typeName = mheTypeById[task.mheTypeId]?.name;
-    if (!typeName || !sums[typeName]) return;
-
-    const ph = parseFloat(tr.querySelector(".planHours")?.textContent || "0") || 0;
-    const ah = parseFloat(tr.querySelector(".actualHours")?.textContent || "0") || 0;
-    sums[typeName].planH += ph;
-    sums[typeName].actH  += ah;
-  });
-
-  // Render rows by type list (consistent order)
-  siteMheTypes.forEach(t => {
-    const name = t.name || "Unknown";
-    const rate = t.rate || 0;
-    const planH = sums[name]?.planH || 0;
-    const actH  = sums[name]?.actH  || 0;
-
+  Object.keys(counts).sort().forEach(name => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${escapeHtml(name)}</td>
-      <td class="num">${counts[name] || 0}</td>
-      <td class="num">${rate ? rate.toFixed(2) : "-"}</td>
-      <td class="num">${planH.toFixed(2)}</td>
-      <td class="num">${actH.toFixed(2)}</td>
-      <td class="num">${(rate ? (planH*rate).toFixed(2) : "0.00")}</td>
-      <td class="num">${(rate ? (actH*rate).toFixed(2) : "0.00")}</td>
-    `;
+    tr.innerHTML = `<td>${escapeHtml(name)}</td><td class="num">${counts[name]}</td>`;
     tbody.appendChild(tr);
   });
 }
@@ -927,7 +1019,7 @@ function escapeHtml(s){
 }
 
 /* =========================
-   Calcs + KPI
+   Calcs + KPI (hours + cost from summary)
    ========================= */
 function recalcRow(tr){
   const idx = Array.from(tr.parentElement.children).indexOf(tr);
@@ -948,24 +1040,16 @@ function recalcRow(tr){
     if (actH > planH + 0.01) tr.classList.add("row-warn");
     else if (actH > 0) tr.classList.add("row-ok");
   }
-
-  renderMheSummary();
 }
 
 function recalcAll(){
   let directPlan=0, directAct=0, indirectPlan=0, indirectAct=0;
-  let costPlan=0, costAct=0, totalPlan=0, totalAct=0;
+  let totalPlan=0, totalAct=0;
 
   document.querySelectorAll("#taskTable tbody tr").forEach((tr, i) => {
     const t = tasksMasterData[i];
     const ph = parseFloat(tr.querySelector(".planHours")?.textContent || "0") || 0;
     const ah = parseFloat(tr.querySelector(".actualHours")?.textContent || "0") || 0;
-
-    const typeName = mheTypeById[t.mheTypeId]?.name;
-    const rate = mheRatesByName[typeName] || 0;
-
-    costPlan += ph * rate;
-    costAct  += ah * rate;
 
     if ((t.category || "Direct") === "Indirect"){
       indirectPlan += ph; indirectAct += ah;
@@ -979,10 +1063,14 @@ function recalcAll(){
   el("kpiDirectActual").textContent = directAct.toFixed(2);
   el("kpiIndirectPlan").textContent = indirectPlan.toFixed(2);
   el("kpiIndirectActual").textContent = indirectAct.toFixed(2);
-  el("kpiCostPlan").textContent = costPlan.toFixed(2);
-  el("kpiCostActual").textContent = costAct.toFixed(2);
   el("kpiTotalPlan").textContent = totalPlan.toFixed(2);
   el("kpiTotalActual").textContent = totalAct.toFixed(2);
+
+  // Cost KPI comes from capability inputs (free input)
+  const cPlan = nz(el("costPlan").value);
+  const cAct  = nz(el("costActual").value);
+  el("kpiCostPlan").textContent = cPlan.toFixed(2);
+  el("kpiCostActual").textContent = cAct.toFixed(2);
 
   el("kpiDirect").classList.toggle("warn", directAct > directPlan + 0.01 && directPlan > 0);
   el("kpiDirect").classList.toggle("ok",   directAct <= directPlan + 0.01 && directAct > 0);
@@ -990,8 +1078,8 @@ function recalcAll(){
   el("kpiIndirect").classList.toggle("warn", indirectAct > indirectPlan + 0.01 && indirectPlan > 0);
   el("kpiIndirect").classList.toggle("ok",   indirectAct <= indirectPlan + 0.01 && indirectAct > 0);
 
-  el("kpiCost").classList.toggle("warn", costAct > costPlan + 0.01 && costPlan > 0);
-  el("kpiCost").classList.toggle("ok",   costAct <= costPlan + 0.01 && costAct > 0);
+  el("kpiCost").classList.toggle("warn", cAct > cPlan + 0.01 && cPlan > 0);
+  el("kpiCost").classList.toggle("ok",   cAct <= cPlan + 0.01 && cAct > 0);
 
   el("kpiTotal").classList.toggle("warn", totalAct > totalPlan + 0.01 && totalPlan > 0);
   el("kpiTotal").classList.toggle("ok",   totalAct <= totalPlan + 0.01 && totalAct > 0);
@@ -1007,7 +1095,6 @@ function clearTaskVolumes(){
     tr.querySelector(".actualHours").textContent = "0.00";
     tr.classList.remove("row-ok","row-warn");
   });
-  renderMheSummary();
 }
 </script>
 </body>
