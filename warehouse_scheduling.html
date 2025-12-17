@@ -5,372 +5,409 @@
   <title>Warehouse Intelligence – Scheduling</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <script>
-    (function () {
-      if (location.protocol === "http:") {
-        location.replace("https://" + location.host + location.pathname + location.search + location.hash);
-      }
-    })();
-  </script>
-
-  <!-- Supabase JS (v2) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
-    :root{
-      --wi-red:#dc2626; --wi-red-dark:#b91c1c;
-      --bg:#f3f4f6; --card:#fff; --border:#e5e7eb;
-      --text:#111827; --muted:#6b7280;
-      --inbg:#f9fafb; --inborder:#d1d5db;
-      --ok:#16a34a; --warn:#b91c1c;
-      --shadow:0 10px 22px rgba(15,23,42,.06);
-      --radius:14px;
-    }
-    *{ box-sizing:border-box; }
-    body{
-      margin:0; background:var(--bg); color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      min-height:100vh;
-    }
-    a{ color:inherit; text-decoration:none; }
-    .page{ max-width:1200px; margin:0 auto; padding:0 16px 40px; }
-
-    /* Breadcrumb */
-    .breadcrumb{
-      max-width:1200px; margin:10px auto 0 auto;
-      padding:6px 16px; font-size:.85rem; color:var(--muted);
-    }
-    .breadcrumb a{ color:var(--muted); }
-    .breadcrumb a:hover{ text-decoration:underline; }
-    .breadcrumb span{ margin:0 6px; }
-
-    /* Header card */
-    .header-card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:16px 16px 12px;
-      margin:10px 0 16px;
-    }
-    .header-row{
-      display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;
-    }
-    .brand h1{ margin:0; font-size:1.35rem; letter-spacing:-.02em; }
-    .brand h1 .red{ color:var(--wi-red); }
-    .brand .sub{ margin-top:2px; color:var(--muted); font-size:.9rem; }
-    .header-actions{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;
-    }
-    .pill{
-      padding:7px 10px; border-radius:999px;
-      border:1px solid var(--border); background:var(--inbg);
-      font-size:.85rem; color:var(--muted);
-    }
-    .btn{
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius:999px;
-      padding:8px 12px;
-      font-size:.9rem;
-      cursor:pointer;
-    }
-    .btn:hover{ background:#f9fafb; }
-    .btn-primary{
-      border-color:var(--wi-red); background:var(--wi-red); color:#fff;
-    }
-    .btn-primary:hover{ background:var(--wi-red-dark); border-color:var(--wi-red-dark); }
-    .tabs{
-      display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;
-    }
-    .tab{
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius:999px;
-      padding:8px 12px;
-      font-size:.9rem;
-      cursor:pointer;
-    }
-    .tab.active{
-      border-color:var(--wi-red);
-      box-shadow:0 0 0 3px rgba(220,38,38,.12);
-      font-weight:600;
+    :root {
+      --wi-red: #dc2626;
+      --wi-red-dark: #b91c1c;
+      --bg: #f3f4f6;
+      --bg-card: #ffffff;
+      --border: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --neutral: #6b7280;
+      --shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+      --radius: 14px;
     }
 
-    /* Status banner */
-    .status{
-      margin-top:12px;
-      border-radius:12px;
-      border:1px solid #bbf7d0;
-      background:#ecfdf5;
-      padding:10px 12px;
-      font-size:.9rem;
-      color:#065f46;
-    }
-    .status.error{
-      border-color:#fecaca;
-      background:#fef2f2;
-      color:#7f1d1d;
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
     }
 
-    /* Panels */
-    .panel{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:14px 16px;
-      margin:12px 0;
+    /* Standard page shell (Dashboard style) */
+    header.shell {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
     }
-    .panel-title{
-      margin:0;
-      font-size:1.05rem;
-      letter-spacing:-.01em;
+    .shell-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
-    .panel-sub{ margin:4px 0 0; color:var(--muted); font-size:.9rem; }
-    .panel-head{
-      display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;
-      margin-bottom:12px;
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
     }
-    .panel-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .btn-small{
-      border-radius:999px; padding:7px 10px; font-size:.85rem;
-      border:1px solid var(--border); background:#fff; cursor:pointer;
+    .brand h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .btn-small:hover{ background:#f9fafb; }
+    .brand h1 span { color: var(--wi-red); }
+    .brand .sub {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .shell-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .pill {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .btn:hover { background: #f9fafb; }
+    .btn-primary {
+      border-color: var(--wi-red);
+      background: var(--wi-red);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--wi-red-dark); border-color: var(--wi-red-dark); }
+    .btn-ghost { background:#fff; }
 
-    /* Form grid */
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap:12px;
+    .page {
+      max-width: 1200px;
+      margin: 12px auto 48px;
+      padding: 0 16px;
     }
-    .field{ grid-column: span 3; min-width:200px; }
-    .field label{
-      display:block; font-size:.85rem; color:var(--muted); margin-bottom:6px;
+
+    .breadcrumb {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      padding: 10px 2px 0;
     }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .hero {
+      margin-top: 12px;
+      padding: 16px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .tab-btn.active {
+      border-color: var(--wi-red);
+      box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.18);
+      font-weight: 600;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #bbf7d0;
+      background: #ecfdf5;
+      color: #065f46;
+      font-size: 0.9rem;
+    }
+    .status.error {
+      border-color: #fecaca;
+      background: #fef2f2;
+      color: #991b1b;
+    }
+
+    .panel {
+      margin-top: 14px;
+      padding: 14px;
+    }
+    .panel h2 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+    .panel .help { color: var(--text-muted); font-size: 0.9rem; }
+
+    .grid-ctx {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 900px) { .grid-ctx { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 520px) { .grid-ctx { grid-template-columns: 1fr; } }
+
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--text-muted); }
     select, input[type="date"], input[type="number"], input[type="text"]{
-      width:100%;
-      padding:9px 10px;
-      border-radius:10px;
-      border:1px solid var(--inborder);
-      background:var(--inbg);
-      font-size:.95rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      background: #fff;
+      font-size: 0.95rem;
+      color: var(--text-main);
     }
-    .note{ margin-top:8px; color:var(--muted); font-size:.85rem; }
 
-    /* KPI row */
-    .kpi-row{
-      display:grid;
+    .kpi-row {
+      margin-top: 12px;
+      display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap:12px;
-      margin-top:12px;
+      gap: 12px;
     }
-    .kpi{
-      border:1px solid var(--border);
-      border-radius:14px;
-      background:#fff;
-      padding:10px 12px;
+    .kpi {
+      padding: 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: #fff;
     }
-    .kpi h3{ margin:0 0 6px; font-size:.9rem; color:var(--muted); font-weight:600; }
-    .kpi .val{ font-size:1.15rem; font-weight:700; }
-    .kpi.ok{ border-left:4px solid var(--ok); background:#ecfdf5; }
-    .kpi.warn{ border-left:4px solid var(--warn); background:#fef2f2; }
+    .kpi .k { color: var(--text-muted); font-size: 0.85rem; }
+    .kpi .v { font-size: 1.1rem; font-weight: 700; margin-top: 6px; }
+    .kpi.ok { border-left: 4px solid var(--success); background: #ecfdf5; }
+    .kpi.warn { border-left: 4px solid var(--danger); background: #fef2f2; }
 
-    /* Tables */
-    table{ width:100%; border-collapse:collapse; font-size:.9rem; }
-    thead{ background:#f8fafc; }
-    th,td{ border:1px solid var(--border); padding:8px 10px; text-align:left; }
-    th{ font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
-    td.numeric{ text-align:right; white-space:nowrap; }
-    td input[type="number"]{ width:100%; text-align:right; }
-    .row-warn td{ background:#fef2f2 !important; }
-    .row-ok td{ background:#ecfdf5 !important; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 10px; }
+    th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+    th { background: #f9fafb; color: var(--text-muted); font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    td.numeric { text-align: right; white-space: nowrap; }
+    td input[type="number"] { width: 120px; text-align: right; }
 
-    /* Config box */
-    .config-wrap{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
+    .row-ok td { background: #ecfdf5; }
+    .row-warn td { background: #fef2f2; }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 10px; }
+    .hint { color: var(--text-muted); font-size: 0.85rem; margin-top: 6px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .inline-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
     }
-    .hint{
-      color:var(--muted); font-size:.85rem;
+  
+    /* Clearer context selectors */
+    .grid-ctx label { font-weight: 600; }
+    .grid-ctx label > span { font-weight: 400; }
+    select, input[type="date"], input[type="number"], input[type="text"]{ height: 42px; }
+
+    .seg {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+      background: #fff;
+      height: 42px;
+      width: fit-content;
+    }
+    .seg-btn {
+      border: none;
+      background: transparent;
+      padding: 0 14px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      color: var(--text-main);
+    }
+    .seg-btn + .seg-btn { border-left: 1px solid var(--border); }
+    .seg-btn:hover { background: #f9fafb; }
+    .seg-btn.active {
+      background: rgba(220,38,38,0.10);
+      color: var(--wi-red-dark);
+      font-weight: 800;
     }
 
-    @media (max-width: 900px){
-      .field{ grid-column: span 6; }
-    }
-    @media (max-width: 560px){
-      .field{ grid-column: span 12; min-width:unset; }
-    }
   </style>
 </head>
 
 <body>
-  <div class="breadcrumb">
-    <a href="dashboard.html">Dashboard</a> <span>›</span>
-    <a href="setup.html">Setup</a> <span>›</span>
-    <span>Scheduling</span>
-  </div>
+  <header class="shell">
+    <div class="shell-inner">
+      <div class="brand">
+        <h1>Warehouse <span>Intelligence</span> – Scheduling</h1>
+        <div class="sub">Expected volume vs resource plan • Plan vs Actual (by Site, Date, Shift)</div>
+      </div>
+      <div class="shell-actions">
+        <button class="btn btn-ghost" type="button" onclick="window.location.href='dashboard.html'">← Back to dashboard</button>
+        <div class="pill" id="signed-in-pill">Signed in: —</div>
+        <button class="btn" type="button" id="btn-signout">Sign out</button>
+      </div>
+    </div>
+  </header>
 
   <div class="page">
-    <div class="header-card">
-      <div class="header-row">
-        <div class="brand">
-          <h1>Warehouse <span class="red">Intelligence</span> – Scheduling</h1>
-          <div class="sub">Plan vs Actual (by Site, Date, Shift) · Uses MHE assets from Setup</div>
-        </div>
+    <div class="breadcrumb">Dashboard &nbsp;&gt;&nbsp; Tools &nbsp;&gt;&nbsp; Scheduling</div>
 
-        <div class="header-actions">
-          <button class="btn" type="button" onclick="window.location.href='dashboard.html'">← Back to dashboard</button>
-          <div class="pill" id="signed-in-pill">Signed in: …</div>
-          <button class="btn" type="button" id="btn-signout">Sign out</button>
-        </div>
+    <div class="card hero">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="capability">Capability plan</button>
+        <button class="tab-btn" data-tab="pva">Plan vs Actual</button>
+        <button class="tab-btn" data-tab="config">Configuration</button>
+        <button class="tab-btn" data-tab="daily">Daily summary</button>
       </div>
-
-      <div class="tabs" role="tablist" aria-label="Scheduling tabs">
-        <button class="tab active" id="tab-capability" type="button">Capability plan</button>
-        <button class="tab" id="tab-planactual" type="button">Plan vs Actual</button>
-        <button class="tab" id="tab-config" type="button">Configuration</button>
-      </div>
-
-      <div class="status" id="status">Ready.</div>
+<div id="status" class="status">Ready.</div>
     </div>
 
-    <!-- Context -->
-    <section class="panel">
-      <div class="panel-head">
+    <div class="card panel">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
         <div>
-          <h2 class="panel-title">Context</h2>
-          <div class="panel-sub">Select the company and site. MHE will automatically load from MHE Setup (excluding off-road).</div>
+          <h2>Context</h2>
+          <div class="help">Select company, site, date and shift. Core calculations remain local; use “Save to database” to write results to <code>scheduling_entries</code>.</div>
         </div>
-        <div class="panel-actions">
-          <button class="btn-small" type="button" id="btn-reload">Reload</button>
-          <button class="btn-small btn-primary" type="button" id="btn-save">Save (site/date/shift)</button>
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn" type="button" id="btn-reload">Reload</button>
+          <button class="btn btn-primary" type="button" id="btn-save-db">Save to database</button>
         </div>
       </div>
 
-      <div class="grid">
-        <div class="field">
-          <label for="company-select">Company</label>
+      <div class="grid-ctx">
+        <label>
+          Company
           <select id="company-select">
             <option value="">Loading…</option>
           </select>
-        </div>
-
-        <div class="field">
-          <label for="site-select">Site</label>
+        </label>
+        <label>
+          Site
           <select id="site-select" disabled>
             <option value="">Select a company first</option>
           </select>
-        </div>
-
-        <div class="field">
-          <label for="date-input">Date</label>
-          <input type="date" id="date-input" />
-        </div>
-
-        <div class="field">
-          <label for="shift-select">Shift</label>
-          <select id="shift-select">
+        </label>
+        <label>
+          Date
+          <input type="date" id="shift-date">
+        </label>
+        
+        <label>
+          Shift
+          <div class="seg" role="tablist" aria-label="Shift selector">
+            <button type="button" class="seg-btn active" data-shift="AM">AM</button>
+            <button type="button" class="seg-btn" data-shift="PM">PM</button>
+            <button type="button" class="seg-btn" data-shift="Nights">Nights</button>
+          </div>
+          <select id="shift-name" style="display:none;">
             <option value="AM">AM</option>
             <option value="PM">PM</option>
             <option value="Nights">Nights</option>
           </select>
-        </div>
+        </label>
+
       </div>
 
-      <div class="note" id="mhe-note">MHE: not loaded yet.</div>
-    </section>
+      <div class="hint" id="ctx-hint">Tip: if nothing saves, check Supabase URL/key and RLS permissions on <code>scheduling_entries</code>.</div>
+    </div>
 
-    <!-- Capability tab -->
-    <section class="panel" id="panel-capability">
-      <div class="panel-head">
-        <div>
-          <h2 class="panel-title">Capability plan</h2>
-          <div class="panel-sub">Planned resource vs resource available (capacity). Uses MHE counts from Setup.</div>
-        </div>
-      </div>
+    <!-- CAPABILITY TAB -->
+    <div class="tab-panel active" id="tab-capability">
+      <div class="card panel">
+        <h2>Capability plan</h2>
+        <div class="help">Planned resource vs resource available (capacity). Uses your task configuration + MHE availability inputs.</div>
 
-      <div class="grid">
-        <div class="field">
-          <label for="shift-hours">Shift length (hours)</label>
-          <input type="number" id="shift-hours" min="0" step="0.25" value="8" />
+        <div class="grid-ctx" style="grid-template-columns: repeat(4, minmax(180px, 1fr));">
+          <label>Shift length (hours)
+            <input type="number" id="shift-length" min="0" step="0.25" value="8">
+          </label>
+          <label>Utilisation factor (%)
+            <input type="number" id="util-factor" min="0" max="100" step="1" value="85">
+          </label>
+          <label>Headcount expected (optional)
+            <input type="number" id="hc-expected" min="0" step="1" placeholder="Optional">
+          </label>
+          <label>Cost expected (optional)
+            <input type="number" id="cost-expected" min="0" step="0.01" placeholder="Optional">
+          </label>
         </div>
-        <div class="field">
-          <label for="utilisation">Utilisation factor (%)</label>
-          <input type="number" id="utilisation" min="0" max="100" step="1" value="85" />
-        </div>
-        <div class="field">
-          <label for="headcount-expected">Headcount expected</label>
-          <input type="number" id="headcount-expected" min="0" step="1" value="" placeholder="Optional" />
-        </div>
-        <div class="field">
-          <label for="cost-expected">Cost expected (optional)</label>
-          <input type="number" id="cost-expected" min="0" step="0.01" value="" placeholder="Optional" />
-        </div>
-      </div>
 
-      <div class="kpi-row" style="margin-top:14px;">
-        <div class="kpi" id="kpi-cap-available">
-          <h3>Total MHE hours available</h3>
-          <div class="val"><span id="cap-hours-available">0.00</span>h</div>
-          <div class="hint">Calculated as (active MHE count × shift length × utilisation).</div>
+        <div class="kpi-row">
+          <div class="kpi" id="kpi-cap-available">
+            <div class="k">Total hours available</div>
+            <div class="v"><span id="cap-total-available">0.00</span>h</div>
+            <div class="hint">Calculated as entered available hours (by MHE) or MHE count × shift length × utilisation (if you choose to use it later).</div>
+          </div>
+          <div class="kpi" id="kpi-cap-planned">
+            <div class="k">Total hours planned</div>
+            <div class="v"><span id="cap-total-planned">0.00</span>h</div>
+            <div class="hint">From planned volumes × minutes per unit.</div>
+          </div>
+          <div class="kpi" id="kpi-cap-variance">
+            <div class="k">Capacity variance</div>
+            <div class="v"><span id="cap-total-variance">0.00</span>h</div>
+            <div class="hint">Available − Planned.</div>
+          </div>
         </div>
-        <div class="kpi" id="kpi-cap-plan">
-          <h3>Total hours planned</h3>
-          <div class="val"><span id="cap-hours-plan">0.00</span>h</div>
-          <div class="hint">From Plan volumes × minutes per unit (Configuration).</div>
-        </div>
-        <div class="kpi" id="kpi-cap-variance">
-          <h3>Capacity variance</h3>
-          <div class="val"><span id="cap-hours-variance">0.00</span>h</div>
-          <div class="hint">Available − Planned.</div>
-        </div>
-      </div>
 
-      <div style="margin-top:12px;">
         <table id="capability-table">
           <thead>
             <tr>
-              <th>MHE type</th>
+              <th>MHE Type</th>
               <th class="numeric">Active count</th>
-              <th class="numeric">Hours available</th>
+              <th class="numeric">Hours available (input)</th>
               <th class="numeric">Hours planned</th>
               <th class="numeric">Variance</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
-        <div class="note">Planned hours by MHE are derived from task mapping (Configuration). Available hours are calculated from active assets for this site.</div>
-      </div>
-    </section>
 
-    <!-- Plan vs Actual tab -->
-    <section class="panel" id="panel-planactual" style="display:none;">
-      <div class="panel-head">
-        <div>
-          <h2 class="panel-title">Plan vs Actual</h2>
-          <div class="panel-sub">Enter plan and actual volumes for the selected site/date/shift. Save writes to <code>scheduling_entries</code>.</div>
-        </div>
+        <div class="hint">Planned hours by MHE are derived from task mapping. Available hours are user input for now (simplified).</div>
       </div>
 
-      <div class="kpi-row">
-        <div class="kpi" id="kpi-direct">
-          <h3>Direct hours</h3>
-          <div class="val">Plan <span id="kpi-direct-plan">0.00</span>h · Actual <span id="kpi-direct-actual">0.00</span>h</div>
-        </div>
-        <div class="kpi" id="kpi-indirect">
-          <h3>Indirect hours</h3>
-          <div class="val">Plan <span id="kpi-indirect-plan">0.00</span>h · Actual <span id="kpi-indirect-actual">0.00</span>h</div>
-        </div>
-        <div class="kpi" id="kpi-total">
-          <h3>Total hours</h3>
-          <div class="val">Plan <span id="kpi-total-plan">0.00</span>h · Actual <span id="kpi-total-actual">0.00</span>h</div>
-        </div>
-      </div>
+      <div class="card panel">
+        <h2>Planned activity</h2>
+        <div class="help">Enter planned volumes only. These drive planned hours and capability comparisons.</div>
 
-      <div style="margin-top:12px;">
+        <div class="inline-controls">
+          <label style="min-width:260px;">Import CSV
+            <input type="file" id="csv-upload" accept=".csv,text/csv">
+          </label>
+          <button class="btn" type="button" id="btn-download-template">Download CSV template</button>
+          <button class="btn" type="button" id="btn-download-full-data">Download full dataset CSV</button>
+          <button class="btn" type="button" id="btn-clear-volumes">Clear all volumes</button>
+        </div>
+        <div id="upload-message" class="hint"></div>
+
         <table id="tasks-table">
           <thead>
             <tr>
@@ -378,7 +415,7 @@
               <th>Area / Zone</th>
               <th>MHE type</th>
               <th>Unit</th>
-              <th class="numeric">Minutes per unit</th>
+              <th class="numeric">Minutes / unit</th>
               <th class="numeric">Plan volume</th>
               <th class="numeric">Plan hours</th>
               <th class="numeric">Actual volume</th>
@@ -388,31 +425,94 @@
           </thead>
           <tbody></tbody>
         </table>
-        <div class="note">Tasks and minutes-per-unit are configured in the Configuration tab. MHE types are constrained to active MHE types for the selected site.</div>
-      </div>
-    </section>
 
-    <!-- Config tab -->
-    <section class="panel" id="panel-config" style="display:none;">
-      <div class="panel-head">
-        <div>
-          <h2 class="panel-title">Configuration</h2>
-          <div class="panel-sub">Core inputs to generate capability and plan/actual calculations. Stored in this browser (for now).</div>
+        <div class="hint">In this tab, focus on planned volumes (actuals are optional here).</div>
+      </div>
+    </div>
+
+    <!-- PLAN VS ACTUAL TAB -->
+    <div class="tab-panel" id="tab-pva">
+      <div class="card panel">
+        <h2>Plan vs Actual</h2>
+        <div class="help">Plan is taken from your planned activity. Enter actual volumes to measure performance against the plan.</div>
+
+        <div class="kpi-row">
+          <div class="kpi" id="kpi-direct-card">
+            <div class="k">Direct hours</div>
+            <div class="v">Plan: <span id="kpi-direct-plan">0.00</span>h • Actual: <span id="kpi-direct-actual">0.00</span>h</div>
+          </div>
+          <div class="kpi" id="kpi-indirect-card">
+            <div class="k">Indirect hours</div>
+            <div class="v">Plan: <span id="kpi-indirect-plan">0.00</span>h • Actual: <span id="kpi-indirect-actual">0.00</span>h</div>
+          </div>
+          <div class="kpi" id="kpi-total-card">
+            <div class="k">Total hours</div>
+            <div class="v">Plan: <span id="kpi-total-plan">0.00</span>h • Expected: <span id="kpi-total-available">0.00</span>h • Actual: <span id="kpi-total-actual">0.00</span>h</div>
+            <div class="hint">Variance (expected − plan): <span id="kpi-total-variance">0.00</span>h</div>
+          </div>
         </div>
+
+        <table id="summary-by-mhe">
+          <thead>
+            <tr>
+              <th>MHE Type</th>
+              <th class="numeric">Planned hours required</th>
+              <th class="numeric">Hours available (input)</th>
+              <th class="numeric">Plan variance</th>
+              <th class="numeric">Actual hours used</th>
+              <th class="numeric">Actual variance</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div class="hint">This view is driven by the same core calculations. Use Save to database to persist your day/shift results.</div>
       </div>
 
-      <div class="config-wrap">
-        <div class="panel" style="margin:0;">
-          <h3 class="panel-title" style="font-size:1rem;">Tasks &amp; productivity</h3>
-          <div class="panel-sub">Each row defines a task: area, direct/indirect category, linked MHE type, unit and minutes per unit.</div>
-          <div style="margin-top:10px; overflow:auto;">
-            <table id="task-config-table">
+
+    <!-- CONFIGURATION TAB -->
+    <div class="tab-panel" id="tab-config">
+      <div class="card panel">
+        <h2>Configuration</h2>
+        <div class="help">Maintain resource types and task productivity settings. These are saved in your browser (local storage) and drive the calculations.</div>
+
+        <div class="split">
+          <div class="subcard">
+            <div class="subhead">
+              <div>
+                <h3>Resources (MHE types)</h3>
+                <div class="subhelp">Define the resource types you plan against (e.g., PPT, CB, VNA, Manual, Admin). You can add/remove types as needed.</div>
+              </div>
+              <button class="btn" type="button" id="btn-add-mhe-row">Add resource</button>
+            </div>
+            <table id="mhe-config-table" class="grid">
+              <thead>
+                <tr>
+                  <th>Label</th>
+                  <th>Type</th>
+                  <th class="numeric">Count</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <div class="hint">Counts here are used by Capability planning (hours available).</div>
+          </div>
+
+          <div class="subcard">
+            <div class="subhead">
+              <div>
+                <h3>Tasks &amp; productivity</h3>
+                <div class="subhelp">Each task maps to a resource type and a direct/indirect category. Minutes per unit drives planned hours.</div>
+              </div>
+              <button class="btn" type="button" id="btn-add-task-row">Add task</button>
+            </div>
+            <table id="task-config-table" class="grid">
               <thead>
                 <tr>
                   <th>Task</th>
                   <th>Area</th>
                   <th>Category</th>
-                  <th>MHE</th>
+                  <th>Resource</th>
                   <th>Unit</th>
                   <th class="numeric">Min / unit</th>
                   <th></th>
@@ -420,787 +520,1251 @@
               </thead>
               <tbody></tbody>
             </table>
+            <div class="hint">These settings drive the Planned Activity tab. Plan vs Actual uses the same task list (Actual volumes only).</div>
           </div>
-          <div style="margin-top:10px; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
-            <button class="btn-small" type="button" id="btn-add-task">Add task</button>
-            <button class="btn-small btn-primary" type="button" id="btn-save-config">Save config</button>
-          </div>
-          <div class="note">This keeps your existing “prototype” behaviour; the site/date/shift values are saved to the database via the Save button in Context.</div>
         </div>
       </div>
-    </section>
+    </div>
+
+
+    <!-- DAILY SUMMARY TAB -->
+    <div class="tab-panel" id="tab-daily">
+      <div class="card panel">
+        <h2>Daily summary</h2>
+        <div class="help">Summary of all shifts for the selected <strong>site</strong> and <strong>date</strong>. Includes shift-by-shift totals and a day total.</div>
+
+        <div class="inline-controls">
+          <button class="btn" type="button" id="btn-refresh-daily">Refresh daily summary</button>
+          <button class="btn" type="button" id="btn-download-daily-csv">Download daily summary CSV</button>
+        </div>
+
+        <table id="daily-summary-table">
+          <thead>
+            <tr>
+              <th>Shift</th>
+              <th class="numeric">Planned direct (h)</th>
+              <th class="numeric">Planned indirect (h)</th>
+              <th class="numeric">Planned total (h)</th>
+              <th class="numeric">Actual direct (h)</th>
+              <th class="numeric">Actual indirect (h)</th>
+              <th class="numeric">Actual total (h)</th>
+              <th class="numeric">Expected / available (h)</th>
+              <th class="numeric">Variance (exp - plan)</th>
+              <th class="numeric">Variance (exp - actual)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div class="hint" id="daily-hint">Tip: this reads from <code>scheduling_entries</code> for the day (all shifts).</div>
+      </div>
+    </div>
+
+</div>
+    </div>
 
   </div>
 
 <script>
-/* ==========================
-   SUPABASE CONFIG
-   ========================== */
-const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // =========================
+  // SUPABASE CONFIG (YOU MUST SET)
+  // =========================
+  const SUPABASE_URL = "https://lwsddsbizqwsdmrcgnwm.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_otgRLtgXtaZgj-c2pxov1A_SQBpaxVB";
+  const supa = (window.supabase && SUPABASE_URL.startsWith("http")) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-/* ==========================
-   LOCAL CONFIG STORAGE
-   ========================== */
-const TASK_CONFIG_KEY = "wi_sched_task_config_v1";
+  // =========================
+  // STORAGE KEYS (keep core engine local)
+  // =========================
+  const PRODUCTIVITY_STORAGE_KEY = "wiSchedulingProductivity_v7";
+  const SCHEDULE_STORAGE_KEY     = "wiSchedulingData_v1";
+  const MHE_ASSETS_STORAGE_KEY   = "wiSchedulingMheAssets_v3";
 
-/* ==========================
-   STATE
-   ========================== */
-let companies = [];
-let sites = [];
-let mheByType = new Map(); // typeName -> { count, mhe_type_id? }
-let allowedMheTypes = [];  // array of typeName strings for this site (active only)
-let currentUser = null;
+  let scheduleData = {};
+  let currentContext = { date: "", shift: "AM" };
 
-let tasksMasterData = [
-  { id: "trailer_unload", name: "Trailer unload (rear tip)", area: "Inbound – BAYM", mhe: "PPT",   uom: "Pallets", minutesPerUnit: 2.0, category: "Direct" },
-  { id: "container_20",   name: "Container unload (20ft)",   area: "Inbound",       mhe: "PPT",   uom: "Pallets", minutesPerUnit: 2.5, category: "Direct" },
-  { id: "container_40",   name: "Container unload (40ft)",   area: "Inbound",       mhe: "PPT",   uom: "Pallets", minutesPerUnit: 3.0, category: "Direct" },
-  { id: "putaway_vna",    name: "Putaway – VNA",             area: "High bay",      mhe: "VNA",   uom: "Pallets", minutesPerUnit: 3.0, category: "Direct" },
-  { id: "putaway_reach",  name: "Putaway – Reach",           area: "Bulk / floor",  mhe: "Reach", uom: "Pallets", minutesPerUnit: 2.7, category: "Direct" },
-  { id: "replenishment",  name: "Replenishment move",        area: "Replen",        mhe: "CB",    uom: "Pallets", minutesPerUnit: 2.2, category: "Direct" },
-  { id: "picking_manual", name: "Case picking",              area: "Pick face",     mhe: "Manual",uom: "Units",   minutesPerUnit: 0.1, category: "Direct" },
-  { id: "picking_ppt",    name: "Pallet picking (full)",     area: "Pick face",     mhe: "PPT",   uom: "Pallets", minutesPerUnit: 2.4, category: "Direct" },
-  { id: "admin_inbound",  name: "Admin – inbound",           area: "Office",        mhe: "Admin", uom: "Units",   minutesPerUnit: 0.6, category: "Indirect" }
-];
-
-// Per context, we keep volumes in memory only; on Load we pull from scheduling_entries.
-let scheduleRows = new Map(); // taskId -> { planVolume, actualVolume }
-
-/* ==========================
-   HELPERS
-   ========================== */
-function setStatus(msg, isError=false){
-  const el = document.getElementById("status");
-  el.textContent = msg;
-  el.classList.toggle("error", !!isError);
-}
-function todayISO(){
-  const d = new Date();
-  return d.toISOString().slice(0,10);
-}
-function getCtx(){
-  return {
-    company_id: document.getElementById("company-select").value || null,
-    site_id: document.getElementById("site-select").value || null,
-    date: document.getElementById("date-input").value || null,
-    shift: document.getElementById("shift-select").value || null
-  };
-}
-function minutesToHours(vol, mp){
-  const v = (Number(vol) || 0);
-  const m = (Number(mp) || 0);
-  return (v * m) / 60;
-}
-function safeNum(v){
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-/* ==========================
-   TABS
-   ========================== */
-function setActiveTab(tab){
-  const tabs = [
-    {btn:"tab-capability", panel:"panel-capability"},
-    {btn:"tab-planactual", panel:"panel-planactual"},
-    {btn:"tab-config", panel:"panel-config"}
+  // Core master tasks (same idea as your original)
+  let cfgTasks = [
+    { id: "trailer_unload", name: "Trailer unload (rear tip)", area: "Inbound – BAYM", mhe: "PPT", uom: "Pallets", minutesPerUnit: 2.0, category: "Direct" },
+    { id: "container_20",   name: "Container unload (20ft)",   area: "Inbound",       mhe: "PPT", uom: "Pallets", minutesPerUnit: 2.5, category: "Direct" },
+    { id: "container_40",   name: "Container unload (40ft)",   area: "Inbound",       mhe: "PPT", uom: "Pallets", minutesPerUnit: 3.0, category: "Direct" },
+    { id: "putaway_vna",    name: "Putaway – VNA",             area: "High bay",      mhe: "VNA", uom: "Pallets", minutesPerUnit: 3.0, category: "Direct" },
+    { id: "putaway_reach",  name: "Putaway – Reach",           area: "Bulk / floor",  mhe: "CB",  uom: "Pallets", minutesPerUnit: 2.7, category: "Direct" },
+    { id: "replenishment",  name: "Replenishment move",        area: "Replen",        mhe: "CB",  uom: "Pallets", minutesPerUnit: 2.2, category: "Direct" },
+    { id: "picking_manual", name: "Case picking",              area: "Pick face",     mhe: "Manual", uom: "Units", minutesPerUnit: 0.1, category: "Direct" },
+    { id: "picking_ppt",    name: "Pallet picking (full)",     area: "Pick face",     mhe: "PPT", uom: "Pallets", minutesPerUnit: 2.4, category: "Direct" },
+    { id: "admin_inbound",  name: "Admin – inbound",           area: "Office",        mhe: "Admin", uom: "Units", minutesPerUnit: 0.6, category: "Indirect" }
   ];
-  tabs.forEach(t=>{
-    document.getElementById(t.btn).classList.toggle("active", t.btn===tab);
-    document.getElementById(t.panel).style.display = (t.btn===tab) ? "" : "none";
-  });
-}
 
-document.getElementById("tab-capability").addEventListener("click", ()=>setActiveTab("tab-capability"));
-document.getElementById("tab-planactual").addEventListener("click", ()=>setActiveTab("tab-planactual"));
-document.getElementById("tab-config").addEventListener("click", ()=>setActiveTab("tab-config"));
+  // Local MHE types (simplified). We keep these local for now as you requested.
+  let cfgMhe = [];
 
-/* ==========================
-   INIT
-   ========================== */
-document.addEventListener("DOMContentLoaded", async ()=>{
-  document.getElementById("date-input").value = todayISO();
+  // Context selections
+  let selectedCompanyId = "";
+  let selectedSiteId = "";
 
-  loadTaskConfigFromStorage();
-  wireButtons();
-  wireCapabilityInputs();
+  document.addEventListener("DOMContentLoaded", async () => {
+    initTabs();
+    loadConfig();
+    initTabs();
+    initDateDefaults();
 
-  await loadSession();
-  await loadCompanies();
+    loadProductivityFromStorage();
+    loadScheduleFromStorage();
+    loadMheAssetsFromStorage();
 
-  buildTasksTable();
-  buildTaskConfigTable();
-
-  setStatus("Ready.");
-});
-
-async function loadSession(){
-  const { data, error } = await sb.auth.getSession();
-  if (error) {
-    setStatus("Auth error: " + error.message, true);
-    return;
-  }
-  currentUser = data?.session?.user || null;
-  document.getElementById("signed-in-pill").textContent = "Signed in: " + (currentUser?.email || "unknown");
-}
-
-document.getElementById("btn-signout").addEventListener("click", async ()=>{
-  await sb.auth.signOut();
-  window.location.href = "index.html";
-});
-
-function wireButtons(){
-  document.getElementById("btn-reload").addEventListener("click", async ()=>{
-    await reloadForContext();
-  });
-  document.getElementById("btn-save").addEventListener("click", async ()=>{
-    await saveToDatabase();
-  });
-
-  document.getElementById("company-select").addEventListener("change", async ()=>{
-    await loadSitesForCompany();
-  });
-  document.getElementById("site-select").addEventListener("change", async ()=>{
-    await reloadForContext();
-  });
-  document.getElementById("date-input").addEventListener("change", async ()=>{
-    await reloadForContext();
-  });
-  document.getElementById("shift-select").addEventListener("change", async ()=>{
-    await reloadForContext();
-  });
-
-  document.getElementById("btn-add-task").addEventListener("click", ()=>{
-    const id = "task_" + Date.now().toString(36);
-    const fallbackMhe = allowedMheTypes[0] || (tasksMasterData[0]?.mhe || "");
-    tasksMasterData.push({
-      id,
-      name: "New task",
-      area: "",
-      mhe: fallbackMhe,
-      uom: "Pallets",
-      minutesPerUnit: 2.0,
-      category: "Direct"
-    });
     buildTasksTable();
-    buildTaskConfigTable();
+    buildCapabilityTable();
+    buildSummaryByMheTable();
+
+    bindContextControls();
+
+    bindShiftSegmented();
+    bindDailySummary();
+    bindConfigTab();
+    refreshAllFromConfig();
+
+    bindUpload();
+    bindDownloadTemplate();
+    bindDownloadFullData();
+    bindClearVolumes();
+    bindReload();
+    bindSaveToDb();
+
+    await loadCompanies();
+
+    currentContext = getCurrentContext();
+    loadContextIntoDom(currentContext);
     recalcAll();
   });
 
-  document.getElementById("btn-save-config").addEventListener("click", ()=>{
-    saveTaskConfigToStorage();
-    setStatus("Configuration saved (browser).");
-    recalcAll();
-  });
-}
+  function setStatus(text, isError=false) {
+    const el = document.getElementById("status");
+    el.textContent = text;
+    el.classList.toggle("error", !!isError);
+  }
 
-function wireCapabilityInputs(){
-  ["shift-hours","utilisation"].forEach(id=>{
-    document.getElementById(id).addEventListener("input", ()=>{
-      buildCapabilityTable();
+  function initTabs() {
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const tab = btn.dataset.tab;
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        document.getElementById("tab-" + tab).classList.add("active");
+
+        // In Plan vs Actual tab, lock plan inputs (actuals only)
+        const inPva = (tab === "pva");
+        setPlanInputsDisabled(inPva);
+        setActualInputsDisabled(!inPva);
+
+        recalcAll();
+      });
+    });
+  }
+
+  function initDateDefaults() {
+    const d = new Date();
+    const iso = d.toISOString().split("T")[0];
+    document.getElementById("shift-date").value = iso;
+  }
+
+  function getCurrentContext() {
+    return {
+      date: (document.getElementById("shift-date").value || "").trim(),
+      shift: (document.getElementById("shift-name").value || "AM").trim()
+    };
+  }
+
+  function bindContextControls() {
+    document.getElementById("shift-date").addEventListener("change", () => { currentContext = getCurrentContext(); loadContextIntoDom(currentContext); recalcAll(); });
+    document.getElementById("shift-name").addEventListener("change", () => { currentContext = getCurrentContext(); loadContextIntoDom(currentContext); recalcAll(); });
+    document.getElementById("company-select").addEventListener("change", async (e) => {
+      selectedCompanyId = e.target.value || "";
+      await loadSites(selectedCompanyId);
+    });
+    document.getElementById("site-select").addEventListener("change", (e) => {
+      selectedSiteId = e.target.value || "";
+      localStorage.setItem("wi_selected_site_id", selectedSiteId);
+      setStatus(selectedSiteId ? "Site selected. Ready." : "Select a site to enable saving.");
+    });
+  }
+
+  function bindReload() {
+    document.getElementById("btn-reload").addEventListener("click", () => {
+      loadContextIntoDom(getCurrentContext());
       recalcAll();
-    });
-  });
-  // optional inputs are written at save time
-}
-
-/* ==========================
-   LOAD: COMPANIES / SITES
-   ========================== */
-async function loadCompanies(){
-  setStatus("Loading companies…");
-  const sel = document.getElementById("company-select");
-  sel.innerHTML = `<option value="">Select…</option>`;
-
-  // Note: if you use RLS, ensure the current user can read these tables.
-  const { data, error } = await sb
-    .from("companies")
-    .select("id, name")
-    .order("name", { ascending:true });
-
-  if (error) {
-    setStatus("Unable to load companies: " + error.message, true);
-    sel.innerHTML = `<option value="">(error)</option>`;
-    return;
-  }
-
-  companies = data || [];
-  if (companies.length === 0){
-    sel.innerHTML = `<option value="">No companies found</option>`;
-  } else {
-    companies.forEach(c=>{
-      const opt = document.createElement("option");
-      opt.value = c.id;
-      opt.textContent = c.name || c.id;
-      sel.appendChild(opt);
+      setStatus("Reloaded.");
     });
   }
 
-  setStatus("Ready.");
-}
-
-async function loadSitesForCompany(){
-  const companyId = document.getElementById("company-select").value;
-  const siteSel = document.getElementById("site-select");
-  siteSel.disabled = true;
-  siteSel.innerHTML = `<option value="">Loading…</option>`;
-  allowedMheTypes = [];
-  mheByType = new Map();
-  document.getElementById("mhe-note").textContent = "MHE: not loaded yet.";
-
-  if (!companyId){
-    siteSel.innerHTML = `<option value="">Select a company first</option>`;
-    return;
+  function setPlanInputsDisabled(disabled) {
+    document.querySelectorAll(".plan-volume").forEach(i => i.disabled = disabled);
+  }
+  function setActualInputsDisabled(disabled) {
+    document.querySelectorAll(".actual-volume").forEach(i => i.disabled = disabled);
   }
 
-  setStatus("Loading sites…");
-  // Assumption: sites table has company_id. If your column name differs, change here.
-  const { data, error } = await sb
-    .from("sites")
-    .select("id, name, company_id")
-    .eq("company_id", companyId)
-    .order("name", { ascending:true });
+  // =========================
+  // BUILD UI TABLES
+  // =========================
 
-  if (error){
-    setStatus("Unable to load sites: " + error.message, true);
-    siteSel.innerHTML = `<option value="">(error)</option>`;
-    return;
+  function getMheTypes() {
+    const set = new Set();
+    cfgMhe.forEach(a => { if (a.type && a.type.trim()) set.add(a.type.trim()); });
+    if (set.size === 0) ["PPT","CB","VNA"].forEach(t => set.add(t));
+    return Array.from(set);
   }
 
-  sites = data || [];
-  siteSel.innerHTML = `<option value="">Select…</option>`;
-  sites.forEach(s=>{
-    const opt = document.createElement("option");
-    opt.value = s.id;
-    opt.textContent = s.name || s.id;
-    siteSel.appendChild(opt);
-  });
-  siteSel.disabled = false;
+  function buildTasksTable() {
+    const tbody = document.querySelector("#tasks-table tbody");
+    tbody.innerHTML = "";
 
-  setStatus("Ready.");
-}
+    cfgTasks.forEach(task => {
+      const tr = document.createElement("tr");
+      tr.dataset.taskId = task.id;
+      tr.dataset.mhe = task.mhe || "";
+      tr.dataset.category = task.category || "Direct";
 
-/* ==========================
-   LOAD: MHE ASSETS (active only)
-   ========================== */
-async function loadMheForSite(siteId){
-  allowedMheTypes = [];
-  mheByType = new Map();
+      tr.innerHTML = `
+        <td>${escapeHtml(task.name)}</td>
+        <td>${escapeHtml(task.area || "")}</td>
+        <td>${escapeHtml(task.mhe || "")}</td>
+        <td>${escapeHtml(task.uom || "Units")}</td>
+        <td class="numeric minutes-cell">${(task.minutesPerUnit || 0).toFixed(2)}</td>
+        <td class="numeric"><input class="plan-volume" type="number" min="0" step="1"></td>
+        <td class="numeric plan-hours">0.00</td>
+        <td class="numeric"><input class="actual-volume" type="number" min="0" step="1"></td>
+        <td class="numeric actual-hours">0.00</td>
+        <td class="numeric productivity">-</td>
+      `;
 
-  if (!siteId){
-    document.getElementById("mhe-note").textContent = "MHE: not loaded yet.";
-    return;
+      tr.querySelector(".plan-volume").addEventListener("input", () => { recalcRow(tr, true); recalcAll(); });
+      tr.querySelector(".actual-volume").addEventListener("input", () => { recalcRow(tr, true); recalcAll(); });
+
+      tbody.appendChild(tr);
+    });
+
+    // Default mode = Capability tab => plan enabled, actual disabled
+    setPlanInputsDisabled(false);
+    setActualInputsDisabled(true);
   }
 
-  setStatus("Loading MHE assets…");
+  function buildCapabilityTable() {
+    const tbody = document.querySelector("#capability-table tbody");
+    tbody.innerHTML = "";
+    const types = getMheTypes();
 
-  // We fetch assets and join mhe_types for readable type name.
-  // If your mhe_types column differs (e.g., "name" vs "type_name"), change the select.
-  const { data, error } = await sb
-    .from("mhe_assets")
-    .select(`
-      id,
-      status,
-      mhe_type_id,
-      mhe_types: mhe_type_id ( id, name )
-    `)
-    .eq("site_id", siteId)
-    .eq("status", "active"); // excludes off-road
+    types.forEach(type => {
+      const tr = document.createElement("tr");
+      tr.dataset.mhe = type;
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(type)}</strong></td>
+        <td class="numeric mhe-count">-</td>
+        <td class="numeric"><input class="cap-avail" type="number" min="0" step="0.25" placeholder="0.00"></td>
+        <td class="numeric cap-planned">0.00</td>
+        <td class="numeric cap-var">0.00</td>
+      `;
+      tr.querySelector(".cap-avail").addEventListener("input", () => { storeAvailableHoursForCurrentContext(); recalcAll(); });
+      tbody.appendChild(tr);
+    });
 
-  if (error){
-    setStatus("Unable to load MHE assets: " + error.message, true);
-    document.getElementById("mhe-note").textContent = "MHE: failed to load.";
-    return;
+    // Use local MHE counts if present
+    updateCapabilityCounts();
+    setAvailableHoursForContext(getCurrentContext());
   }
 
-  const assets = data || [];
-  assets.forEach(a=>{
-    const typeName = (a.mhe_types && (a.mhe_types.name || a.mhe_types.type_name)) ? (a.mhe_types.name || a.mhe_types.type_name) : "Unclassified";
-    const cur = mheByType.get(typeName) || { count:0 };
-    cur.count += 1;
-    mheByType.set(typeName, cur);
-  });
+  function updateCapabilityCounts() {
+    // If you later re-enable DB MHE counts, this is the single place to populate "active count".
+    const countByType = {};
+    cfgMhe.forEach(a => {
+      const t = (a.type || "").trim();
+      const c = parseInt(a.count || 0, 10) || 0;
+      if (!t) return;
+      countByType[t] = (countByType[t] || 0) + c;
+    });
 
-  allowedMheTypes = Array.from(mheByType.keys()).sort((a,b)=>a.localeCompare(b));
-  document.getElementById("mhe-note").textContent = "MHE loaded: " + assets.length + " active asset(s) across " + allowedMheTypes.length + " type(s).";
+    document.querySelectorAll("#capability-table tbody tr").forEach(tr => {
+      const type = tr.dataset.mhe;
+      const cell = tr.querySelector(".mhe-count");
+      const val = countByType[type];
+      cell.textContent = (val != null && val !== 0) ? String(val) : "-";
+    });
+  }
 
-  // Constrain task MHE dropdowns to allowed types (fallback to first type)
-  normaliseTasksToAllowedMhe();
-  buildTasksTable();
-  buildTaskConfigTable();
-  buildCapabilityTable();
+  function buildSummaryByMheTable() {
+    const tbody = document.querySelector("#summary-by-mhe tbody");
+    tbody.innerHTML = "";
+    const types = getMheTypes();
 
-  setStatus("Ready.");
-}
+    types.forEach(type => {
+      const tr = document.createElement("tr");
+      tr.dataset.mhe = type;
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(type)}</strong></td>
+        <td class="numeric summary-plan-hours">0.00</td>
+        <td class="numeric"><input class="summary-available-hours" type="number" min="0" step="0.25" placeholder="0.00"></td>
+        <td class="numeric summary-plan-variance">0.00</td>
+        <td class="numeric summary-actual-hours">0.00</td>
+        <td class="numeric summary-actual-variance">0.00</td>
+      `;
+      tr.querySelector(".summary-available-hours").addEventListener("input", () => { storeAvailableHoursForCurrentContext(); recalcAll(); });
+      tbody.appendChild(tr);
+    });
 
-function normaliseTasksToAllowedMhe(){
-  if (!allowedMheTypes || allowedMheTypes.length === 0) return;
-  tasksMasterData.forEach(t=>{
-    if (!t.mhe || !allowedMheTypes.includes(t.mhe)){
-      t.mhe = allowedMheTypes[0];
+    setAvailableHoursForContext(getCurrentContext());
+  }
+
+  // =========================
+  // LOAD/SAVE LOCAL CONTEXT
+  // =========================
+  function loadContextIntoDom(ctx) {
+    const dateKey = ctx.date;
+    const shiftKey = ctx.shift;
+    const ctxData = (scheduleData[dateKey] || {})[shiftKey] || {};
+
+    document.querySelectorAll("#tasks-table tbody tr").forEach(row => {
+      const taskId = row.dataset.taskId;
+      const entry = ctxData[taskId] || {};
+      row.querySelector(".plan-volume").value = (entry.planVolume != null) ? entry.planVolume : "";
+      row.querySelector(".actual-volume").value = (entry.actualVolume != null) ? entry.actualVolume : "";
+      recalcRow(row, false);
+    });
+
+    setAvailableHoursForContext(ctx);
+  }
+
+  function storeRowVolumes(row) {
+    const plan = parseFloat(row.querySelector(".plan-volume").value);
+    const act  = parseFloat(row.querySelector(".actual-volume").value);
+
+    const taskId = row.dataset.taskId;
+    const ctx = getCurrentContext();
+    if (!ctx.date || !ctx.shift) return;
+
+    scheduleData[ctx.date] = scheduleData[ctx.date] || {};
+    scheduleData[ctx.date][ctx.shift] = scheduleData[ctx.date][ctx.shift] || {};
+    const ctxStore = scheduleData[ctx.date][ctx.shift];
+
+    ctxStore[taskId] = ctxStore[taskId] || {};
+    if (!isNaN(plan)) ctxStore[taskId].planVolume = plan;
+    else delete ctxStore[taskId].planVolume;
+    if (!isNaN(act)) ctxStore[taskId].actualVolume = act;
+    else delete ctxStore[taskId].actualVolume;
+
+    saveScheduleToStorage();
+  }
+
+  function storeAvailableHoursForCurrentContext() {
+    const ctx = getCurrentContext();
+    if (!ctx.date || !ctx.shift) return;
+
+    scheduleData[ctx.date] = scheduleData[ctx.date] || {};
+    scheduleData[ctx.date][ctx.shift] = scheduleData[ctx.date][ctx.shift] || {};
+    const ctxStore = scheduleData[ctx.date][ctx.shift];
+
+    const byMhe = {};
+    document.querySelectorAll("#summary-by-mhe tbody tr").forEach(row => {
+      const mhe = row.dataset.mhe;
+      const val = parseFloat(row.querySelector(".summary-available-hours").value);
+      if (!isNaN(val)) byMhe[mhe] = val;
+    });
+    ctxStore.__availableByMhe = byMhe;
+
+    saveScheduleToStorage();
+  }
+
+  function setAvailableHoursForContext(ctx) {
+    const ctxStore = ((scheduleData[ctx.date] || {})[ctx.shift] || {});
+    const avail = ctxStore.__availableByMhe || {};
+
+    document.querySelectorAll("#summary-by-mhe tbody tr").forEach(row => {
+      const mhe = row.dataset.mhe;
+      const input = row.querySelector(".summary-available-hours");
+      input.value = (avail[mhe] != null) ? avail[mhe] : "";
+    });
+
+    document.querySelectorAll("#capability-table tbody tr").forEach(row => {
+      const mhe = row.dataset.mhe;
+      const input = row.querySelector(".cap-avail");
+      input.value = (avail[mhe] != null) ? avail[mhe] : "";
+    });
+  }
+
+  // =========================
+  // CORE CALCULATIONS
+  // =========================
+  function recalcAll() {
+    document.querySelectorAll("#tasks-table tbody tr").forEach(row => recalcRow(row, false));
+    recalcSummaries();
+  }
+
+  function recalcRow(row, persist) {
+    const mp = parseFloat(row.querySelector(".minutes-cell").textContent) || 0;
+    const planVol = parseFloat(row.querySelector(".plan-volume").value) || 0;
+    const actVol  = parseFloat(row.querySelector(".actual-volume").value) || 0;
+
+    const planHours = mp > 0 ? (planVol * mp) / 60 : 0;
+    const actHours  = mp > 0 ? (actVol  * mp) / 60 : 0;
+
+    row.querySelector(".plan-hours").textContent = planHours.toFixed(2);
+    row.querySelector(".actual-hours").textContent = actHours.toFixed(2);
+
+    const prodCell = row.querySelector(".productivity");
+    if (actHours > 0 && actVol > 0) prodCell.textContent = (actVol / actHours).toFixed(1);
+    else prodCell.textContent = "-";
+
+    row.classList.remove("row-ok", "row-warn");
+    if (planHours > 0 || actHours > 0) {
+      if (actHours > planHours + 0.01) row.classList.add("row-warn");
+      else if (actHours > 0) row.classList.add("row-ok");
     }
-  });
-}
 
-/* ==========================
-   LOAD: SCHEDULING ENTRIES (context)
-   ========================== */
-async function loadScheduleForContext(){
-  scheduleRows = new Map();
+    if (persist) storeRowVolumes(row);
+  }
 
-  const ctx = getCtx();
-  if (!ctx.site_id || !ctx.date){
+  function recalcSummaries() {
+    const byMhe = {};
+    let planDirect=0, planIndirect=0, actDirect=0, actIndirect=0;
+
+    document.querySelectorAll("#tasks-table tbody tr").forEach(row => {
+      const mhe = (row.dataset.mhe || "").trim();
+      const cat = (row.dataset.category || "Direct").trim();
+
+      const ph = parseFloat(row.querySelector(".plan-hours").textContent) || 0;
+      const ah = parseFloat(row.querySelector(".actual-hours").textContent) || 0;
+
+      if (mhe) {
+        byMhe[mhe] = byMhe[mhe] || { plan:0, actual:0 };
+        byMhe[mhe].plan += ph;
+        byMhe[mhe].actual += ah;
+      }
+
+      if (cat === "Indirect") { planIndirect += ph; actIndirect += ah; }
+      else { planDirect += ph; actDirect += ah; }
+    });
+
+    // Update Plan vs Actual KPI cards
+    const totalPlan = planDirect + planIndirect;
+    const totalAct = actDirect + actIndirect;
+
+    document.getElementById("kpi-direct-plan").textContent = planDirect.toFixed(2);
+    document.getElementById("kpi-direct-actual").textContent = actDirect.toFixed(2);
+    document.getElementById("kpi-indirect-plan").textContent = planIndirect.toFixed(2);
+    document.getElementById("kpi-indirect-actual").textContent = actIndirect.toFixed(2);
+    document.getElementById("kpi-total-plan").textContent = totalPlan.toFixed(2);
+    document.getElementById("kpi-total-actual").textContent = totalAct.toFixed(2);
+
+    // Available is whatever user entered in summary table
+    let totalAvail = 0;
+    document.querySelectorAll("#summary-by-mhe tbody tr").forEach(row => {
+      totalAvail += parseFloat(row.querySelector(".summary-available-hours").value) || 0;
+    });
+    document.getElementById("kpi-total-available").textContent = totalAvail.toFixed(2);
+    document.getElementById("kpi-total-variance").textContent = (totalAvail - totalPlan).toFixed(2);
+
+    // Update Summary-by-MHE table
+    document.querySelectorAll("#summary-by-mhe tbody tr").forEach(row => {
+      const mhe = row.dataset.mhe;
+      const data = byMhe[mhe] || { plan:0, actual:0 };
+      const avail = parseFloat(row.querySelector(".summary-available-hours").value) || 0;
+
+      const pv = avail - data.plan;
+      const av = avail - data.actual;
+
+      row.querySelector(".summary-plan-hours").textContent = data.plan.toFixed(2);
+      row.querySelector(".summary-actual-hours").textContent = data.actual.toFixed(2);
+      row.querySelector(".summary-plan-variance").textContent = pv.toFixed(2);
+      row.querySelector(".summary-actual-variance").textContent = av.toFixed(2);
+    });
+
+    // Capability table (planned hours by MHE + variance)
+    let capAvail = 0;
+    let capPlanned = 0;
+
+    document.querySelectorAll("#capability-table tbody tr").forEach(row => {
+      const mhe = row.dataset.mhe;
+      const planned = (byMhe[mhe]?.plan || 0);
+      const avail = parseFloat(row.querySelector(".cap-avail").value) || 0;
+      const variance = avail - planned;
+
+      row.querySelector(".cap-planned").textContent = planned.toFixed(2);
+      row.querySelector(".cap-var").textContent = variance.toFixed(2);
+
+      row.classList.remove("row-ok", "row-warn");
+      if (planned > 0 || avail > 0) {
+        if (variance < -0.01) row.classList.add("row-warn");
+        else if (variance > 0.01) row.classList.add("row-ok");
+      }
+
+      capAvail += avail;
+      capPlanned += planned;
+    });
+
+    document.getElementById("cap-total-available").textContent = capAvail.toFixed(2);
+    document.getElementById("cap-total-planned").textContent = capPlanned.toFixed(2);
+    document.getElementById("cap-total-variance").textContent = (capAvail - capPlanned).toFixed(2);
+
+    // KPI colouring
+    const capCard = document.getElementById("kpi-cap-variance");
+    capCard.classList.remove("ok","warn");
+    const capVar = capAvail - capPlanned;
+    if (capPlanned > 0 || capAvail > 0) {
+      if (capVar < -0.01) capCard.classList.add("warn");
+      else if (capVar > 0.01) capCard.classList.add("ok");
+    }
+  }
+
+  // =========================
+  // CSV IMPORT/EXPORT (kept)
+  // =========================
+  function bindUpload() {
+    document.getElementById("csv-upload").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const rows = parseCsv(text);
+      applyCsv(rows);
+    });
+  }
+
+  function parseCsv(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+    if (lines.length < 2) return [];
+    const header = lines[0].split(",").map(s => s.trim().toLowerCase());
+    const idxTask = header.indexOf("task");
+    const idxPlan = header.findIndex(h => ["planvolume","plan","planned"].includes(h.replace(/\s+/g,"")));
+    const idxAct  = header.findIndex(h => ["actualvolume","actual","actuals"].includes(h.replace(/\s+/g,"")));
+    const idxDate = header.indexOf("date");
+    const idxShift= header.indexOf("shift");
+
+    const out = [];
+    for (let i=1;i<lines.length;i++) {
+      const parts = lines[i].split(",");
+      if (!parts[idxTask]) continue;
+      out.push({
+        task: (parts[idxTask]||"").trim(),
+        plan: idxPlan>=0 ? (parts[idxPlan]||"").trim() : "",
+        actual: idxAct>=0 ? (parts[idxAct]||"").trim() : "",
+        date: idxDate>=0 ? (parts[idxDate]||"").trim() : "",
+        shift: idxShift>=0 ? (parts[idxShift]||"").trim() : ""
+      });
+    }
+    return out;
+  }
+
+  function applyCsv(rows) {
+    const ctx = getCurrentContext();
+    const nameMap = {};
+    cfgTasks.forEach(t => nameMap[t.name.trim().toLowerCase()] = t.id);
+
+    let matched=0, unmatched=0;
+    rows.forEach(r => {
+      const id = nameMap[(r.task||"").toLowerCase()];
+      if (!id) { unmatched++; return; }
+
+      const dateKey = r.date || ctx.date;
+      const shiftKey= r.shift || ctx.shift;
+      if (!dateKey || !shiftKey) { unmatched++; return; }
+
+      scheduleData[dateKey] = scheduleData[dateKey] || {};
+      scheduleData[dateKey][shiftKey] = scheduleData[dateKey][shiftKey] || {};
+      const ctxStore = scheduleData[dateKey][shiftKey];
+      ctxStore[id] = ctxStore[id] || {};
+
+      const pv = parseFloat(r.plan);
+      const av = parseFloat(r.actual);
+      if (!isNaN(pv)) ctxStore[id].planVolume = pv;
+      if (!isNaN(av)) ctxStore[id].actualVolume = av;
+      matched++;
+    });
+
+    saveScheduleToStorage();
+    loadContextIntoDom(getCurrentContext());
     recalcAll();
-    return;
+    document.getElementById("upload-message").textContent = `Imported ${matched} row(s). Unmatched: ${unmatched}.`;
   }
 
-  setStatus("Loading schedule entries…");
-
-  const { data, error } = await sb
-    .from("scheduling_entries")
-    .select("id, task_name, mhe_id, units_planned, units_actual, headcount_expected, cost_expected, created_by")
-    .eq("site_id", ctx.site_id)
-    .eq("scheduled_date", ctx.date)
-    .eq("shift_code", ctx.shift || "AM");
-
-  if (error){
-    setStatus("Unable to load schedule entries: " + error.message, true);
-    return;
+  function bindDownloadTemplate() {
+    document.getElementById("btn-download-template").addEventListener("click", () => {
+      const ctx = getCurrentContext();
+      const lines = ["Date,Shift,Task,PlanVolume,ActualVolume"];
+      cfgTasks.forEach(t => lines.push(`${ctx.date},${ctx.shift},"${t.name.replace(/"/g,'""')}",,`));
+      downloadText(lines.join("\n"), "scheduling-template.csv");
+    });
   }
 
-  const rows = data || [];
-  // Map back to tasks by name (case-insensitive match)
-  const nameToTask = {};
-  tasksMasterData.forEach(t=> nameToTask[(t.name||"").trim().toLowerCase()] = t);
+  function bindDownloadFullData() {
+    document.getElementById("btn-download-full-data").addEventListener("click", () => {
+      const lines = ["Date,Shift,Task,PlanVolume,ActualVolume"];
+      Object.keys(scheduleData).sort().forEach(dateKey => {
+        Object.keys(scheduleData[dateKey]||{}).forEach(shiftKey => {
+          const store = scheduleData[dateKey][shiftKey] || {};
+          cfgTasks.forEach(t => {
+            const e = store[t.id] || {};
+            if (e.planVolume==null && e.actualVolume==null) return;
+            lines.push(`${dateKey},${shiftKey},"${t.name.replace(/"/g,'""')}",${e.planVolume??""},${e.actualVolume??""}`);
+          });
+        });
+      });
+      downloadText(lines.join("\n"), "scheduling-full-dataset.csv");
+    });
+  }
 
-  rows.forEach(r=>{
-    const tn = (r.task_name || "").trim().toLowerCase();
-    if (tn === "__capability__"){
-      // hydrate capability optional fields
-      const hc = r.headcount_expected;
-      const ce = r.cost_expected;
-      if (hc != null) document.getElementById("headcount-expected").value = hc;
-      if (ce != null) document.getElementById("cost-expected").value = ce;
+  function bindClearVolumes() {
+    document.getElementById("btn-clear-volumes").addEventListener("click", () => {
+      scheduleData = {};
+      saveScheduleToStorage();
+      loadContextIntoDom(getCurrentContext());
+      recalcAll();
+      document.getElementById("upload-message").textContent = "All plan/actual volumes cleared.";
+    });
+  }
+
+  function downloadText(text, filename) {
+    const blob = new Blob([text], {type:"text/csv"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // =========================
+  // LOCAL STORAGE
+  // =========================
+  function saveProductivityToStorage() {
+    try { localStorage.setItem(PRODUCTIVITY_STORAGE_KEY, JSON.stringify(cfgTasks)); } catch(e){}
+  }
+  function loadProductivityFromStorage() {
+    try {
+      const raw = localStorage.getItem(PRODUCTIVITY_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (Array.isArray(saved)) cfgTasks = saved;
+    } catch(e){}
+  }
+  function saveScheduleToStorage() {
+    try { localStorage.setItem(SCHEDULE_STORAGE_KEY, JSON.stringify(scheduleData)); } catch(e){}
+  }
+  function loadScheduleFromStorage() {
+    try {
+      const raw = localStorage.getItem(SCHEDULE_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") scheduleData = parsed;
+    } catch(e){}
+  }
+  function loadMheAssetsFromStorage() {
+    try {
+      const raw = localStorage.getItem(MHE_ASSETS_STORAGE_KEY);
+      if (!raw) {
+        cfgMhe = [
+          { id:"m1", label:"PPT fleet", type:"PPT", count:4 },
+          { id:"m2", label:"CB fleet", type:"CB", count:3 },
+          { id:"m3", label:"VNA trucks", type:"VNA", count:2 }
+        ];
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) cfgMhe = parsed;
+    } catch(e){}
+  }
+
+  // =========================
+  // COMPANY/SITE DROPDOWNS (DB)
+  // =========================
+  async function loadCompanies() {
+    if (!supa) {
+      setStatus("Supabase not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.", true);
+      document.getElementById("company-select").innerHTML = `<option value="">Supabase not configured</option>`;
       return;
     }
-    const task = nameToTask[tn];
-    if (!task) return;
-    scheduleRows.set(task.id, {
-      planVolume: r.units_planned,
-      actualVolume: r.units_actual
-    });
-  });
 
-  // Push into DOM
-  document.querySelectorAll("#tasks-table tbody tr").forEach(tr=>{
-    const taskId = tr.dataset.taskId;
-    const rec = scheduleRows.get(taskId) || {};
-    const pv = tr.querySelector(".plan-volume");
-    const av = tr.querySelector(".actual-volume");
-    if (pv) pv.value = (rec.planVolume ?? "");
-    if (av) av.value = (rec.actualVolume ?? "");
-  });
+    const { data, error } = await supa.from("companies").select("id,name").order("name");
+    if (error) {
+      setStatus("Failed to load companies: " + error.message, true);
+      document.getElementById("company-select").innerHTML = `<option value="">Error loading companies</option>`;
+      return;
+    }
 
-  recalcAll();
-  setStatus("Ready.");
-}
-
-/* ==========================
-   RELOAD PIPELINE
-   ========================== */
-async function reloadForContext(){
-  const ctx = getCtx();
-  // need MHE first
-  await loadMheForSite(ctx.site_id);
-  await loadScheduleForContext();
-}
-
-/* ==========================
-   TASKS TABLE (PLAN/ACTUAL)
-   ========================== */
-function buildTasksTable(){
-  const tbody = document.querySelector("#tasks-table tbody");
-  tbody.innerHTML = "";
-
-  tasksMasterData.forEach(task=>{
-    const tr = document.createElement("tr");
-    tr.dataset.taskId = task.id;
-    tr.dataset.category = task.category || "Direct";
-    tr.dataset.mhe = task.mhe || "";
-
-    tr.innerHTML = `
-      <td>${escapeHtml(task.name || "")}</td>
-      <td>${escapeHtml(task.area || "")}</td>
-      <td>${escapeHtml(task.mhe || "")}</td>
-      <td>${escapeHtml(task.uom || "Units")}</td>
-      <td class="numeric minutes-cell">${Number(task.minutesPerUnit||0).toFixed(2)}</td>
-      <td class="numeric"><input class="plan-volume" type="number" min="0" step="1" /></td>
-      <td class="numeric plan-hours">0.00</td>
-      <td class="numeric"><input class="actual-volume" type="number" min="0" step="1" /></td>
-      <td class="numeric actual-hours">0.00</td>
-      <td class="numeric productivity">-</td>
-    `;
-
-    tr.querySelector(".plan-volume").addEventListener("input", ()=>{ recalcRow(tr); });
-    tr.querySelector(".actual-volume").addEventListener("input", ()=>{ recalcRow(tr); });
-
-    tbody.appendChild(tr);
-  });
-
-  recalcAll();
-}
-
-function recalcRow(tr){
-  const mp = Number(tr.querySelector(".minutes-cell")?.textContent || 0) || 0;
-  const pv = Number(tr.querySelector(".plan-volume")?.value || 0) || 0;
-  const av = Number(tr.querySelector(".actual-volume")?.value || 0) || 0;
-
-  const planHours = minutesToHours(pv, mp);
-  const actHours  = minutesToHours(av, mp);
-
-  tr.querySelector(".plan-hours").textContent = planHours.toFixed(2);
-  tr.querySelector(".actual-hours").textContent = actHours.toFixed(2);
-
-  const prodCell = tr.querySelector(".productivity");
-  if (actHours > 0 && av > 0){
-    const p = av / actHours;
-    prodCell.textContent = Number.isFinite(p) ? p.toFixed(1) : "-";
-  } else {
-    prodCell.textContent = "-";
+    const sel = document.getElementById("company-select");
+    sel.innerHTML = `<option value="">Select company</option>` + (data||[]).map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
   }
 
-  tr.classList.remove("row-warn","row-ok");
-  if ((planHours>0 || actHours>0) && actHours > planHours + 0.01) tr.classList.add("row-warn");
-  else if (actHours>0 && actHours <= planHours + 0.01) tr.classList.add("row-ok");
+  async function loadSites(companyId) {
+    const siteSel = document.getElementById("site-select");
+    selectedSiteId = "";
+    localStorage.removeItem("wi_selected_site_id");
 
-  recalcAll(false);
-}
+    if (!companyId) {
+      siteSel.disabled = true;
+      siteSel.innerHTML = `<option value="">Select a company first</option>`;
+      return;
+    }
 
-function recalcAll(recalcRows=true){
-  if (recalcRows){
-    document.querySelectorAll("#tasks-table tbody tr").forEach(tr=>recalcRow(tr));
+    siteSel.disabled = true;
+    siteSel.innerHTML = `<option value="">Loading…</option>`;
+
+    const { data, error } = await supa.from("sites").select("id,name").eq("company_id", companyId).order("name");
+    if (error) {
+      setStatus("Failed to load sites: " + error.message, true);
+      siteSel.innerHTML = `<option value="">Error loading sites</option>`;
+      siteSel.disabled = true;
+      return;
+    }
+
+    siteSel.innerHTML = `<option value="">Select site</option>` + (data||[]).map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("");
+    siteSel.disabled = false;
   }
 
-  // totals
-  let directPlan=0, directAct=0, indPlan=0, indAct=0;
-  const planByMhe = new Map();
-
-  document.querySelectorAll("#tasks-table tbody tr").forEach(tr=>{
-    const cat = tr.dataset.category || "Direct";
-    const mhe = tr.dataset.mhe || "Unassigned";
-    const ph = Number(tr.querySelector(".plan-hours")?.textContent || 0) || 0;
-    const ah = Number(tr.querySelector(".actual-hours")?.textContent || 0) || 0;
-
-    if (cat === "Indirect"){ indPlan += ph; indAct += ah; }
-    else { directPlan += ph; directAct += ah; }
-
-    const cur = planByMhe.get(mhe) || 0;
-    planByMhe.set(mhe, cur + ph);
-  });
-
-  const totalPlan = directPlan + indPlan;
-  const totalAct  = directAct + indAct;
-
-  document.getElementById("kpi-direct-plan").textContent = directPlan.toFixed(2);
-  document.getElementById("kpi-direct-actual").textContent = directAct.toFixed(2);
-  document.getElementById("kpi-indirect-plan").textContent = indPlan.toFixed(2);
-  document.getElementById("kpi-indirect-actual").textContent = indAct.toFixed(2);
-  document.getElementById("kpi-total-plan").textContent = totalPlan.toFixed(2);
-  document.getElementById("kpi-total-actual").textContent = totalAct.toFixed(2);
-
-  // capability KPIs + table
-  buildCapabilityTable(planByMhe, totalPlan);
-}
-
-function buildCapabilityTable(planByMhe = null, totalPlanOverride = null){
-  const tbody = document.querySelector("#capability-table tbody");
-  tbody.innerHTML = "";
-
-  const shiftHours = Number(document.getElementById("shift-hours").value || 0) || 0;
-  const utilPct = Number(document.getElementById("utilisation").value || 0) || 0;
-  const util = utilPct / 100;
-
-  let totalAvail = 0;
-  let totalPlan = 0;
-
-  const types = allowedMheTypes && allowedMheTypes.length ? allowedMheTypes : Array.from(mheByType.keys());
-
-  types.forEach(tn=>{
-    const count = (mheByType.get(tn)?.count) || 0;
-    const avail = count * shiftHours * util;
-    const planned = planByMhe ? (Number(planByMhe.get(tn) || 0) || 0) : 0;
-    const variance = avail - planned;
-
-    totalAvail += avail;
-    totalPlan += planned;
-
-    const tr = document.createElement("tr");
-    if (variance < -0.01) tr.classList.add("row-warn");
-    else if (variance > 0.01) tr.classList.add("row-ok");
-
-    tr.innerHTML = `
-      <td>${escapeHtml(tn)}</td>
-      <td class="numeric">${count}</td>
-      <td class="numeric">${avail.toFixed(2)}</td>
-      <td class="numeric">${planned.toFixed(2)}</td>
-      <td class="numeric">${variance.toFixed(2)}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  if (totalPlanOverride != null) totalPlan = totalPlanOverride;
-
-  const capVar = totalAvail - totalPlan;
-  document.getElementById("cap-hours-available").textContent = totalAvail.toFixed(2);
-  document.getElementById("cap-hours-plan").textContent = totalPlan.toFixed(2);
-  document.getElementById("cap-hours-variance").textContent = capVar.toFixed(2);
-
-  // KPI colours
-  const kAvail = document.getElementById("kpi-cap-available");
-  const kVar = document.getElementById("kpi-cap-variance");
-  kAvail.classList.remove("ok","warn");
-  kVar.classList.remove("ok","warn");
-  if (totalAvail > 0) kAvail.classList.add("ok");
-  if (capVar < -0.01) kVar.classList.add("warn");
-  else if (capVar > 0.01) kVar.classList.add("ok");
-}
-
-/* ==========================
-   CONFIG TABLE
-   ========================== */
-function buildTaskConfigTable(){
-  const tbody = document.querySelector("#task-config-table tbody");
-  tbody.innerHTML = "";
-
-  const mheOptions = (allowedMheTypes && allowedMheTypes.length) ? allowedMheTypes : getDistinctMheFromTasks();
-
-  tasksMasterData.forEach(task=>{
-    const tr = document.createElement("tr");
-
-    const mheSel = document.createElement("select");
-    mheOptions.forEach(m=>{
-      const opt = document.createElement("option");
-      opt.value = m; opt.textContent = m;
-      mheSel.appendChild(opt);
-    });
-    if (task.mhe && mheOptions.includes(task.mhe)) mheSel.value = task.mhe;
-    else if (mheOptions[0]) { mheSel.value = mheOptions[0]; task.mhe = mheOptions[0]; }
-
-    tr.innerHTML = `
-      <td><input type="text" value="${escapeAttr(task.name||"")}" /></td>
-      <td><input type="text" value="${escapeAttr(task.area||"")}" /></td>
-      <td>
-        <select class="cat">
-          <option value="Direct">Direct</option>
-          <option value="Indirect">Indirect</option>
-        </select>
-      </td>
-      <td class="mhe-cell"></td>
-      <td>
-        <select class="uom">
-          <option value="Pallets">Pallets</option>
-          <option value="Units">Units</option>
-        </select>
-      </td>
-      <td class="numeric"><input type="number" min="0" step="0.1" value="${Number(task.minutesPerUnit||0).toFixed(2)}" /></td>
-      <td><button class="btn-small" type="button">Delete</button></td>
-    `;
-
-    // Category
-    const catSel = tr.querySelector("select.cat");
-    catSel.value = task.category || "Direct";
-    catSel.addEventListener("change", ()=>{
-      task.category = catSel.value;
-      buildTasksTable();
-      recalcAll();
-    });
-
-    // MHE select
-    tr.querySelector(".mhe-cell").appendChild(mheSel);
-    mheSel.addEventListener("change", ()=>{
-      task.mhe = mheSel.value;
-      buildTasksTable();
-      recalcAll();
-    });
-
-    // UOM
-    const uomSel = tr.querySelector("select.uom");
-    uomSel.value = task.uom || "Units";
-    uomSel.addEventListener("change", ()=>{
-      task.uom = uomSel.value;
-      buildTasksTable();
-      recalcAll();
-    });
-
-    // Name / Area
-    const nameInp = tr.querySelectorAll("input[type='text']")[0];
-    const areaInp = tr.querySelectorAll("input[type='text']")[1];
-    nameInp.addEventListener("input", ()=>{ task.name = nameInp.value; buildTasksTable(); recalcAll(); });
-    areaInp.addEventListener("input", ()=>{ task.area = areaInp.value; buildTasksTable(); recalcAll(); });
-
-    // Minutes
-    const minInp = tr.querySelector("td.numeric input[type='number']");
-    minInp.addEventListener("input", ()=>{
-      const v = Number(minInp.value);
-      task.minutesPerUnit = (Number.isFinite(v) && v>=0) ? v : 0;
-      buildTasksTable();
-      recalcAll();
-    });
-
-    // Delete
-    tr.querySelector("button").addEventListener("click", ()=>{
-      tasksMasterData = tasksMasterData.filter(t=>t.id !== task.id);
-      buildTasksTable();
-      buildTaskConfigTable();
-      recalcAll();
-    });
-
-    tbody.appendChild(tr);
-  });
-}
-
-function getDistinctMheFromTasks(){
-  const set = new Set();
-  tasksMasterData.forEach(t=>{ if (t.mhe) set.add(t.mhe); });
-  return Array.from(set);
-}
-
-function saveTaskConfigToStorage(){
-  try{
-    const simple = tasksMasterData.map(t=>({
-      id:t.id, name:t.name, area:t.area, mhe:t.mhe, uom:t.uom,
-      minutesPerUnit:t.minutesPerUnit, category:t.category
-    }));
-    localStorage.setItem(TASK_CONFIG_KEY, JSON.stringify(simple));
-  }catch(e){}
-}
-
-function loadTaskConfigFromStorage(){
-  try{
-    const raw = localStorage.getItem(TASK_CONFIG_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return;
-    tasksMasterData = parsed.map(t=>({
-      id: t.id || ("task_"+Date.now().toString(36)),
-      name: t.name || "Task",
-      area: t.area || "",
-      mhe: t.mhe || "",
-      uom: t.uom || "Units",
-      minutesPerUnit: Number(t.minutesPerUnit||0) || 0,
-      category: t.category || "Direct"
-    }));
-  }catch(e){}
-}
-
-/* ==========================
-   SAVE TO DATABASE
-   ========================== */
-async function saveToDatabase(){
-  const ctx = getCtx();
-  if (!ctx.site_id || !ctx.date || !ctx.shift){
-    setStatus("Please select Site, Date and Shift before saving.", true);
-    return;
+  // =========================
+  // SAVE OUTPUT TO DB (scheduling_entries)
+  // =========================
+  function bindSaveToDb() {
+    document.getElementById("btn-save-db").addEventListener("click", saveToDb);
   }
 
-  setStatus("Saving…");
+  async function saveToDb() {
+    if (!supa) { setStatus("Supabase not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.", true); return; }
+    if (!selectedSiteId) { setStatus("Select a Site before saving.", true); return; }
 
-  // Build payload: one row per task, plus one __capability__ row for optional values.
-  const rows = [];
-  const userId = currentUser?.id || null;
+    const ctx = getCurrentContext();
+    if (!ctx.date || !ctx.shift) { setStatus("Select Date and Shift before saving.", true); return; }
 
-  document.querySelectorAll("#tasks-table tbody tr").forEach(tr=>{
-    const taskId = tr.dataset.taskId;
-    const task = tasksMasterData.find(t=>t.id === taskId);
-    if (!task) return;
+    // Build rows from task table
+    const taskRows = [];
+    document.querySelectorAll("#tasks-table tbody tr").forEach(row => {
+      const taskName = (row.children[0]?.textContent || "").trim();
+      const mheType = (row.dataset.mhe || "").trim() || null;
+      const category = (row.dataset.category || "Direct").trim();
 
-    const pv = safeNum(tr.querySelector(".plan-volume")?.value);
-    const av = safeNum(tr.querySelector(".actual-volume")?.value);
+      const planVol = parseFloat(row.querySelector(".plan-volume").value);
+      const actVol  = parseFloat(row.querySelector(".actual-volume").value);
 
-    // If both empty, skip (keeps table clean)
-    if (pv == null && av == null) return;
+      const planHours = parseFloat(row.querySelector(".plan-hours").textContent) || 0;
+      const actHours  = parseFloat(row.querySelector(".actual-hours").textContent) || 0;
 
-    const ph = minutesToHours(pv || 0, task.minutesPerUnit || 0);
-    const ah = minutesToHours(av || 0, task.minutesPerUnit || 0);
+      const hasAny = (!isNaN(planVol) && planVol > 0) || (!isNaN(actVol) && actVol > 0) || planHours > 0 || actHours > 0;
+      if (!hasAny) return;
 
-    const isIndirect = (task.category || "Direct") === "Indirect";
+      const hdPlan = (category === "Indirect") ? 0 : planHours;
+      const hiPlan = (category === "Indirect") ? planHours : 0;
+      const hdAct  = (category === "Indirect") ? 0 : actHours;
+      const hiAct  = (category === "Indirect") ? actHours : 0;
 
-    rows.push({
-      site_id: ctx.site_id,
+      taskRows.push({
+        site_id: selectedSiteId,
+        scheduled_date: ctx.date,
+        shift_code: ctx.shift,
+        mhe_id: mheType,
+        task_name: taskName,
+        units_planned: !isNaN(planVol) ? planVol : null,
+        units_actual:  !isNaN(actVol)  ? actVol  : null,
+        hours_direct_plan: hdPlan,
+        hours_direct_actual: hdAct,
+        hours_indirect_plan: hiPlan,
+        hours_indirect_actual: hiAct
+      });
+    });
+
+    // Capability rows from summary-by-mhe (store available hours + planned/actual usage)
+    const capRows = [];
+    document.querySelectorAll("#summary-by-mhe tbody tr").forEach(row => {
+      const mheType = (row.dataset.mhe || "").trim() || null;
+      const avail = parseFloat(row.querySelector(".summary-available-hours").value);
+      const planReq = parseFloat(row.querySelector(".summary-plan-hours").textContent) || 0;
+      const actUsed = parseFloat(row.querySelector(".summary-actual-hours").textContent) || 0;
+
+      const hasAny = (!isNaN(avail) && avail > 0) || planReq > 0 || actUsed > 0;
+      if (!hasAny) return;
+
+      capRows.push({
+        site_id: selectedSiteId,
+        scheduled_date: ctx.date,
+        shift_code: ctx.shift,
+        mhe_id: mheType,
+        task_name: "__capability__",
+        headcount_expected: !isNaN(avail) ? avail : null,  // repurposed as "hours available"
+        hours_direct_plan: planReq,
+        hours_direct_actual: actUsed
+      });
+    });
+
+    // Totals row
+    const totalPlan = parseFloat(document.getElementById("kpi-total-plan").textContent) || 0;
+    const totalAvail= parseFloat(document.getElementById("kpi-total-available").textContent) || 0;
+    const totalAct = parseFloat(document.getElementById("kpi-total-actual").textContent) || 0;
+
+    const totalsRow = [{
+      site_id: selectedSiteId,
       scheduled_date: ctx.date,
       shift_code: ctx.shift,
-      mhe_id: task.mhe || null,         // storing MHE Type for now (text)
-      task_name: task.name || null,
+      mhe_id: null,
+      task_name: "__kpi_totals__",
+      hours_direct_plan: totalPlan,
+      hours_direct_expected: totalAvail,
+      hours_direct_actual: totalAct
+    }];
 
-      units_planned: pv,
-      units_actual: av,
+    const allRows = [...taskRows, ...capRows, ...totalsRow];
+    if (allRows.length === 0) { setStatus("Nothing to save for this date/shift.", true); return; }
 
-      hours_direct_plan:  isIndirect ? null : ph,
-      hours_direct_actual:isIndirect ? null : ah,
-      hours_indirect_plan:  isIndirect ? ph : null,
-      hours_indirect_actual:isIndirect ? ah : null,
+    // De-dup without DB changes (fetch existing IDs for context)
+    const { data: existing, error: e1 } = await supa
+      .from("scheduling_entries")
+      .select("id, task_name, mhe_id")
+      .eq("site_id", selectedSiteId)
+      .eq("scheduled_date", ctx.date)
+      .eq("shift_code", ctx.shift);
 
-      created_by: userId,
-      updated_by: userId,
-      updated_at: new Date().toISOString()
+    if (e1) { setStatus("DB read failed: " + e1.message, true); return; }
+
+    const key = (task_name, mhe_id) => `${(task_name||"").toLowerCase()}|${(mhe_id||"").toLowerCase()}`;
+    const existingMap = new Map();
+    (existing || []).forEach(r => existingMap.set(key(r.task_name, r.mhe_id), r.id));
+
+    const upsertRows = allRows.map(r => {
+      const id = existingMap.get(key(r.task_name, r.mhe_id));
+      return id ? { ...r, id } : r;
     });
-  });
 
-  // Capability record for this context (optional values)
-  const hcExp = safeNum(document.getElementById("headcount-expected").value);
-  const costExp = safeNum(document.getElementById("cost-expected").value);
+    const { error: e2 } = await supa.from("scheduling_entries").upsert(upsertRows);
+    if (e2) { setStatus("DB write failed: " + e2.message, true); return; }
 
-  rows.push({
-    site_id: ctx.site_id,
-    scheduled_date: ctx.date,
-    shift_code: ctx.shift,
-    task_name: "__capability__",
-    headcount_expected: hcExp,
-    cost_expected: costExp,
-    created_by: userId,
-    updated_by: userId,
-    updated_at: new Date().toISOString()
-  });
-
-  // Strategy: delete existing rows for site/date/shift and insert current.
-  // This avoids needing a unique constraint right now.
-  const del = await sb
-    .from("scheduling_entries")
-    .delete()
-    .eq("site_id", ctx.site_id)
-    .eq("scheduled_date", ctx.date)
-    .eq("shift_code", ctx.shift);
-
-  if (del.error){
-    setStatus("Save failed (delete step): " + del.error.message, true);
-    return;
+    setStatus(`Saved ${upsertRows.length} record(s) to scheduling_entries for ${ctx.date} ${ctx.shift}.`);
   }
 
-  const ins = await sb
-    .from("scheduling_entries")
-    .insert(rows);
 
-  if (ins.error){
-    setStatus("Save failed (insert step): " + ins.error.message, true);
-    return;
+  function bindShiftSegmented() {
+    const buttons = document.querySelectorAll(".seg-btn");
+    const sel = document.getElementById("shift-name");
+    if (!buttons.length || !sel) return;
+
+    function setActive(shift) {
+      buttons.forEach(b => b.classList.toggle("active", (b.dataset.shift === shift)));
+      sel.value = shift;
+      currentContext = getCurrentContext();
+      loadContextIntoDom(currentContext);
+      recalcAll();
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => setActive(btn.dataset.shift));
+    });
+
+    // Initialise from select value (or default)
+    setActive(sel.value || "AM");
   }
 
-  setStatus("Saved " + rows.length + " row(s) to scheduling_entries.");
-}
+  function bindDailySummary() {
+    const btn = document.getElementById("btn-refresh-daily");
+    if (btn) btn.addEventListener("click", refreshDailySummary);
 
-/* ==========================
-   UTIL
-   ========================== */
-function escapeHtml(s){
-  return String(s ?? "").replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-}
-function escapeAttr(s){
-  return String(s ?? "").replace(/"/g, "&quot;");
-}
+    const dl = document.getElementById("btn-download-daily-csv");
+    if (dl) dl.addEventListener("click", downloadDailySummaryCsv);
+
+    // refresh when site/date changes (if daily tab is open, user sees immediate update)
+    document.getElementById("shift-date").addEventListener("change", () => {
+      if (document.getElementById("tab-daily")?.classList.contains("active")) refreshDailySummary();
+    });
+    document.getElementById("site-select").addEventListener("change", () => {
+      if (document.getElementById("tab-daily")?.classList.contains("active")) refreshDailySummary();
+    });
+  }
+
+  async function refreshDailySummary() {
+    const tbody = document.querySelector("#daily-summary-table tbody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+    if (!supa) { setStatus("Supabase not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.", true); return; }
+    if (!selectedSiteId) { setStatus("Select a Site to view daily summary.", true); return; }
+
+    const date = (document.getElementById("shift-date").value || "").trim();
+    if (!date) { setStatus("Select a Date to view daily summary.", true); return; }
+
+    // Prefer the totals rows if they exist, otherwise aggregate all task rows for the day.
+    const { data: totalsRows, error: totalsErr } = await supa
+      .from("scheduling_entries")
+      .select("shift_code,hours_direct_plan,hours_indirect_plan,hours_direct_actual,hours_indirect_actual,hours_direct_expected,hours_indirect_expected")
+      .eq("site_id", selectedSiteId)
+      .eq("scheduled_date", date)
+      .eq("task_name", "__kpi_totals__");
+
+    if (totalsErr) { setStatus("Daily summary read failed: " + totalsErr.message, true); return; }
+
+    const useTotals = (totalsRows && totalsRows.length > 0);
+
+    const shifts = ["AM", "PM", "Nights"];
+    const map = {};
+    shifts.forEach(s => map[s] = { shift:s, pd:0, pi:0, ad:0, ai:0, exp:0 });
+
+    if (useTotals) {
+      totalsRows.forEach(r => {
+        const s = (r.shift_code || "").trim() || "AM";
+        if (!map[s]) map[s] = { shift:s, pd:0, pi:0, ad:0, ai:0, exp:0 };
+        map[s].pd = Number(r.hours_direct_plan || 0);
+        map[s].pi = Number(r.hours_indirect_plan || 0);
+        map[s].ad = Number(r.hours_direct_actual || 0);
+        map[s].ai = Number(r.hours_indirect_actual || 0);
+        map[s].exp = Number(r.hours_direct_expected || 0) + Number(r.hours_indirect_expected || 0);
+      });
+    } else {
+      const { data: rows, error } = await supa
+        .from("scheduling_entries")
+        .select("shift_code,task_name,hours_direct_plan,hours_indirect_plan,hours_direct_actual,hours_indirect_actual,hours_direct_expected,hours_indirect_expected")
+        .eq("site_id", selectedSiteId)
+        .eq("scheduled_date", date);
+
+      if (error) { setStatus("Daily summary read failed: " + error.message, true); return; }
+
+      (rows || []).forEach(r => {
+        const tn = (r.task_name || "").trim();
+        if (!tn || tn.startsWith("__")) return; // skip meta rows
+        const s = (r.shift_code || "").trim() || "AM";
+        if (!map[s]) map[s] = { shift:s, pd:0, pi:0, ad:0, ai:0, exp:0 };
+        map[s].pd += Number(r.hours_direct_plan || 0);
+        map[s].pi += Number(r.hours_indirect_plan || 0);
+        map[s].ad += Number(r.hours_direct_actual || 0);
+        map[s].ai += Number(r.hours_indirect_actual || 0);
+        map[s].exp += Number(r.hours_direct_expected || 0) + Number(r.hours_indirect_expected || 0);
+      });
+    }
+
+    let tpd=0,tpi=0,tad=0,tai=0,texp=0;
+    shifts.forEach(s => {
+      const r = map[s] || { shift:s, pd:0, pi:0, ad:0, ai:0, exp:0 };
+      const pt = r.pd + r.pi;
+      const at = r.ad + r.ai;
+      const vplan = r.exp - pt;
+      const vact  = r.exp - at;
+
+      tpd += r.pd; tpi += r.pi; tad += r.ad; tai += r.ai; texp += r.exp;
+      tbody.appendChild(buildDailyRow(r.shift, r.pd, r.pi, pt, r.ad, r.ai, at, r.exp, vplan, vact, false));
+    });
+
+    const totPlan = tpd + tpi;
+    const totAct  = tad + tai;
+    tbody.appendChild(buildDailyRow("TOTAL", tpd, tpi, totPlan, tad, tai, totAct, texp, texp - totPlan, texp - totAct, true));
+
+    setStatus(useTotals ? "Daily summary refreshed (totals rows)." : "Daily summary refreshed (aggregated).");
+  }
+
+
+  function buildDailyRow(shift, pd, pi, pt, ad, ai, at, exp, vplan, vact, isTotal) {
+    const tr = document.createElement("tr");
+    if (isTotal) tr.style.fontWeight = "800";
+
+    // Highlight variance
+    if (!isTotal) {
+      if (vplan < -0.01 || vact < -0.01) tr.classList.add("row-warn");
+      else if (vplan > 0.01 || vact > 0.01) tr.classList.add("row-ok");
+    }
+
+    tr.innerHTML = `
+      <td>${escapeHtml(shift)}</td>
+      <td class="numeric">${Number(pd).toFixed(2)}</td>
+      <td class="numeric">${Number(pi).toFixed(2)}</td>
+      <td class="numeric">${Number(pt).toFixed(2)}</td>
+      <td class="numeric">${Number(ad).toFixed(2)}</td>
+      <td class="numeric">${Number(ai).toFixed(2)}</td>
+      <td class="numeric">${Number(at).toFixed(2)}</td>
+      <td class="numeric">${Number(exp).toFixed(2)}</td>
+      <td class="numeric">${Number(vplan).toFixed(2)}</td>
+      <td class="numeric">${Number(vact).toFixed(2)}</td>
+    `;
+    return tr;
+  }
+
+  function downloadDailySummaryCsv() {
+    const tbody = document.querySelector("#daily-summary-table tbody");
+    if (!tbody) return;
+
+    const rows = [];
+    rows.push(["Shift","PlannedDirectH","PlannedIndirectH","PlannedTotalH","ActualDirectH","ActualIndirectH","ActualTotalH","ExpectedH","VarExpMinusPlan","VarExpMinusActual"].join(","));
+
+    tbody.querySelectorAll("tr").forEach(tr => {
+      const cols = Array.from(tr.children).map(td => td.textContent.trim());
+      rows.push(cols.join(","));
+    });
+
+    downloadText(rows.join("\\n"), "daily-summary.csv");
+  }
+
+
+
+  // =========================
+  // Configuration (Resources + Tasks)
+  // =========================
+  const CONFIG_MHE_KEY  = "wiSched_cfg_mhe_v1";
+  const CONFIG_TASK_KEY = "wiSched_cfg_tasks_v1";
+
+  let cfgMhe = [];
+  let cfgTasks = [];
+
+  function loadConfig() {
+    try {
+      const rawM = localStorage.getItem(CONFIG_MHE_KEY);
+      const rawT = localStorage.getItem(CONFIG_TASK_KEY);
+    if (rawM) cfgMhe = JSON.parse(rawM) || [];
+    if (rawT) cfgTasks = JSON.parse(rawT) || [];
+    } catch(e){}
+
+    if (!Array.isArray(cfgMhe) || cfgMhe.length === 0) {
+      cfgMhe = [
+        { id: uid(), label: "PPT fleet", type: "PPT", count: 4 },
+        { id: uid(), label: "CB fleet", type: "CB", count: 3 },
+        { id: uid(), label: "VNA trucks", type: "VNA", count: 2 },
+        { id: uid(), label: "Manual labour", type: "Manual", count: 10 },
+        { id: uid(), label: "Admin", type: "Admin", count: 2 }
+      ];
+    }
+
+    if (!Array.isArray(cfgTasks) || cfgTasks.length === 0) {
+      cfgTasks = [
+        { id: "trailer_unload", name: "Trailer unload (rear tip)", area: "Inbound – BAYM", resource: "PPT", unit: "Pallets", minutesPerUnit: 2.0, category: "Direct" },
+        { id: "container_20",   name: "Container unload (20ft)",   area: "Inbound",       resource: "PPT", unit: "Pallets", minutesPerUnit: 2.5, category: "Direct" },
+        { id: "container_40",   name: "Container unload (40ft)",   area: "Inbound",       resource: "PPT", unit: "Pallets", minutesPerUnit: 3.0, category: "Direct" },
+        { id: "putaway_vna",    name: "Putaway – VNA",             area: "High bay",      resource: "VNA", unit: "Pallets", minutesPerUnit: 3.0, category: "Direct" },
+        { id: "putaway_reach",  name: "Putaway – Reach",           area: "Bulk / floor",  resource: "PPT", unit: "Pallets", minutesPerUnit: 2.7, category: "Direct" },
+        { id: "replenishment",  name: "Replenishment move",        area: "Replen",        resource: "CB",  unit: "Pallets", minutesPerUnit: 2.2, category: "Direct" },
+        { id: "picking_manual", name: "Case picking",              area: "Pick face",     resource: "Manual", unit: "Units", minutesPerUnit: 0.1, category: "Direct" },
+        { id: "picking_ppt",    name: "Pallet picking (full)",     area: "Pick face",     resource: "PPT", unit: "Pallets", minutesPerUnit: 2.4, category: "Direct" },
+        { id: "admin_inbound",  name: "Admin – inbound",           area: "Office",        resource: "Admin", unit: "Units", minutesPerUnit: 0.6, category: "Indirect" }
+      ];
+    }
+
+    saveConfig();
+  }
+
+  function saveConfig() {
+    try {
+      localStorage.setItem(CONFIG_MHE_KEY, JSON.stringify(cfgMhe));
+      localStorage.setItem(CONFIG_TASK_KEY, JSON.stringify(cfgTasks));
+    } catch(e){}
+  }
+
+  function getResourceTypes() {
+    const types = cfgMhe.map(r => (r.type || "").trim()).filter(Boolean);
+    // Ensure uniqueness
+    return Array.from(new Set(types));
+  }
+
+  function buildMheConfigTable() {
+    const tbody = document.querySelector("#mhe-config-table tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    cfgMhe.forEach(r => {
+      const tr = document.createElement("tr");
+
+      const tdLabel = document.createElement("td");
+      const inLabel = document.createElement("input");
+      inLabel.type = "text";
+      inLabel.value = r.label || "";
+      inLabel.addEventListener("input", () => { r.label = inLabel.value; saveConfig(); refreshAllFromConfig(); });
+      tdLabel.appendChild(inLabel);
+
+      const tdType = document.createElement("td");
+      const inType = document.createElement("input");
+      inType.type = "text";
+      inType.value = r.type || "";
+      inType.addEventListener("input", () => { r.type = inType.value; saveConfig(); refreshAllFromConfig(); });
+      tdType.appendChild(inType);
+
+      const tdCount = document.createElement("td");
+      tdCount.className = "numeric";
+      const inCount = document.createElement("input");
+      inCount.type = "number";
+      inCount.min = "0";
+      inCount.step = "1";
+      inCount.value = (r.count ?? 0);
+      inCount.addEventListener("input", () => {
+        const v = parseInt(inCount.value, 10);
+        r.count = isNaN(v) ? 0 : v;
+        saveConfig();
+        refreshCapability();
+      });
+      tdCount.appendChild(inCount);
+
+      tr.appendChild(tdLabel);
+      tr.appendChild(tdType);
+      tr.appendChild(tdCount);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function buildTaskConfigTable() {
+    const tbody = document.querySelector("#task-config-table tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    const resources = getResourceTypes();
+
+    cfgTasks.forEach(t => {
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      const inName = document.createElement("input");
+      inName.type = "text";
+      inName.value = t.name || "";
+      inName.addEventListener("input", () => { t.name = inName.value; saveConfig(); refreshPlannedTables(); });
+      tdName.appendChild(inName);
+
+      const tdArea = document.createElement("td");
+      const inArea = document.createElement("input");
+      inArea.type = "text";
+      inArea.value = t.area || "";
+      inArea.addEventListener("input", () => { t.area = inArea.value; saveConfig(); refreshPlannedTables(); });
+      tdArea.appendChild(inArea);
+
+      const tdCat = document.createElement("td");
+      const selCat = document.createElement("select");
+      ["Direct","Indirect"].forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c; opt.textContent = c;
+        if ((t.category || "Direct") === c) opt.selected = true;
+        selCat.appendChild(opt);
+      });
+      selCat.addEventListener("change", () => { t.category = selCat.value; saveConfig(); refreshPlannedTables(); });
+      tdCat.appendChild(selCat);
+
+      const tdRes = document.createElement("td");
+      const selRes = document.createElement("select");
+      resources.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r; opt.textContent = r;
+        selRes.appendChild(opt);
+      });
+      selRes.value = resources.includes(t.resource) ? t.resource : (resources[0] || "");
+      t.resource = selRes.value;
+      selRes.addEventListener("change", () => { t.resource = selRes.value; saveConfig(); refreshPlannedTables(); refreshCapability(); });
+      tdRes.appendChild(selRes);
+
+      const tdUnit = document.createElement("td");
+      const selUnit = document.createElement("select");
+      ["Pallets","Units"].forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u; opt.textContent = u;
+        if ((t.unit || "Units") === u) opt.selected = true;
+        selUnit.appendChild(opt);
+      });
+      selUnit.addEventListener("change", () => { t.unit = selUnit.value; saveConfig(); refreshPlannedTables(); });
+      tdUnit.appendChild(selUnit);
+
+      const tdMin = document.createElement("td");
+      tdMin.className = "numeric";
+      const inMin = document.createElement("input");
+      inMin.type = "number";
+      inMin.min = "0";
+      inMin.step = "0.1";
+      inMin.value = Number(t.minutesPerUnit || 0).toFixed(2);
+      inMin.addEventListener("input", () => {
+        const v = parseFloat(inMin.value);
+        t.minutesPerUnit = (isNaN(v) || v < 0) ? 0 : v;
+        saveConfig();
+        refreshPlannedTables();
+      });
+      tdMin.appendChild(inMin);
+
+      const tdDel = document.createElement("td");
+      const btnDel = document.createElement("button");
+      btnDel.type = "button";
+      btnDel.className = "btn-icon";
+      btnDel.innerHTML = "&times;";
+      btnDel.addEventListener("click", () => {
+        cfgTasks = cfgTasks.filter(x => x.id !== t.id);
+        saveConfig();
+        refreshAllFromConfig();
+      });
+      tdDel.appendChild(btnDel);
+
+      tr.appendChild(tdName);
+      tr.appendChild(tdArea);
+      tr.appendChild(tdCat);
+      tr.appendChild(tdRes);
+      tr.appendChild(tdUnit);
+      tr.appendChild(tdMin);
+      tr.appendChild(tdDel);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function refreshAllFromConfig() {
+    buildMheConfigTable();
+    buildTaskConfigTable();
+    refreshPlannedTables();
+    refreshCapability();
+  }
+
+  function refreshPlannedTables() {
+    // Rebuild the plan table and PVA table from cfgTasks if the page uses those.
+    if (typeof buildPlannedActivityTable === "function") buildPlannedActivityTable();
+    if (typeof buildPlanVsActualTable === "function") buildPlanVsActualTable();
+    if (typeof recalcAll === "function") recalcAll();
+  }
+
+  function refreshCapability() {
+    if (typeof buildCapabilityTable === "function") buildCapabilityTable();
+    if (typeof recalcCapability === "function") recalcCapability();
+  }
+
+
+
+  function bindConfigTab() {
+    const btnM = document.getElementById("btn-add-mhe-row");
+    if (btnM) btnM.addEventListener("click", () => {
+      cfgMhe.push({ id: uid(), label: "New resource", type: "", count: 0 });
+      saveConfig();
+      refreshAllFromConfig();
+    });
+
+    const btnT = document.getElementById("btn-add-task-row");
+    if (btnT) btnT.addEventListener("click", () => {
+      const resources = getResourceTypes();
+      cfgTasks.push({
+        id: uid(),
+        name: "New task",
+        area: "",
+        category: "Direct",
+        resource: resources[0] || "",
+        unit: "Pallets",
+        minutesPerUnit: 1.0
+      });
+      saveConfig();
+      refreshAllFromConfig();
+    });
+  }
+
+
+
+  function uid() {
+    return "id_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+
+  // =========================
+  // Utilities
+  // =========================
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#39;");
+  }
+
+  // Dummy sign out button (wire to your auth later)
+  document.getElementById("btn-signout").addEventListener("click", () => {
+    setStatus("Sign out is handled by your dashboard auth. (Wire this button to your sign-out flow.)");
+  });
 </script>
-
 </body>
 </html>
